@@ -118,6 +118,10 @@
   .folder-actions{display:flex;align-items:center;gap:6px;margin-left:12px;}
   .folder-action{border:1px solid var(--line);background:rgba(0,0,0,0.35);color:var(--dim-2);font-family:'JetBrains Mono',monospace;font-size:0.58rem;font-weight:800;padding:4px 7px;cursor:pointer;border-radius:6px;}
   .folder-action:hover{background:var(--white);color:var(--black);border-color:var(--white);}
+  body:not(.is-admin) .admin-only{display:none!important;}
+  body.is-admin .explorer-tools.admin-only{display:flex;}
+  body.is-admin .folder-actions.admin-only{display:flex;}
+  body.is-admin .delete-btn.admin-only{display:inline-block;}
   .folder-block.drag-over > .folder-row{background:var(--white);color:var(--black);box-shadow:inset 0 0 0 2px var(--white);}
   .folder-block.dragging, .frow.dragging{opacity:0.42;}
 
@@ -617,7 +621,16 @@
     document.getElementById('authLogout').style.display = isAdmin ? 'inline' : 'none';
     document.getElementById('authEmail').style.display = 'none';
     if(!isAdmin) document.getElementById('controlPanel').classList.remove('active');
+    syncAdminControls();
     updateCounts();
+  }
+
+  function syncAdminControls() {
+    document.querySelectorAll('.admin-only').forEach(el => {
+      el.setAttribute('aria-hidden', isAdmin ? 'false' : 'true');
+      if(!isAdmin && (el.matches('button') || el.matches('input') || el.matches('select'))) el.disabled = true;
+      else if(isAdmin && (el.matches('button') || el.matches('input') || el.matches('select'))) el.disabled = false;
+    });
   }
 
   async function adminLogin() {
