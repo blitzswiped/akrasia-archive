@@ -20,6 +20,10 @@
     --radius-soft:14px;
     --squircle:8px;
     --reactive-pulse: 0;
+    --reactive-r: 255;
+    --reactive-g: 255;
+    --reactive-b: 255;
+    --reactive-accent: #ffffff;
   }
 
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -27,7 +31,10 @@
   body{
     font-family:'Inter', sans-serif; text-transform:lowercase;
     -webkit-font-smoothing:antialiased;
-    background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255, calc(var(--reactive-pulse) * 0.35)) 0%, rgba(0,0,0,0) 70%);
+    background-image:
+      radial-gradient(circle at 12% 20%, rgba(var(--reactive-r), var(--reactive-g), var(--reactive-b), calc(var(--reactive-pulse) * 0.40)) 0%, rgba(0,0,0,0) 32%),
+      radial-gradient(circle at 86% 12%, rgba(255,255,255, calc(var(--reactive-pulse) * 0.22)) 0%, rgba(0,0,0,0) 28%),
+      radial-gradient(circle at 50% 92%, rgba(var(--reactive-r), var(--reactive-g), var(--reactive-b), calc(var(--reactive-pulse) * 0.30)) 0%, rgba(0,0,0,0) 42%);
     background-attachment: fixed;
   }
   button, input, select, textarea { font-family:inherit; color:inherit; background:none; border:none; text-transform:lowercase; }
@@ -98,13 +105,21 @@
   .sort-trigger{ cursor:pointer; user-select:none; }
   .sort-trigger:hover{ color:var(--white); }
 
+  .explorer-tools{display:flex;gap:8px;align-items:center;margin:0 0 14px;border:1px solid var(--line-soft);padding:8px;background:rgba(255,255,255,0.025);}
+  .explorer-tools input{flex:1;min-width:0;background:#050505;border:1px solid var(--line);color:var(--white);padding:9px 10px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;border-radius:6px;}
+  .explorer-tools button{background:var(--white);color:var(--black);border:1px solid var(--white);font-family:'JetBrains Mono',monospace;font-size:0.66rem;font-weight:800;padding:9px 11px;cursor:pointer;border-radius:6px;}
   .folder-block { margin-bottom: 8px; --folder-depth: 0; }
-  .folder-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 8px 12px calc(8px + (var(--folder-depth) * 18px)); background: rgba(255,255,255,0.045); border-bottom: 1px solid var(--line); border-top:1px solid var(--line-soft); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; cursor: pointer; letter-spacing:0.02em; }
+  .folder-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 8px 12px calc(8px + (var(--folder-depth) * 18px)); background: rgba(255,255,255,0.045); border-bottom: 1px solid var(--line); border-top:1px solid var(--line-soft); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; cursor: pointer; letter-spacing:0.02em; transition:background 0.16s, color 0.16s, box-shadow 0.16s; }
   .folder-row-left { display: flex; align-items: center; gap: 10px; }
   .folder-row svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
-  .folder-contents { display: flex; flex-direction: column; }
+  .folder-contents { display: flex; flex-direction: column; min-height: 8px; }
   .folder-block.collapsed .folder-contents{display:none;}
   .folder-toggle{margin-left:auto;color:var(--dim-2);font-size:0.68rem;font-family:'JetBrains Mono',monospace;}
+  .folder-actions{display:flex;align-items:center;gap:6px;margin-left:12px;}
+  .folder-action{border:1px solid var(--line);background:rgba(0,0,0,0.35);color:var(--dim-2);font-family:'JetBrains Mono',monospace;font-size:0.58rem;font-weight:800;padding:4px 7px;cursor:pointer;border-radius:6px;}
+  .folder-action:hover{background:var(--white);color:var(--black);border-color:var(--white);}
+  .folder-block.drag-over > .folder-row{background:var(--white);color:var(--black);box-shadow:inset 0 0 0 2px var(--white);}
+  .folder-block.dragging, .frow.dragging{opacity:0.42;}
 
   .frow{
     display:grid; grid-template-columns:30px 1fr 100px 60px 90px 60px 60px 140px;
@@ -143,7 +158,7 @@
   .props-val { color: var(--white); word-break: break-all; }
 
   /* ===== MINI PLAYER BAR ===== */
-  .player-bar{position:fixed;bottom:0;left:0;transform:translateY(110%);width:100%;background:rgba(0,0,0,0.94);backdrop-filter:blur(12px);border-top:2px solid var(--white);padding:14px 5vw;display:flex;align-items:center;gap:16px;transition:transform 0.34s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;z-index:400;box-shadow:0 -18px 70px rgba(255,255,255,calc(var(--reactive-pulse) * 0.18));border-radius:0;}
+  .player-bar{position:fixed;bottom:0;left:0;transform:translateY(110%);width:100%;background:rgba(0,0,0,0.94);backdrop-filter:blur(12px);border-top:2px solid var(--white);padding:14px 5vw;display:flex;align-items:center;gap:16px;transition:transform 0.34s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;z-index:400;box-shadow:0 -18px 70px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.40));border-radius:0;}
   .player-bar.active{transform:translateY(0);animation:barWake 0.55s cubic-bezier(0.16,1,0.3,1);}
   @keyframes barWake{0%{filter:contrast(1.8);clip-path:inset(45% 0 45% 0);}100%{filter:contrast(1);clip-path:inset(0);}}
   
@@ -162,11 +177,17 @@
   .pb-time { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--dim-2); min-width: 80px; text-align: right; }
   .pb-progress-container { flex:2; height: 16px; display: flex; align-items: center; cursor: pointer; position: relative; }
   .pb-progress{ width: 100%; height:5px; background:var(--line-soft); position:relative; overflow:hidden;border-radius:999px;}
-  .pb-progress-fill{position:absolute;left:0;top:0;height:100%;width:0%;background:var(--white); pointer-events: none; transition:width 0.18s linear; box-shadow:0 0 16px rgba(255,255,255,calc(0.2 + var(--reactive-pulse) * 0.8));}
+  .pb-progress-fill{position:absolute;left:0;top:0;height:100%;width:0%;background:var(--reactive-accent); pointer-events: none; transition:width 0.18s linear; box-shadow:0 0 16px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(0.2 + var(--reactive-pulse) * 0.8));}
   .pb-progress-fill::after{content:"";position:absolute;right:0;top:-4px;width:2px;height:13px;background:var(--white);opacity:0.8;}
 
   /* ===== FULLSCREEN PLAYER ===== */
-  .fs-player { position: fixed; inset: 0; background: radial-gradient(circle at 35% 40%, rgba(255,255,255,calc(var(--reactive-pulse) * 0.25)), transparent 42%), linear-gradient(115deg, rgba(255,255,255,0.04), transparent 28%, rgba(255,255,255,0.03) 70%, transparent), var(--black); z-index: 450; display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1); }
+  .fs-player { position: fixed; inset: 0; background:
+    radial-gradient(circle at 8% 18%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.40)), transparent 30%),
+    radial-gradient(circle at 92% 22%, rgba(255,255,255,calc(var(--reactive-pulse) * 0.24)), transparent 32%),
+    radial-gradient(circle at 18% 88%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.34)), transparent 36%),
+    radial-gradient(circle at 78% 82%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.26)), transparent 34%),
+    linear-gradient(115deg, rgba(255,255,255,0.04), transparent 28%, rgba(255,255,255,0.03) 70%, transparent),
+    var(--black); z-index: 450; display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1); }
   .fs-player.active { transform: translateY(0); }
   .fs-player.is-playing .fs-title{animation:titlePulse 1.8s ease-in-out infinite alternate;}
   @keyframes titlePulse{from{text-shadow:0 0 0 rgba(255,255,255,0);}to{text-shadow:0 0 24px rgba(255,255,255,calc(var(--reactive-pulse) * 0.5));}}
@@ -179,7 +200,7 @@
   .fs-main { display: flex; flex-direction: column; padding: 40px 5vw; border-right: 2px solid var(--white); position: relative; justify-content: flex-end; overflow:hidden; }
   .fs-main::before{content:"";position:absolute;inset:28px 5vw auto 5vw;height:1px;background:linear-gradient(90deg, transparent, var(--white), transparent);opacity:calc(0.28 + var(--reactive-pulse));animation:scanline 3.8s linear infinite;}
   @keyframes scanline{0%{transform:translateY(0);opacity:0;}20%{opacity:0.65;}100%{transform:translateY(38vh);opacity:0;}}
-  .fs-visualizer { position: absolute; top: 40px; left: 5vw; right: 5vw; height: 35vh; }
+  .fs-visualizer { position: absolute; inset: 0; width:100%; height:100%; opacity:0.40; mix-blend-mode:screen; pointer-events:none; }
   .fs-visualizer.hidden { display: none; }
   .fs-media-stage { position:absolute; top:40px; left:5vw; right:5vw; bottom:250px; display:none; align-items:center; justify-content:center; border:1px solid var(--line-soft); background:rgba(255,255,255,0.03); overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.04); border-radius:0; }
   .fs-media-stage.active { display:flex; }
@@ -188,10 +209,9 @@
   
   .fs-meta { margin-bottom: 30px; position: relative; z-index: 10; display: flex; flex-direction: column; }
   
-  .fs-cover { width: 220px; height: 220px; border: 2px solid var(--white); object-fit: cover; filter: grayscale(100%) contrast(120%); margin-bottom: 24px; display: none; border-radius:0; box-shadow:16px 16px 0 rgba(255,255,255,0.08); }
-  .fs-cover.active { display: block; animation:coverIn 0.45s cubic-bezier(0.16,1,0.3,1), coverDrift 9s ease-in-out infinite alternate; }
+  .fs-cover { width: 220px; height: 220px; border: 2px solid var(--white); object-fit: cover; margin-bottom: 24px; display: none; border-radius:0; box-shadow:16px 16px 0 rgba(255,255,255,0.08); }
+  .fs-cover.active { display: block; animation:coverIn 0.45s cubic-bezier(0.16,1,0.3,1); }
   @keyframes coverIn{from{opacity:0;transform:translateY(12px) scale(0.96);}to{opacity:1;transform:translateY(0) scale(1);}}
-  @keyframes coverDrift{from{filter:grayscale(100%) contrast(120%);}to{filter:grayscale(100%) contrast(145%);}}
   
   .fs-title { font-size: clamp(2.4rem, 6vw, 5.8rem); font-weight: 800; letter-spacing: 0; line-height: 0.95; margin-bottom: 14px; word-break: break-word; max-width: 12ch; }
   .fs-sub { font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--dim-2); }
@@ -277,12 +297,10 @@
       </div>
     </div>
 
-    <!-- CREATE FOLDERS -->
+    <!-- ADMIN MAINTENANCE -->
     <div class="panel-sect">
-      <h3>create directory</h3>
+      <h3>maintenance</h3>
       <form class="injector-form" id="folderForm">
-        <input type="text" id="newFolder" placeholder="directory path (e.g. batch 04/demos)" required>
-        <button type="button" onclick="handleFolderCreate()">initialize directory</button>
         <button type="button" onclick="removePlaceholders()">remove placeholder content</button>
       </form>
     </div>
@@ -339,6 +357,11 @@
       <div class="status-cell"><strong id="statAccess">view</strong>access</div>
     </div>
 
+    <div class="explorer-tools admin-only">
+      <input type="text" id="newFolder" placeholder="new folder path, like batch 04/demos">
+      <button type="button" onclick="handleFolderCreate()">new folder</button>
+    </div>
+
     <div class="col-head">
       <div></div>
       <div class="sort-trigger" onclick="triggerSort('title')">title ↕</div>
@@ -359,9 +382,9 @@
       </div>
 
       <!-- EXISTING BASE DIRECTORY -->
-      <div class="folder-block" data-standard-folder="batch 04">
-        <div class="folder-row" onclick="toggleFolder(this)">
-          <div class="folder-row-left"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> <span>batch 04 items</span></div><span class="folder-toggle">[-]</span>
+      <div class="folder-block" data-standard-folder="batch 04" draggable="true">
+        <div class="folder-row" onclick="toggleFolder(this)" ondragover="handleFolderDragOver(event)" ondragleave="handleFolderDragLeave(event)" ondrop="handleFolderDrop(event)">
+          <div class="folder-row-left"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> <span>batch 04 items</span></div><span class="folder-toggle">[-]</span><div class="folder-actions admin-only"><button class="folder-action" onclick="ungroupFolder(event, this)">ungroup</button><button class="folder-action" onclick="deleteFolder(event, this)">remove</button></div>
         </div>
         <div class="folder-contents" data-batch-target="batch 04">
           <div class="frow" data-placeholder="true" data-mood-color="#8fb7ff" style="--mood-color:#8fb7ff" data-file="" data-cover="" data-title="pray and leave it there" data-sub="batch 04" data-name="akrasia_b04_v3_pray.mp3" data-date="202606240702" data-ver="v3" data-mood="ambient" data-type="audio" data-size="9mb">
@@ -488,8 +511,11 @@
   var isAdmin = false;
   var isRemoteReady = false;
   var adminTapCount = 0;
+  var draggedExplorerItem = null;
 
   var audioCtx = null, analyser = null, sourceNode = null, dataArray = null;
+  var reactiveBase = { r: 255, g: 255, b: 255 };
+  var reactiveHueShift = 0;
   const canvas = document.getElementById('visualizerCanvas');
   const canvasCtx = canvas.getContext('2d');
 
@@ -501,6 +527,66 @@
   function closeViewport(id) { document.getElementById(id).classList.remove('active'); }
   window.addEventListener('resize', resizeCanvas);
   function resizeCanvas() { canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; }
+
+  function hexToRgb(hex) {
+    var clean = String(hex || '#ffffff').replace('#', '').trim();
+    if(clean.length === 3) clean = clean.split('').map(ch => ch + ch).join('');
+    var num = parseInt(clean, 16);
+    if(Number.isNaN(num)) return { r: 255, g: 255, b: 255 };
+    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+  }
+
+  function rgbToHex(rgb) {
+    return '#' + [rgb.r, rgb.g, rgb.b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+  }
+
+  function setReactiveColor(rgb) {
+    reactiveBase = rgb || reactiveBase;
+    document.documentElement.style.setProperty('--reactive-r', reactiveBase.r);
+    document.documentElement.style.setProperty('--reactive-g', reactiveBase.g);
+    document.documentElement.style.setProperty('--reactive-b', reactiveBase.b);
+    document.documentElement.style.setProperty('--reactive-accent', rgbToHex(reactiveBase));
+  }
+
+  function readCoverColor(src, fallbackColor) {
+    setReactiveColor(hexToRgb(fallbackColor));
+    if(!src) return;
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      try {
+        var sample = document.createElement('canvas');
+        sample.width = 24;
+        sample.height = 24;
+        var ctx = sample.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(img, 0, 0, sample.width, sample.height);
+        var pixels = ctx.getImageData(0, 0, sample.width, sample.height).data;
+        var r = 0, g = 0, b = 0, count = 0;
+        for(var i = 0; i < pixels.length; i += 16) {
+          var alpha = pixels[i + 3];
+          if(alpha < 80) continue;
+          var brightness = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+          if(brightness < 18) continue;
+          r += pixels[i]; g += pixels[i + 1]; b += pixels[i + 2]; count++;
+        }
+        if(count) setReactiveColor({ r: r / count, g: g / count, b: b / count });
+      } catch(err) {}
+    };
+    img.src = src;
+  }
+
+  function reactiveBandColor(low, mid, high, energy) {
+    var swing = Math.max(0, Math.min(1, (high - low + 80) / 180));
+    var bpmFeel = Math.max(0, Math.min(1, (low * 0.7 + mid * 0.3) / 255));
+    reactiveHueShift = (reactiveHueShift + 0.006 + bpmFeel * 0.018) % 1;
+    var tint = {
+      r: reactiveBase.r * (0.78 + low / 900) + 255 * swing * 0.22,
+      g: reactiveBase.g * (0.78 + mid / 950) + 255 * reactiveHueShift * 0.14,
+      b: reactiveBase.b * (0.82 + high / 900) + 255 * (1 - swing) * 0.16
+    };
+    var lift = 1 + energy * 0.34;
+    return { r: Math.min(255, tint.r * lift), g: Math.min(255, tint.g * lift), b: Math.min(255, tint.b * lift) };
+  }
 
   function supabaseConfigured() {
     return SUPABASE_URL.indexOf('PASTE_') !== 0 && SUPABASE_ANON_KEY.indexOf('PASTE_') !== 0 && ADMIN_EMAIL !== 'your@email.com';
@@ -592,7 +678,18 @@
   }
 
   function folderDisplayName(path) {
-    return normalizeFolderPath(path).split('/').filter(Boolean).join(' / ') || 'uncategorized';
+    var parts = normalizeFolderPath(path).split('/').filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : 'uncategorized';
+  }
+
+  function folderParentPath(path) {
+    var parts = normalizeFolderPath(path).split('/').filter(Boolean);
+    parts.pop();
+    return parts.join('/');
+  }
+
+  function folderPathDepth(path) {
+    return Math.max(0, normalizeFolderPath(path).split('/').filter(Boolean).length - 1);
   }
 
   function selectedAssetDate() {
@@ -628,7 +725,7 @@
       if (name === "smartFilterFolderBlock") return;
       var opt = document.createElement('option');
       opt.value = name;
-      opt.textContent = `directory: ${folderDisplayName(name)}`;
+      opt.textContent = `${'  '.repeat(folderPathDepth(name))}directory: ${folderDisplayName(name)}`;
       select.appendChild(opt);
     });
     
@@ -643,7 +740,7 @@
     if(!name) return;
     if(findFolderBlock(name)) return alert("directory already exists.");
     ensureFolder(name);
-    document.getElementById('folderForm').reset();
+    document.getElementById('newFolder').value = '';
     updateDirectoryDropdown();
   }
 
@@ -794,19 +891,22 @@
     var existing = findFolderBlock(name);
     if(existing) return existing.querySelector('[data-batch-target]');
 
-    var container = document.getElementById('directoryContainer');
-    var depth = Math.max(0, name.split('/').length - 1);
+    var parentPath = folderParentPath(name);
+    var container = parentPath ? ensureFolder(parentPath) : document.getElementById('directoryContainer');
+    var depth = folderPathDepth(name);
     var label = folderDisplayName(name);
     var newBlock = document.createElement('div');
     newBlock.className = 'folder-block';
     newBlock.setAttribute('data-standard-folder', name);
     newBlock.setAttribute('data-folder-depth', depth);
     newBlock.style.setProperty('--folder-depth', depth);
+    newBlock.draggable = true;
     newBlock.innerHTML = `
-      <div class="folder-row" onclick="toggleFolder(this)"><div class="folder-row-left"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>${escapeHtml(label)} items</span></div><span class="folder-toggle">[-]</span></div>
+      <div class="folder-row" onclick="toggleFolder(this)" ondragover="handleFolderDragOver(event)" ondragleave="handleFolderDragLeave(event)" ondrop="handleFolderDrop(event)"><div class="folder-row-left"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>${escapeHtml(label)} items</span></div><span class="folder-toggle">[-]</span><div class="folder-actions admin-only"><button class="folder-action" onclick="ungroupFolder(event, this)">ungroup</button><button class="folder-action" onclick="deleteFolder(event, this)">remove</button></div></div>
       <div class="folder-contents" data-batch-target="${escapeAttr(name)}"></div>
     `;
     container.appendChild(newBlock);
+    attachExplorerDrag(newBlock);
     return newBlock.querySelector('[data-batch-target]');
   }
 
@@ -815,12 +915,206 @@
     return Array.from(document.querySelectorAll('.folder-block[data-standard-folder]')).find(folder => folder.getAttribute('data-standard-folder') === normalized);
   }
 
+  function updateFolderLabel(folder) {
+    var label = folder.querySelector('.folder-row-left span');
+    if(label) label.textContent = `${folderDisplayName(folder.getAttribute('data-standard-folder'))} items`;
+  }
+
+  function attachExplorerDrag(item) {
+    if(!item || item.id === 'smartFilterFolderBlock') return;
+    item.draggable = true;
+    item.addEventListener('dragstart', function(e) {
+      if(!isAdmin) {
+        e.preventDefault();
+        return;
+      }
+      draggedExplorerItem = item;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', item.classList.contains('folder-block') ? 'folder' : 'row');
+      e.stopPropagation();
+    });
+    item.addEventListener('dragend', function() {
+      item.classList.remove('dragging');
+      document.querySelectorAll('.folder-block.drag-over').forEach(folder => folder.classList.remove('drag-over'));
+      draggedExplorerItem = null;
+    });
+  }
+
+  function initExplorerDrag() {
+    document.querySelectorAll('.folder-block[data-standard-folder], .frow').forEach(attachExplorerDrag);
+  }
+
+  function handleFolderDragOver(e) {
+    if(!isAdmin || !draggedExplorerItem) return;
+    e.preventDefault();
+    var folder = e.currentTarget.closest('.folder-block');
+    if(folder && folder !== draggedExplorerItem) folder.classList.add('drag-over');
+  }
+
+  function handleFolderDragLeave(e) {
+    var folder = e.currentTarget.closest('.folder-block');
+    if(folder) folder.classList.remove('drag-over');
+  }
+
+  function handleFolderDrop(e) {
+    if(!isAdmin || !draggedExplorerItem) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var targetFolder = e.currentTarget.closest('.folder-block');
+    if(!targetFolder || targetFolder === draggedExplorerItem) return;
+    targetFolder.classList.remove('drag-over');
+    var targetPath = targetFolder.getAttribute('data-standard-folder');
+    var targetList = targetFolder.querySelector('[data-batch-target]');
+    if(!targetList) return;
+
+    if(draggedExplorerItem.classList.contains('frow')) {
+      targetList.appendChild(draggedExplorerItem);
+      draggedExplorerItem.setAttribute('data-sub', targetPath);
+      saveMovedRowBatch(draggedExplorerItem, targetPath);
+    } else if(draggedExplorerItem.classList.contains('folder-block')) {
+      var oldPath = draggedExplorerItem.getAttribute('data-standard-folder');
+      if(targetPath.indexOf(oldPath + '/') === 0) return;
+      var newPath = normalizeFolderPath(`${targetPath}/${folderDisplayName(oldPath)}`);
+      var duplicateFolder = findFolderBlock(newPath);
+      if(duplicateFolder && duplicateFolder !== draggedExplorerItem) {
+        alert('that folder already exists there.');
+        return;
+      }
+      targetList.appendChild(draggedExplorerItem);
+      updateMovedFolderPaths(draggedExplorerItem, targetPath);
+    }
+
+    updateDirectoryDropdown();
+    updateCounts();
+    buildQueue();
+  }
+
+  function updateMovedFolderPaths(folder, targetPath) {
+    var oldRoot = folder.getAttribute('data-standard-folder');
+    var leaf = folderDisplayName(oldRoot);
+    var newRoot = normalizeFolderPath(`${targetPath}/${leaf}`);
+    var folderBlocks = [folder].concat(Array.from(folder.querySelectorAll('.folder-block[data-standard-folder]')));
+
+    folderBlocks.forEach(block => {
+      var oldPath = block.getAttribute('data-standard-folder');
+      var newPath = oldPath === oldRoot ? newRoot : normalizeFolderPath(newRoot + oldPath.slice(oldRoot.length));
+      var depth = folderPathDepth(newPath);
+      block.setAttribute('data-standard-folder', newPath);
+      block.setAttribute('data-folder-depth', depth);
+      block.style.setProperty('--folder-depth', depth);
+      var contents = block.querySelector('[data-batch-target]');
+      if(contents) contents.setAttribute('data-batch-target', newPath);
+      updateFolderLabel(block);
+
+      if(contents) {
+        Array.from(contents.children).forEach(child => {
+          if(child.classList && child.classList.contains('frow')) {
+            child.setAttribute('data-sub', newPath);
+            saveMovedRowBatch(child, newPath);
+          }
+        });
+      }
+    });
+  }
+
+  async function saveMovedRowBatch(row, batch) {
+    if(!isRemoteReady) return;
+    var assetId = row.getAttribute('data-id');
+    if(!assetId) return;
+    var result = await supabaseClient.from('archive_assets').update({ batch }).eq('id', assetId);
+    if(result.error) {
+      document.getElementById('authStatus').textContent = 'move not saved';
+    }
+  }
+
+  function folderParentList(folder) {
+    var parentPath = folderParentPath(folder.getAttribute('data-standard-folder'));
+    return parentPath ? ensureFolder(parentPath) : document.getElementById('directoryContainer');
+  }
+
+  function refreshExplorerAfterFolderAction() {
+    removeEmptyFolders();
+    updateDirectoryDropdown();
+    updateCounts();
+    buildQueue();
+    renderQueueList();
+  }
+
+  function ungroupFolder(event, button) {
+    event.preventDefault();
+    event.stopPropagation();
+    if(!requireAdmin()) return;
+    var folder = button.closest('.folder-block');
+    if(!folder || folder.id === 'smartFilterFolderBlock') return;
+    var list = folder.querySelector(':scope > .folder-contents');
+    var parentPath = folderParentPath(folder.getAttribute('data-standard-folder'));
+    var destination = parentPath ? ensureFolder(parentPath) : document.getElementById('directoryContainer');
+    var rowDestination = parentPath ? destination : ensureFolder('uncategorized');
+    var rowDestinationPath = parentPath || 'uncategorized';
+    var children = Array.from(list.children);
+    if(!children.length) {
+      folder.remove();
+      refreshExplorerAfterFolderAction();
+      return;
+    }
+
+    children.forEach(child => {
+      if(child.classList.contains('frow')) {
+        rowDestination.appendChild(child);
+        child.setAttribute('data-sub', rowDestinationPath);
+        saveMovedRowBatch(child, rowDestinationPath);
+      } else if(child.classList.contains('folder-block')) {
+        destination.appendChild(child);
+        updateMovedFolderPaths(child, parentPath || '');
+      }
+    });
+
+    folder.remove();
+    refreshExplorerAfterFolderAction();
+  }
+
+  async function deleteFolder(event, button) {
+    event.preventDefault();
+    event.stopPropagation();
+    if(!requireAdmin()) return;
+    var folder = button.closest('.folder-block');
+    if(!folder || folder.id === 'smartFilterFolderBlock') return;
+    var name = folderDisplayName(folder.getAttribute('data-standard-folder'));
+    var rows = Array.from(folder.querySelectorAll('.frow'));
+    var message = rows.length ? `remove folder "${name}" and ${rows.length} item(s) inside it?` : `remove empty folder "${name}"?`;
+    if(!confirm(message)) return;
+
+    if(isRemoteReady && rows.length) {
+      var ids = rows.map(row => row.getAttribute('data-id')).filter(Boolean);
+      var paths = [];
+      rows.forEach(row => {
+        var storagePath = row.getAttribute('data-storage-path');
+        var coverPath = row.getAttribute('data-cover-storage-path');
+        if(storagePath) paths.push(storagePath);
+        if(coverPath) paths.push(coverPath);
+      });
+      if(paths.length) await supabaseClient.storage.from(STORAGE_BUCKET).remove(paths);
+      if(ids.length) {
+        var result = await supabaseClient.from('archive_assets').delete().in('id', ids);
+        if(result.error) return alert(result.error.message);
+      }
+    }
+
+    rows.forEach(row => row.remove());
+    folder.remove();
+    document.getElementById('playerBar').classList.remove('active');
+    document.getElementById('fsPlayer').classList.remove('active');
+    refreshExplorerAfterFolderAction();
+  }
+
   function createRowFromRecord(record, skipRefresh) {
     var type = record.type || 'audio';
     var batch = normalizeFolderPath(record.batch) || 'uncategorized';
     var targetBatchList = ensureFolder(batch);
     var row = document.createElement('div');
     row.className = 'frow';
+    row.draggable = true;
     var assetDate = record.asset_date || '';
     var created = record.created_at ? new Date(record.created_at) : new Date();
     var dateDisplay = assetDate ? displayDateFromISO(assetDate) : `${String(created.getMonth() + 1).padStart(2, '0')}.${String(created.getDate()).padStart(2, '0')}.${String(created.getFullYear()).slice(-2)}`;
@@ -866,6 +1160,7 @@
       <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
     `;
     targetBatchList.appendChild(row);
+    attachExplorerDrag(row);
     generateFilterChip(record.mood || 'raw', record.mood_color || moodColorFor(record.mood || 'raw'));
     if(!skipRefresh) {
       updateDirectoryDropdown();
@@ -928,6 +1223,7 @@
     
     var row = document.createElement('div');
     row.className = 'frow';
+    row.draggable = true;
     row.setAttribute('data-name', name);
     row.setAttribute('data-title', title);
     row.setAttribute('data-date', assetDate ? sortDateFromISO(assetDate) : date.replaceAll('.',''));
@@ -980,6 +1276,7 @@
         <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
       `;
       targetBatchList.appendChild(row);
+      attachExplorerDrag(row);
       document.getElementById('injectForm').reset();
       toggleCoverInput();
       setDefaultAssetDate();
@@ -1041,8 +1338,8 @@
   }
 
   function removeEmptyFolders() {
-    document.querySelectorAll('.folder-block[data-standard-folder]').forEach(folder => {
-      var list = folder.querySelector('[data-batch-target]');
+    Array.from(document.querySelectorAll('.folder-block[data-standard-folder]')).reverse().forEach(folder => {
+      var list = folder.querySelector(':scope > .folder-contents');
       if(list && list.children.length === 0) folder.remove();
     });
   }
@@ -1239,6 +1536,7 @@
     var fsCover = document.getElementById('fsCover');
     if(cover) { fsCover.src = cover; fsCover.classList.add('active'); } 
     else { fsCover.src = ''; fsCover.classList.remove('active'); }
+    readCoverColor(cover, row.getAttribute('data-mood-color') || moodColorFor(row.getAttribute('data-mood') || 'raw'));
 
     renderQueueList();
     updateNowPlayingDetails(row, 'audio');
@@ -1267,7 +1565,7 @@
   function handleTrackEnd() {
     if(isLooping) return;
     if(queueIndex < audioQueue.length - 1) playTrackFromQueue(queueIndex + 1);
-    else { setPlayIcon(true); setPlayingState(false); document.documentElement.style.setProperty('--reactive-pulse', '0'); }
+    else { setPlayIcon(true); setPlayingState(false); document.documentElement.style.setProperty('--reactive-pulse', '0'); setReactiveColor(reactiveBase); }
   }
 
   function playNextTrack() { if(queueIndex < audioQueue.length - 1) playTrackFromQueue(queueIndex + 1); }
@@ -1308,7 +1606,7 @@
     document.getElementById('pbTime').textContent = '00:00 / 00:00';
     document.getElementById('fsTime').textContent = '00:00 / 00:00';
     document.querySelectorAll('.frow.playing').forEach(r => r.classList.remove('playing'));
-    currentAudio = null; nextAudioPreload = null; queueIndex = -1; activeMediaType = 'audio'; document.documentElement.style.setProperty('--reactive-pulse', '0');
+    currentAudio = null; nextAudioPreload = null; queueIndex = -1; activeMediaType = 'audio'; document.documentElement.style.setProperty('--reactive-pulse', '0'); setReactiveColor(reactiveBase);
   };
 
   function setPlayIcon(isPaused) {
@@ -1379,17 +1677,73 @@
     if(!analyser || !currentAudio || currentAudio.paused) return;
     analyser.getByteFrequencyData(dataArray);
     
-    var sum = 0; dataArray.forEach(v => sum += v);
-    document.documentElement.style.setProperty('--reactive-pulse', (sum / dataArray.length) / 255);
+    var sum = 0, low = 0, mid = 0, high = 0;
+    dataArray.forEach((v, i) => {
+      sum += v;
+      if(i < dataArray.length * 0.18) low += v;
+      else if(i < dataArray.length * 0.58) mid += v;
+      else high += v;
+    });
+    low = low / Math.max(1, Math.floor(dataArray.length * 0.18));
+    mid = mid / Math.max(1, Math.floor(dataArray.length * 0.40));
+    high = high / Math.max(1, Math.ceil(dataArray.length * 0.42));
+    var energy = (sum / dataArray.length) / 255;
+    var bass = low / 255;
+    var treble = high / 255;
+    var activeColor = reactiveBandColor(low, mid, high, energy);
+    document.documentElement.style.setProperty('--reactive-pulse', Math.min(1, energy * 1.45 + bass * 0.28).toFixed(3));
+    document.documentElement.style.setProperty('--reactive-r', Math.round(activeColor.r));
+    document.documentElement.style.setProperty('--reactive-g', Math.round(activeColor.g));
+    document.documentElement.style.setProperty('--reactive-b', Math.round(activeColor.b));
+    document.documentElement.style.setProperty('--reactive-accent', rgbToHex(activeColor));
 
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-    var barWidth = (canvas.width / dataArray.length) * 2.5; var barHeight; var x = 0;
-    canvasCtx.fillStyle = 'rgba(255, 255, 255, 1)';
-    for(var i = 0; i < dataArray.length; i++) {
-      barHeight = (dataArray[i] / 255) * canvas.height;
-      canvasCtx.fillRect(x, canvas.height - barHeight, barWidth - 1, barHeight);
-      x += barWidth + 1;
+    var w = canvas.width;
+    var h = canvas.height;
+    var glow = `rgba(${Math.round(activeColor.r)},${Math.round(activeColor.g)},${Math.round(activeColor.b)},`;
+    canvasCtx.globalCompositeOperation = 'lighter';
+
+    var points = [
+      [w * 0.12, h * 0.18, bass],
+      [w * 0.88, h * 0.20, treble],
+      [w * 0.18, h * 0.82, energy],
+      [w * 0.78, h * 0.78, mid / 255],
+      [w * 0.50, h * 0.48, (bass + energy) / 2]
+    ];
+    points.forEach((p, i) => {
+      var radius = (110 + p[2] * 460) * (i === 4 ? 1.2 : 1);
+      var grad = canvasCtx.createRadialGradient(p[0], p[1], 0, p[0], p[1], radius);
+      grad.addColorStop(0, `${glow}${0.34 * p[2]})`);
+      grad.addColorStop(0.48, `${glow}${0.15 * p[2]})`);
+      grad.addColorStop(1, `${glow}0)`);
+      canvasCtx.fillStyle = grad;
+      canvasCtx.beginPath();
+      canvasCtx.arc(p[0], p[1], radius, 0, Math.PI * 2);
+      canvasCtx.fill();
+    });
+
+    canvasCtx.lineWidth = 1 + bass * 5;
+    canvasCtx.strokeStyle = `${glow}${0.30 + energy * 0.32})`;
+    canvasCtx.beginPath();
+    for(var x = 0; x <= w; x += 18) {
+      var idx = Math.floor((x / w) * (dataArray.length - 1));
+      var y = h * 0.52 + Math.sin(x * 0.012 + reactiveHueShift * Math.PI * 2) * (18 + bass * 70) - (dataArray[idx] / 255) * h * 0.22;
+      if(x === 0) canvasCtx.moveTo(x, y);
+      else canvasCtx.lineTo(x, y);
     }
+    canvasCtx.stroke();
+
+    var barCount = 44;
+    var barW = w / barCount;
+    for(var i = 0; i < barCount; i++) {
+      var idx = Math.floor((i / barCount) * dataArray.length);
+      var value = dataArray[idx] / 255;
+      var barH = value * h * 0.32;
+      canvasCtx.fillStyle = `${glow}${0.11 + value * 0.28})`;
+      canvasCtx.fillRect(i * barW, h - barH, Math.max(2, barW - 7), barH);
+      canvasCtx.fillRect(i * barW, 0, Math.max(2, barW - 7), barH * 0.48);
+    }
+    canvasCtx.globalCompositeOperation = 'source-over';
   }
 
   // Init
@@ -1397,6 +1751,7 @@
   setDefaultAssetDate();
   updateDirectoryDropdown();
   updateCounts();
+  initExplorerDrag();
   initSupabase();
 </script>
 
