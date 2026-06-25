@@ -249,14 +249,45 @@
   .meta-chip strong{display:block;color:var(--white);}
 
   @media (max-width: 980px){
+    body{background-image:
+      radial-gradient(circle at 18% 16%, rgba(var(--reactive-r), var(--reactive-g), var(--reactive-b), calc(var(--reactive-pulse) * 0.58)) 0%, rgba(0,0,0,0) 38%),
+      radial-gradient(circle at 88% 76%, rgba(var(--reactive-r), var(--reactive-g), var(--reactive-b), calc(var(--reactive-pulse) * 0.46)) 0%, rgba(0,0,0,0) 42%);
+    }
+    .grain{opacity:0.03;}
+    .explorer{padding:3vh 4vw 20vh;}
     .col-head, .dim-cell, .pill {display:none;}
-    .frow{grid-template-columns:24px 1fr 90px;}
+    .folder-row{padding-top:11px;padding-bottom:11px;font-size:0.72rem;}
+    .folder-actions{gap:4px;margin-left:8px;}
+    .folder-action{font-size:0.54rem;padding:4px 6px;}
+    .frow{grid-template-columns:22px minmax(0,1fr) auto;grid-template-rows:auto auto;gap:2px 8px;padding:13px 6px;min-height:58px;}
+    .frow::after{content:attr(data-ver) " / " attr(data-type);grid-column:2;grid-row:2;font-family:'JetBrains Mono',monospace;font-size:0.66rem;color:var(--dim-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .frow.playing::after,.frow:hover::after{color:rgba(0,0,0,0.72);}
+    .icon-cell{grid-column:1;grid-row:1 / span 2;}
+    .name-cell{grid-column:2;grid-row:1;font-size:0.82rem;padding-right:4px;}
+    .row-actions{grid-column:3;grid-row:1 / span 2;align-self:center;}
+    .action-btn{font-size:0.58rem;padding:6px 7px;}
     .control-panel { grid-template-columns: 1fr; gap: 20px; }
+    .injector-form.dual{grid-template-columns:1fr;}
+    .player-bar{padding:12px 4vw;gap:10px;box-shadow:0 -18px 85px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.58));}
+    .pb-info{min-width:0;}
+    .pb-title{font-size:0.78rem;}
+    .pb-sub{font-size:0.62rem;}
     .pb-progress-container, .pb-time, .pb-ctrls .pb-btn:not(.fs-toggle) { display: none; }
     .fs-body { grid-template-columns: 1fr; }
     .fs-queue-panel { display: none; }
-    .fs-title { font-size: 2rem; }
+    .fs-player{background:
+      radial-gradient(circle at 14% 18%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.62)), transparent 38%),
+      radial-gradient(circle at 86% 18%, rgba(255,255,255,calc(var(--reactive-pulse) * 0.28)), transparent 34%),
+      radial-gradient(circle at 50% 92%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.56)), transparent 44%),
+      var(--black);}
+    .fs-header{padding:14px 4vw;}
+    .fs-main{padding:22px 4vw 30px;border-right:none;}
+    .fs-main::before{animation:none;opacity:calc(0.18 + var(--reactive-pulse) * 0.55);}
+    .fs-visualizer{opacity:0.58;}
+    .fs-title { font-size:2.25rem;max-width:13ch;}
     .fs-cover { width: 140px; height: 140px; }
+    .fs-readouts{grid-template-columns:1fr 1fr 1fr;gap:6px;}
+    .fs-readout{padding:8px;font-size:0.58rem;}
     .fs-media-stage { position:relative; inset:auto; height:38vh; margin-bottom:24px; }
     .fs-controls { grid-template-columns:1fr; gap:10px; }
     .topbar{align-items:flex-start;gap:12px;flex-direction:column;}
@@ -313,7 +344,7 @@
     <div class="panel-sect">
       <h3>inject local asset</h3>
       <form class="injector-form dual" id="injectForm">
-        <input type="text" id="injTitle" placeholder="display title (e.g. rough draft)" required>
+        <input type="text" id="injTitle" placeholder="display title / batch prefix">
         <input type="text" id="injVer" placeholder="version (e.g. v2)" required>
         
         <select id="injBatch" class="full-width" required>
@@ -337,8 +368,8 @@
         <input type="url" id="injYoutube" placeholder="youtube / video link (optional)">
         <input type="url" id="injSoundcloud" placeholder="soundcloud / dsp link (optional)">
         
-        <div class="label-mini">core file:</div>
-        <input type="file" id="injFile" required>
+        <div class="label-mini">core file(s):</div>
+        <input type="file" id="injFile" multiple required>
         
         <div class="label-mini cover-row">album cover (optional):</div>
         <input type="file" id="injCover" class="cover-row" accept="image/*">
@@ -520,6 +551,8 @@
   var audioCtx = null, analyser = null, sourceNode = null, dataArray = null;
   var reactiveBase = { r: 255, g: 255, b: 255 };
   var reactiveHueShift = 0;
+  var isCompactVisual = window.matchMedia('(max-width: 980px)').matches;
+  var visualFrame = 0;
   const canvas = document.getElementById('visualizerCanvas');
   const canvasCtx = canvas.getContext('2d');
 
@@ -529,8 +562,12 @@
   }
   function toggleFullscreen() { document.getElementById('fsPlayer').classList.toggle('active'); resizeCanvas(); }
   function closeViewport(id) { document.getElementById(id).classList.remove('active'); }
-  window.addEventListener('resize', resizeCanvas);
-  function resizeCanvas() { canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight; }
+  window.addEventListener('resize', () => { isCompactVisual = window.matchMedia('(max-width: 980px)').matches; resizeCanvas(); });
+  function resizeCanvas() {
+    var scale = isCompactVisual ? 0.55 : 1;
+    canvas.width = Math.max(1, Math.floor(canvas.clientWidth * scale));
+    canvas.height = Math.max(1, Math.floor(canvas.clientHeight * scale));
+  }
 
   function hexToRgb(hex) {
     var clean = String(hex || '#ffffff').replace('#', '').trim();
@@ -811,9 +848,16 @@
   }
 
   // ---- FILE INJECTION ----
+  function titleForUpload(file, baseTitle, index, total) {
+    var cleanName = file && file.name ? file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').trim() : 'untitled file';
+    if(total <= 1) return baseTitle || cleanName || 'untitled file';
+    if(baseTitle) return `${baseTitle} ${String(index + 1).padStart(2, '0')}`;
+    return cleanName || `untitled file ${index + 1}`;
+  }
+
   async function handleFileInject() {
     if(!requireAdmin()) return;
-    var title = document.getElementById('injTitle').value || 'untitled file';
+    var title = document.getElementById('injTitle').value.trim();
     var ver = document.getElementById('injVer').value || 'v1';
     var baseBatch = normalizeFolderPath(document.getElementById('injBatch').value);
     var subfolder = normalizeFolderPath(document.getElementById('injSubfolder').value);
@@ -831,14 +875,14 @@
     var fileInput = document.getElementById('injFile');
     var coverInput = document.getElementById('injCover');
     
-    if(!fileInput.files.length) return alert("select a core file.");
+    if(!fileInput.files.length) return alert("select at least one core file.");
     if(!batch) return alert("create a directory first to store this file.");
 
-    var file = fileInput.files[0];
-    var sizeStr = (file.size / 1024 / 1024).toFixed(2) + 'mb';
+    var files = Array.from(fileInput.files);
     var assetDate = selectedAssetDate();
     var dateStr = displayDateFromISO(assetDate);
     var submitBtn = document.querySelector('#injectForm button[onclick="handleFileInject()"]');
+    var coverFile = coverInput.files.length > 0 ? coverInput.files[0] : null;
 
     ensureFolder(batch);
     updateDirectoryDropdown();
@@ -846,28 +890,36 @@
 
     if(isRemoteReady) {
       try {
-        if(submitBtn) submitBtn.textContent = 'uploading...';
-        var remoteRecord = await saveRemoteAsset({
-          file,
-          coverFile: coverInput.files.length > 0 ? coverInput.files[0] : null,
-          name: file.name,
-          title,
-          batch,
-          mood,
-          moodColor,
-          type,
-          size: sizeStr,
-          date: dateStr,
-          assetDate,
-          ver,
-          notes,
-          links
-        });
-        createRowFromRecord(remoteRecord);
+        for(var i = 0; i < files.length; i++) {
+          var file = files[i];
+          var uploadTitle = titleForUpload(file, title, i, files.length);
+          var sizeStr = (file.size / 1024 / 1024).toFixed(2) + 'mb';
+          if(submitBtn) submitBtn.textContent = files.length > 1 ? `uploading ${i + 1}/${files.length}...` : 'uploading...';
+          var remoteRecord = await saveRemoteAsset({
+            file,
+            coverFile,
+            name: file.name,
+            title: uploadTitle,
+            batch,
+            mood,
+            moodColor,
+            type,
+            size: sizeStr,
+            date: dateStr,
+            assetDate,
+            ver,
+            notes,
+            links
+          });
+          createRowFromRecord(remoteRecord, true);
+        }
         document.getElementById('injectForm').reset();
         toggleCoverInput();
         setDefaultAssetDate();
         setFilter(activeFilter);
+        updateDirectoryDropdown();
+        updateCounts();
+        buildQueue();
         if(submitBtn) submitBtn.textContent = 'index file to active directory';
         return;
       } catch(err) {
@@ -878,11 +930,19 @@
     }
 
     var coverUrl = '';
-    if(type === 'audio' && coverInput.files.length > 0) {
-      coverUrl = URL.createObjectURL(coverInput.files[0]);
+    if(type === 'audio' && coverFile) {
+      coverUrl = URL.createObjectURL(coverFile);
     }
 
-    createRow(file, file.name, title, batch, mood, type, sizeStr, dateStr, coverUrl, ver, notes, links, moodColor, assetDate);
+    files.forEach((file, i) => {
+      var uploadTitle = titleForUpload(file, title, i, files.length);
+      var sizeStr = (file.size / 1024 / 1024).toFixed(2) + 'mb';
+      createRow(file, file.name, uploadTitle, batch, mood, type, sizeStr, dateStr, coverUrl, ver, notes, links, moodColor, assetDate, true);
+    });
+    document.getElementById('injectForm').reset();
+    toggleCoverInput();
+    setDefaultAssetDate();
+    setFilter(activeFilter);
   }
 
   async function loadRemoteArchive() {
@@ -1230,7 +1290,7 @@
     return insert.data;
   }
 
-  function createRow(fileObj, name, title, batch, mood, type, size, date, coverUrl, ver, notes, links, moodColor, assetDate) {
+  function createRow(fileObj, name, title, batch, mood, type, size, date, coverUrl, ver, notes, links, moodColor, assetDate, skipFormReset) {
     batch = normalizeFolderPath(batch) || 'uncategorized';
     var targetBatchList = ensureFolder(batch);
     
@@ -1290,9 +1350,11 @@
       `;
       targetBatchList.appendChild(row);
       attachExplorerDrag(row);
-      document.getElementById('injectForm').reset();
-      toggleCoverInput();
-      setDefaultAssetDate();
+      if(!skipFormReset) {
+        document.getElementById('injectForm').reset();
+        toggleCoverInput();
+        setDefaultAssetDate();
+      }
       setFilter(activeFilter);
     }
   }
@@ -1656,17 +1718,21 @@
 
   function updateTimeMock() {
     var c = 0, d = 180; clearInterval(window.mockTimer);
+    var tick = 0;
     window.mockTimer = setInterval(() => {
       if(!currentAudio || currentAudio.paused) return;
-      c++; if(c>d) handleTrackEnd();
+      tick++;
+      if(tick % 4 === 0) c++;
+      if(c>d) handleTrackEnd();
       var pct = (c / d * 100) + '%';
       var timeText = fmt(c) + ' / ' + fmt(d);
       document.getElementById('pbFill').style.width = pct;
       document.getElementById('fsFill').style.width = pct;
       document.getElementById('pbTime').textContent = timeText;
       document.getElementById('fsTime').textContent = timeText;
-      document.documentElement.style.setProperty('--reactive-pulse', Math.random()*0.8);
-    }, 1000);
+      var pulse = 0.22 + Math.abs(Math.sin(tick * 0.72)) * (isCompactVisual ? 0.74 : 0.52);
+      document.documentElement.style.setProperty('--reactive-pulse', pulse.toFixed(3));
+    }, 250);
   }
 
   function seekAudio(e, scrubberId) {
@@ -1678,7 +1744,7 @@
   function setupWebAudio(audio) {
     if(!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioCtx.createAnalyser(); analyser.fftSize = 256;
+      analyser = audioCtx.createAnalyser(); analyser.fftSize = isCompactVisual ? 128 : 256;
       dataArray = new Uint8Array(analyser.frequencyBinCount); drawVisualizer();
     }
     if(sourceNode) sourceNode.disconnect();
@@ -1688,6 +1754,8 @@
   function drawVisualizer() {
     requestAnimationFrame(drawVisualizer);
     if(!analyser || !currentAudio || currentAudio.paused) return;
+    visualFrame++;
+    if(isCompactVisual && visualFrame % 2 !== 0) return;
     analyser.getByteFrequencyData(dataArray);
     
     var sum = 0, low = 0, mid = 0, high = 0;
@@ -1704,7 +1772,7 @@
     var bass = low / 255;
     var treble = high / 255;
     var activeColor = reactiveBandColor(low, mid, high, energy);
-    document.documentElement.style.setProperty('--reactive-pulse', Math.min(1, energy * 1.45 + bass * 0.28).toFixed(3));
+    document.documentElement.style.setProperty('--reactive-pulse', Math.min(1, energy * (isCompactVisual ? 2.1 : 1.45) + bass * (isCompactVisual ? 0.42 : 0.28)).toFixed(3));
     document.documentElement.style.setProperty('--reactive-r', Math.round(activeColor.r));
     document.documentElement.style.setProperty('--reactive-g', Math.round(activeColor.g));
     document.documentElement.style.setProperty('--reactive-b', Math.round(activeColor.b));
@@ -1723,11 +1791,13 @@
       [w * 0.78, h * 0.78, mid / 255],
       [w * 0.50, h * 0.48, (bass + energy) / 2]
     ];
+    if(isCompactVisual) points = [points[0], points[2], points[4]];
     points.forEach((p, i) => {
-      var radius = (110 + p[2] * 460) * (i === 4 ? 1.2 : 1);
+      var radius = (isCompactVisual ? 150 : 110) + p[2] * (isCompactVisual ? 360 : 460);
+      if(i === 4) radius *= 1.2;
       var grad = canvasCtx.createRadialGradient(p[0], p[1], 0, p[0], p[1], radius);
-      grad.addColorStop(0, `${glow}${0.34 * p[2]})`);
-      grad.addColorStop(0.48, `${glow}${0.15 * p[2]})`);
+      grad.addColorStop(0, `${glow}${(isCompactVisual ? 0.52 : 0.34) * p[2]})`);
+      grad.addColorStop(0.48, `${glow}${(isCompactVisual ? 0.24 : 0.15) * p[2]})`);
       grad.addColorStop(1, `${glow}0)`);
       canvasCtx.fillStyle = grad;
       canvasCtx.beginPath();
@@ -1738,7 +1808,8 @@
     canvasCtx.lineWidth = 1 + bass * 5;
     canvasCtx.strokeStyle = `${glow}${0.30 + energy * 0.32})`;
     canvasCtx.beginPath();
-    for(var x = 0; x <= w; x += 18) {
+    var waveStep = isCompactVisual ? 34 : 18;
+    for(var x = 0; x <= w; x += waveStep) {
       var idx = Math.floor((x / w) * (dataArray.length - 1));
       var y = h * 0.52 + Math.sin(x * 0.012 + reactiveHueShift * Math.PI * 2) * (18 + bass * 70) - (dataArray[idx] / 255) * h * 0.22;
       if(x === 0) canvasCtx.moveTo(x, y);
@@ -1746,7 +1817,7 @@
     }
     canvasCtx.stroke();
 
-    var barCount = 44;
+    var barCount = isCompactVisual ? 24 : 44;
     var barW = w / barCount;
     for(var i = 0; i < barCount; i++) {
       var idx = Math.floor((i / barCount) * dataArray.length);
