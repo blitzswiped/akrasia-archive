@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>akrasia — archive os</title>
+<title>akrasia archive</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
@@ -24,6 +24,9 @@
     --reactive-g: 255;
     --reactive-b: 255;
     --reactive-accent: #ffffff;
+    --theme-r: 255;
+    --theme-g: 255;
+    --theme-b: 255;
   }
 
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -32,6 +35,7 @@
     font-family:'Inter', sans-serif; text-transform:lowercase;
     -webkit-font-smoothing:antialiased;
     background-image:
+      radial-gradient(circle at 22% 4%, rgba(var(--theme-r), var(--theme-g), var(--theme-b), 0.11) 0%, rgba(0,0,0,0) 34%),
       radial-gradient(circle at 12% 20%, rgba(var(--reactive-r), var(--reactive-g), var(--reactive-b), calc(var(--reactive-pulse) * 0.40)) 0%, rgba(0,0,0,0) 32%),
       radial-gradient(circle at 86% 12%, rgba(255,255,255, calc(var(--reactive-pulse) * 0.22)) 0%, rgba(0,0,0,0) 28%),
       radial-gradient(circle at 50% 92%, rgba(var(--reactive-r), var(--reactive-g), var(--reactive-b), calc(var(--reactive-pulse) * 0.30)) 0%, rgba(0,0,0,0) 42%);
@@ -53,19 +57,25 @@
   .wordmark{font-weight:800;font-size:0.98rem;letter-spacing:0.04em;}
   .wordmark span{color:var(--dim);font-weight:500;}
   .utility-btns { display: flex; gap: 12px; align-items:center; }
-  .action-trigger { cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; border:1px solid var(--line); padding:6px 9px; color:var(--dim-2); transition:all 0.12s; border-radius:999px; }
-  .action-trigger:hover { border-color:var(--white); color:var(--white); background:rgba(255,255,255,0.06); }
+  .action-trigger { cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; border:1px solid var(--line); padding:6px 9px; color:var(--dim-2); transition:all 0.16s; border-radius:999px; }
+  .action-trigger:hover { border-color:var(--white); color:var(--white); background:rgba(255,255,255,0.06); transform:translateY(-1px); box-shadow:0 10px 28px rgba(255,255,255,0.08); }
   .auth-tools { display:flex; align-items:center; gap:7px; flex-wrap:wrap; justify-content:flex-end; }
   .auth-tools input { width:150px; padding:6px 8px; font-family:'JetBrains Mono', monospace; font-size:0.65rem; border-color:var(--line); }
-  .auth-status { font-family:'JetBrains Mono', monospace; font-size:0.65rem; color:var(--black); background:var(--white); padding:6px 8px; border:1px solid var(--white); min-width:72px; text-align:center; border-radius:999px; }
+  .auth-status { display:none; font-family:'JetBrains Mono', monospace; font-size:0.65rem; color:var(--black); background:var(--white); padding:6px 8px; border:1px solid var(--white); min-width:72px; text-align:center; border-radius:999px; }
+  body.is-admin .auth-status{display:inline-block;}
   .admin-only { display:none; }
   body.is-admin .admin-only { display:block; }
 
   /* ===== CONTROL PANEL ===== */
-  .control-panel { background: var(--panel); border-bottom: 2px solid var(--white); padding: 22px 5vw; display: none; grid-template-columns: 1fr 1fr 1.6fr; gap: 14px; box-shadow:0 18px 60px rgba(0,0,0,0.7); }
+  .control-panel { background: var(--panel); border-bottom: 2px solid var(--white); padding: 22px 5vw; display: none; grid-template-columns:minmax(0,1.45fr) minmax(280px,0.75fr); gap: 14px; box-shadow:0 18px 60px rgba(0,0,0,0.7); }
   .control-panel.active { display: grid; animation:panelDrop 0.26s cubic-bezier(0.16, 1, 0.3, 1); }
   @keyframes panelDrop{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
-  .panel-sect { border:1px solid var(--line-soft); padding:14px; background:rgba(255,255,255,0.018); border-radius:var(--radius); }
+  .panel-sect { border:1px solid var(--line-soft); padding:14px; background:rgba(255,255,255,0.018); border-radius:var(--radius); animation:itemIn 0.24s cubic-bezier(0.16,1,0.3,1); }
+  .panel-sect.primary-panel{grid-row:span 3;background:linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.012));}
+  .panel-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px;border-bottom:1px solid var(--line-soft);padding-bottom:12px;}
+  .panel-kicker{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--dim);letter-spacing:0.1em;margin-bottom:5px;}
+  .panel-title{font-weight:800;font-size:1.2rem;line-height:1;}
+  .panel-copy{font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--dim-2);line-height:1.45;max-width:42ch;}
   .panel-sect h3 { font-size: 0.68rem; font-family: 'JetBrains Mono', monospace; margin-bottom: 13px; color: var(--white); letter-spacing:0.08em; display:flex; align-items:center; gap:8px; }
   .panel-sect h3::before { content:""; width:8px; height:8px; border:1px solid var(--white); display:inline-block; background:rgba(255,255,255,0.16); animation:statusBlink 2.4s steps(2,end) infinite; }
   @keyframes statusBlink{50%{opacity:0.35;}}
@@ -78,13 +88,32 @@
   .filter-chip[data-mood-color]{--chip-color:attr(data-mood-color color, var(--white));}
 
   .injector-form { display: grid; grid-template-columns: 1fr; gap: 10px; }
-  .injector-form.dual { grid-template-columns: 1fr 1fr; }
+  .injector-form.dual { grid-template-columns: repeat(4,minmax(0,1fr)); }
   .injector-form input[type="file"], .injector-form select.full-width, .injector-form button { grid-column: 1 / -1; }
+  .injector-form textarea{min-height:72px;resize:vertical;font-family:'JetBrains Mono',monospace;font-size:0.72rem;line-height:1.5;}
+  .injector-form .span-2{grid-column:span 2;}
+  .injector-form .span-3{grid-column:span 3;}
+  .injector-form .full{grid-column:1 / -1;}
   .injector-form input[type="color"]{height:36px;padding:3px;cursor:pointer;}
   .injector-form button { background: var(--white); color: var(--black); padding: 10px; font-weight: 700; cursor: pointer; border: 1px solid var(--white); transition: all 0.1s; letter-spacing:0.02em; border-radius:var(--radius); }
   .injector-form button:hover { background: var(--black); color: var(--white); }
+  .upload-progress{grid-column:1 / -1;display:none;border:1px solid var(--line-soft);padding:8px;border-radius:var(--radius);background:rgba(0,0,0,0.26);}
+  .upload-progress.active{display:block;animation:itemIn 0.22s cubic-bezier(0.16,1,0.3,1);}
+  .upload-progress-label{display:flex;justify-content:space-between;gap:12px;margin-bottom:6px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--dim-2);}
+  .upload-progress-track{height:5px;background:var(--line-soft);overflow:hidden;border-radius:999px;}
+  .upload-progress-fill{height:100%;width:0%;background:var(--white);transition:width 0.22s cubic-bezier(0.16,1,0.3,1);}
 
   .label-mini { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--dim-2); margin-bottom: -6px; }
+  .field-group{grid-column:1 / -1;border:1px solid var(--line-soft);padding:12px;background:rgba(0,0,0,0.24);border-radius:8px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
+  .field-group-title{grid-column:1 / -1;font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--dim-2);letter-spacing:0.08em;}
+  .file-drop{grid-column:1 / -1;border:1px dashed var(--line);padding:14px;background:rgba(255,255,255,0.025);border-radius:8px;}
+  .file-drop input{width:100%;border:none;padding:8px 0;background:transparent;}
+  .quick-stack{display:grid;gap:10px;}
+  .quick-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .mini-btn{border:1px solid var(--line);padding:6px 9px;border-radius:999px;font-family:'JetBrains Mono',monospace;font-size:0.63rem;color:var(--dim-2);cursor:pointer;background:rgba(255,255,255,0.02);transition:all 0.14s;}
+  .mini-btn:hover{background:var(--white);color:var(--black);border-color:var(--white);transform:translateY(-1px);}
+  .injector-form .danger-btn{background:transparent;color:var(--white);border-color:rgba(255,255,255,0.24);}
+  .injector-form .danger-btn:hover{background:rgba(255,255,255,0.08);color:var(--white);}
 
   /* ===== EXPLORER ===== */
   .explorer{padding:4.5vh 5vw 17vh;}
@@ -96,6 +125,45 @@
   .status-cell:hover{background:rgba(255,255,255,0.04);}
   .status-cell:last-child{border-right:none;}
   .status-cell strong{display:block;color:var(--white);font-size:0.78rem;margin-bottom:2px;}
+  .explorer-head-actions{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;justify-content:flex-end;white-space:nowrap;}
+  .explorer-head-actions .action-trigger{background:rgba(255,255,255,0.025);}
+  .timeline-panel{position:fixed;inset:0;z-index:440;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.38s cubic-bezier(0.16,1,0.3,1);border:none;margin:0;padding:0;background:
+    radial-gradient(circle at 18% 20%, rgba(var(--theme-r),var(--theme-g),var(--theme-b),0.18), transparent 34%),
+    radial-gradient(circle at 82% 74%, rgba(var(--theme-r),var(--theme-g),var(--theme-b),0.12), transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,0.045), transparent 28%, rgba(255,255,255,0.02)),
+    var(--black);}
+  .timeline-panel.active{transform:translateY(0);}
+  .timeline-panel.active .timeline-node{animation:timelineNodeIn 0.34s cubic-bezier(0.16,1,0.3,1) both;}
+  @keyframes timelineNodeIn{from{opacity:0;transform:translateY(12px);filter:blur(3px);}to{opacity:1;transform:translateY(0);filter:blur(0);}}
+  .timeline-head{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:20px 5vw;border-bottom:2px solid var(--white);font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--dim-2);background:rgba(0,0,0,0.82);backdrop-filter:blur(12px);min-width:0;}
+  .timeline-title{font-weight:800;font-size:0.98rem;letter-spacing:0.04em;color:var(--white);font-family:'Inter',sans-serif;}
+  .timeline-title span{color:var(--dim);font-weight:500;}
+  .timeline-subtitle{display:none;}
+  .timeline-head-actions{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;justify-content:flex-end;min-width:0;}
+  .timeline-head button{border:1px solid var(--line);color:var(--dim-2);padding:5px 8px;border-radius:999px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:0.62rem;}
+  .timeline-head button:hover{border-color:var(--white);color:var(--white);background:rgba(255,255,255,0.06);}
+  .timeline-track{flex:1;display:grid;grid-template-columns:minmax(0,1040px);align-content:start;justify-content:center;gap:22px;overflow-y:auto;padding:7vh 5vw 10vh;scrollbar-width:thin;}
+  .timeline-node{width:100%;text-align:left;border:1px solid var(--line-soft);background:rgba(255,255,255,0.025);backdrop-filter:blur(8px);padding:34px 38px;border-radius:var(--radius);transition:all 0.16s;font-family:'JetBrains Mono',monospace;position:relative;overflow:hidden;box-shadow:0 18px 70px rgba(0,0,0,0.35);min-height:156px;}
+  .timeline-node::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(var(--dot-color,var(--white)),transparent);}
+  .timeline-node:hover,.timeline-node.active{border-color:rgba(255,255,255,0.42);background:rgba(var(--theme-r),var(--theme-g),var(--theme-b),0.10);box-shadow:0 20px 60px rgba(var(--theme-r),var(--theme-g),var(--theme-b),0.10);}
+  .timeline-day-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:start;cursor:pointer;}
+  .timeline-date{font-weight:800;font-size:clamp(1.75rem,4vw,3.6rem);line-height:0.95;color:var(--white);font-family:'Inter',sans-serif;}
+  .timeline-count{font-size:0.62rem;color:var(--dim-2);margin-top:4px;}
+  .timeline-expand{border:1px solid var(--line);border-radius:999px;padding:6px 9px;color:var(--dim-2);font-size:0.62rem;white-space:nowrap;}
+  .timeline-moods{display:flex;gap:4px;margin-top:8px;}
+  .timeline-dot{width:8px;height:8px;border-radius:999px;background:var(--dot-color,var(--white));box-shadow:0 0 12px var(--dot-color,var(--white));}
+  .timeline-assets{display:grid;gap:8px;margin-top:0;max-height:0;opacity:0;overflow:hidden;transition:max-height 0.34s cubic-bezier(0.16,1,0.3,1), opacity 0.22s, margin-top 0.22s;}
+  .timeline-node.active .timeline-assets{max-height:1200px;opacity:1;margin-top:26px;}
+  .timeline-node.active .timeline-asset{animation:itemIn 0.24s cubic-bezier(0.16,1,0.3,1) both;}
+  .timeline-asset{display:grid;grid-template-columns:24px minmax(0,1fr) 110px 70px 76px;align-items:center;gap:12px;border:1px solid var(--line-soft);padding:12px 13px;color:var(--dim-2);font-size:0.72rem;border-radius:var(--radius);background:rgba(255,255,255,0.018);cursor:pointer;transition:all 0.14s;text-align:left;}
+  .timeline-asset:hover{border-color:var(--white);background:var(--white);color:var(--black);transform:translateX(3px);}
+  .timeline-asset strong{color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .timeline-asset:hover strong{color:var(--black);}
+  .timeline-asset-icon{width:14px;height:14px;border:1px solid currentColor;border-radius:3px;opacity:0.8;}
+  .timeline-asset-meta{font-size:0.62rem;white-space:nowrap;}
+  .timeline-asset-ver{font-size:0.62rem;white-space:nowrap;color:inherit;}
+  .timeline-info{border:1px solid currentColor;border-radius:999px;padding:4px 8px;font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:inherit;background:transparent;cursor:pointer;justify-self:end;}
+  .timeline-info:hover{background:var(--black);color:var(--white);border-color:var(--black);}
 
   .col-head{
     display:grid; grid-template-columns:30px 1fr 100px 60px 90px 60px 60px 140px;
@@ -108,12 +176,14 @@
   .explorer-tools{display:flex;gap:8px;align-items:center;margin:0 0 14px;border:1px solid var(--line-soft);padding:8px;background:rgba(255,255,255,0.025);}
   .explorer-tools input{flex:1;min-width:0;background:#050505;border:1px solid var(--line);color:var(--white);padding:9px 10px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;border-radius:6px;}
   .explorer-tools button{background:var(--white);color:var(--black);border:1px solid var(--white);font-family:'JetBrains Mono',monospace;font-size:0.66rem;font-weight:800;padding:9px 11px;cursor:pointer;border-radius:6px;}
-  .folder-block { margin-bottom: 8px; --folder-depth: 0; }
-  .folder-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 8px 12px calc(8px + (var(--folder-depth) * 18px)); background: rgba(255,255,255,0.045); border-bottom: 1px solid var(--line); border-top:1px solid var(--line-soft); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; cursor: pointer; letter-spacing:0.02em; transition:background 0.16s, color 0.16s, box-shadow 0.16s; }
+  .folder-block { margin-bottom: 8px; --folder-depth: 0; animation:folderIn 0.32s cubic-bezier(0.16,1,0.3,1); }
+  @keyframes folderIn{from{opacity:0;transform:translateY(8px);filter:blur(3px);}to{opacity:1;transform:translateY(0);filter:blur(0);}}
+  .folder-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 8px 12px calc(8px + (var(--folder-depth) * 18px)); background: rgba(255,255,255,0.045); border-bottom: 1px solid var(--line); border-top:1px solid var(--line-soft); font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; font-weight: 700; cursor: pointer; letter-spacing:0.02em; transition:background 0.18s, color 0.18s, box-shadow 0.18s, transform 0.18s; }
+  .folder-row:hover{background:rgba(255,255,255,0.085);box-shadow:inset 3px 0 0 var(--white);transform:translateX(2px);}
   .folder-row-left { display: flex; align-items: center; gap: 10px; }
   .folder-row svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
-  .folder-contents { display: flex; flex-direction: column; min-height: 8px; }
-  .folder-block.collapsed .folder-contents{display:none;}
+  .folder-contents { display: flex; flex-direction: column; min-height: 8px; max-height:2400px; opacity:1; overflow:hidden; transition:max-height 0.36s cubic-bezier(0.16,1,0.3,1), opacity 0.22s, transform 0.28s; transform-origin:top; }
+  .folder-block.collapsed .folder-contents{max-height:0;min-height:0;opacity:0;transform:translateY(-6px);}
   .folder-toggle{margin-left:auto;color:var(--dim-2);font-size:0.68rem;font-family:'JetBrains Mono',monospace;}
   .folder-actions{display:flex;align-items:center;gap:6px;margin-left:12px;}
   .folder-action{border:1px solid var(--line);background:rgba(0,0,0,0.35);color:var(--dim-2);font-family:'JetBrains Mono',monospace;font-size:0.58rem;font-weight:800;padding:4px 7px;cursor:pointer;border-radius:6px;}
@@ -122,13 +192,16 @@
   body.is-admin .explorer-tools.admin-only{display:flex;}
   body.is-admin .folder-actions.admin-only{display:flex;}
   body.is-admin .delete-btn.admin-only{display:inline-block;}
+  body.is-admin .edit-btn.admin-only{display:inline-block;}
   .folder-block.drag-over > .folder-row{background:var(--white);color:var(--black);box-shadow:inset 0 0 0 2px var(--white);}
   .folder-block.dragging, .frow.dragging{opacity:0.42;}
 
   .frow{
     display:grid; grid-template-columns:30px 1fr 100px 60px 90px 60px 60px 140px;
     align-items:center; padding:14px 8px; border-bottom:1px solid var(--line-soft); cursor:pointer; transition:background 0.16s,color 0.16s, transform 0.16s, box-shadow 0.16s;
+    animation:itemIn 0.28s cubic-bezier(0.16,1,0.3,1);
   }
+  @keyframes itemIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:translateY(0);}}
   .frow:hover, .frow.playing{background:var(--white);color:var(--black);transform:translateX(4px);box-shadow:-4px 0 0 var(--white);}
   .frow:hover .dim-cell, .frow.playing .dim-cell{color:rgba(0,0,0,0.6);}
   .frow:hover svg, .frow.playing svg{stroke:var(--black);}
@@ -153,13 +226,20 @@
   .viewport-box{width:100%;max-width:800px;background:var(--black);border:2px solid var(--white);display:flex;flex-direction:column;border-radius:var(--radius-soft);overflow:hidden;}
   .viewport-head{padding:12px;border-bottom:2px solid var(--white);display:flex;justify-content:space-between;align-items:center;font-family:'JetBrains Mono', monospace;font-size:0.8rem;}
   .viewport-body{padding:24px;max-height:70vh;overflow-y:auto;font-family:'JetBrains Mono', monospace;font-size:0.85rem;line-height:1.6;white-space:pre-wrap;color:var(--dim-2);}
-  .viewport-body img{max-width:100%;max-height:60vh;display:block;margin:0 auto;object-fit:contain; filter: grayscale(100%) contrast(120%);}
+  .viewport-body img{max-width:100%;max-height:60vh;display:block;margin:0 auto;object-fit:contain;}
   .viewport-close{background:none;border:1px solid var(--white);color:var(--white);padding:4px 10px;cursor:pointer;font-size:0.75rem;border-radius:999px;}
   .viewport-close:hover{background:var(--white);color:var(--black);}
 
   .props-grid { display: grid; grid-template-columns: 120px 1fr; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
   .props-label { color: var(--dim); }
   .props-val { color: var(--white); word-break: break-all; }
+  .edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .edit-grid input,.edit-grid textarea{width:100%;font-family:'JetBrains Mono',monospace;font-size:0.72rem;}
+  .edit-grid textarea{min-height:96px;resize:vertical;line-height:1.5;}
+  .edit-grid .full{grid-column:1 / -1;}
+  .edit-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+  .edit-actions button{background:var(--white);color:var(--black);border:1px solid var(--white);font-family:'JetBrains Mono',monospace;font-size:0.68rem;font-weight:800;padding:8px 10px;cursor:pointer;border-radius:8px;}
+  .edit-actions button.secondary{background:transparent;color:var(--white);border-color:var(--line);}
 
   /* ===== MINI PLAYER BAR ===== */
   .player-bar{position:fixed;bottom:0;left:0;transform:translateY(110%);width:100%;background:rgba(0,0,0,0.94);backdrop-filter:blur(12px);border-top:2px solid var(--white);padding:14px 5vw;display:flex;align-items:center;gap:16px;transition:transform 0.34s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;z-index:400;box-shadow:0 -18px 70px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.40));border-radius:0;}
@@ -186,30 +266,57 @@
 
   /* ===== FULLSCREEN PLAYER ===== */
   .fs-player { position: fixed; inset: 0; background:
-    radial-gradient(circle at 8% 18%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.40)), transparent 30%),
-    radial-gradient(circle at 92% 22%, rgba(255,255,255,calc(var(--reactive-pulse) * 0.24)), transparent 32%),
-    radial-gradient(circle at 18% 88%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.34)), transparent 36%),
-    radial-gradient(circle at 78% 82%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.26)), transparent 34%),
+    radial-gradient(circle at 8% 18%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.35)), transparent 30%),
+    radial-gradient(circle at 92% 22%, rgba(255,255,255,calc(var(--reactive-pulse) * 0.20)), transparent 32%),
+    radial-gradient(circle at 18% 88%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.29)), transparent 36%),
+    radial-gradient(circle at 78% 82%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.22)), transparent 34%),
     linear-gradient(115deg, rgba(255,255,255,0.04), transparent 28%, rgba(255,255,255,0.03) 70%, transparent),
     var(--black); z-index: 450; display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1); }
   .fs-player.active { transform: translateY(0); }
+  .fs-player.media-mode{background:radial-gradient(circle at 50% 18%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.18), transparent 38%), linear-gradient(180deg, rgba(255,255,255,0.05), transparent 30%, rgba(255,255,255,0.025)), var(--black);}
+  .fs-player.media-mode .fs-body{grid-template-columns:minmax(0,1fr) 320px;}
+  .fs-player.media-mode .fs-main{justify-content:center;padding:28px 4vw;border-right:1px solid var(--line-soft);}
+  .fs-player.media-mode .fs-meta{position:absolute;left:4vw;right:4vw;bottom:24px;margin:0;padding:14px 16px;border:1px solid var(--line-soft);background:rgba(0,0,0,0.58);backdrop-filter:blur(12px);box-shadow:0 18px 70px rgba(0,0,0,0.5);}
+  .fs-player.media-mode .fs-title{font-size:clamp(1.65rem,3.4vw,3.2rem);max-width:24ch;margin-bottom:8px;}
+  .fs-player.media-mode .fs-sub{font-size:0.82rem;}
+  .fs-player.media-mode .fs-readouts{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px;}
+  .fs-player.media-mode .fs-cover,.fs-player.media-mode .fs-visualizer,.fs-player.media-mode .fs-controls{display:none!important;}
   .fs-player.is-playing .fs-title{animation:titlePulse 1.8s ease-in-out infinite alternate;}
   @keyframes titlePulse{from{text-shadow:0 0 0 rgba(255,255,255,0);}to{text-shadow:0 0 24px rgba(255,255,255,calc(var(--reactive-pulse) * 0.5));}}
   .fs-player.track-swap .fs-meta{animation:trackSwap 0.32s cubic-bezier(0.16,1,0.3,1);}
   @keyframes trackSwap{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
   
-  .fs-header { padding: 20px 5vw; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--white); }
+  .fs-header { padding: 20px 5vw; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--white); gap:12px; }
+  .fs-header .wordmark{min-width:0;}
+  .fs-header-actions{display:flex;gap:8px;align-items:center;}
+  .fs-info-toggle{display:none;}
   .fs-body { flex: 1; display: grid; grid-template-columns: 1fr 350px; overflow: hidden; }
   
   .fs-main { display: flex; flex-direction: column; padding: 40px 5vw; border-right: 2px solid var(--white); position: relative; justify-content: flex-end; overflow:hidden; }
   .fs-main::before{content:"";position:absolute;inset:28px 5vw auto 5vw;height:1px;background:linear-gradient(90deg, transparent, var(--white), transparent);opacity:calc(0.28 + var(--reactive-pulse));animation:scanline 3.8s linear infinite;}
   @keyframes scanline{0%{transform:translateY(0);opacity:0;}20%{opacity:0.65;}100%{transform:translateY(38vh);opacity:0;}}
-  .fs-visualizer { position: absolute; inset: 0; width:100%; height:100%; opacity:0.40; mix-blend-mode:screen; pointer-events:none; }
+  .fs-visualizer { position: absolute; inset: 0; width:100%; height:100%; opacity:0.36; mix-blend-mode:screen; pointer-events:none; }
   .fs-visualizer.hidden { display: none; }
   .fs-media-stage { position:absolute; top:40px; left:5vw; right:5vw; bottom:250px; display:none; align-items:center; justify-content:center; border:1px solid var(--line-soft); background:rgba(255,255,255,0.03); overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.04); border-radius:0; }
-  .fs-media-stage.active { display:flex; }
-  .fs-media-stage img, .fs-media-stage video { width:100%; height:100%; object-fit:contain; filter:grayscale(100%) contrast(120%); }
+  .fs-media-stage.active { display:flex; animation:mediaStageIn 0.34s cubic-bezier(0.16,1,0.3,1); }
+  @keyframes mediaStageIn{from{opacity:0;transform:scale(0.985);}to{opacity:1;transform:scale(1);}}
+  .fs-media-stage img, .fs-media-stage video { width:100%; height:100%; object-fit:contain; }
   .fs-media-stage video { background:var(--black); }
+  .fs-player.media-mode .fs-media-stage{position:absolute;inset:20px 4vw 150px 4vw;display:flex;border:0;background:
+    linear-gradient(45deg, rgba(255,255,255,0.045) 25%, transparent 25% 75%, rgba(255,255,255,0.045) 75%),
+    linear-gradient(45deg, rgba(255,255,255,0.045) 25%, transparent 25% 75%, rgba(255,255,255,0.045) 75%),
+    rgba(255,255,255,0.018);background-position:0 0, 12px 12px;background-size:24px 24px;box-shadow:0 0 0 1px rgba(255,255,255,0.12), 0 30px 100px rgba(0,0,0,0.65);border-radius:8px;}
+  .fs-player.media-mode .fs-media-stage img,.fs-player.media-mode .fs-media-stage video{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;box-shadow:0 18px 80px rgba(0,0,0,0.6);}
+  .fs-player.image-mode .fs-main{background:radial-gradient(circle at 50% 40%, rgba(var(--theme-r),var(--theme-g),var(--theme-b),0.13), transparent 46%);}
+  .fs-player.image-mode .fs-media-stage{inset:18px 4vw 132px 4vw;background:#050505;box-shadow:0 0 0 1px rgba(var(--theme-r),var(--theme-g),var(--theme-b),0.38),0 30px 120px rgba(0,0,0,0.72);}
+  .fs-player.image-mode .fs-media-stage img{max-width:calc(100% - 86px);max-height:100%;box-shadow:0 24px 90px rgba(0,0,0,0.72);}
+  .gallery-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:34px;height:54px;border:1px solid var(--line);background:rgba(0,0,0,0.52);backdrop-filter:blur(8px);color:var(--white);cursor:pointer;border-radius:8px;font-size:1.15rem;}
+  .gallery-nav:hover{background:var(--white);color:var(--black);border-color:var(--white);}
+  .gallery-nav.prev{left:14px;}
+  .gallery-nav.next{right:14px;}
+  .gallery-chip{position:absolute;right:12px;bottom:12px;z-index:4;border:1px solid var(--line);background:rgba(0,0,0,0.62);padding:5px 8px;border-radius:999px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--dim-2);}
+  .fs-player.image-mode .fs-media-stage::before{content:"image viewer";position:absolute;top:12px;left:12px;z-index:2;border:1px solid var(--line);background:rgba(0,0,0,0.58);backdrop-filter:blur(8px);padding:5px 8px;border-radius:999px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--dim-2);}
+  .fs-player.video-mode .fs-media-stage::before{content:"video viewer";position:absolute;top:12px;left:12px;z-index:2;border:1px solid var(--line);background:rgba(0,0,0,0.58);backdrop-filter:blur(8px);padding:5px 8px;border-radius:999px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--dim-2);}
   
   .fs-meta { margin-bottom: 30px; position: relative; z-index: 10; display: flex; flex-direction: column; }
   
@@ -242,6 +349,10 @@
   .archive-meta a { color:var(--white); text-decoration:none; border-bottom:1px solid var(--white); }
   .archive-meta a:hover { background:var(--white); color:var(--black); }
   .meta-section-title { color:var(--dim-2); margin-bottom:6px; font-weight:700; }
+  .notes-card{border:1px solid rgba(var(--theme-r),var(--theme-g),var(--theme-b),0.34);background:linear-gradient(180deg,rgba(var(--theme-r),var(--theme-g),var(--theme-b),0.10),rgba(255,255,255,0.018));border-radius:10px;padding:12px;margin-bottom:14px;color:var(--white);white-space:pre-wrap;}
+  .notes-empty{color:var(--dim);font-style:italic;}
+  .notes-card p{margin:0 0 9px;}
+  .notes-card p:last-child{margin-bottom:0;}
   .link-stack { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
   .link-stack a { padding:4px 8px; border:1px solid var(--line); border-radius:999px; }
   .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
@@ -268,32 +379,84 @@
     .action-btn{font-size:0.58rem;padding:6px 7px;}
     .control-panel { grid-template-columns: 1fr; gap: 20px; }
     .injector-form.dual{grid-template-columns:1fr;}
+    .panel-sect.primary-panel{grid-row:auto;}
+    .panel-head{flex-direction:column;}
+    .field-group{grid-template-columns:1fr;}
+    .injector-form .span-2,.injector-form .span-3{grid-column:1 / -1;}
     .player-bar{padding:12px 4vw;gap:10px;box-shadow:0 -18px 85px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.58));}
     .pb-info{min-width:0;}
     .pb-title{font-size:0.78rem;}
     .pb-sub{font-size:0.62rem;}
     .pb-progress-container, .pb-time, .pb-ctrls .pb-btn:not(.fs-toggle) { display: none; }
-    .fs-body { grid-template-columns: 1fr; }
-    .fs-queue-panel { display: none; }
-    .fs-player{background:
-      radial-gradient(circle at 14% 18%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.62)), transparent 38%),
-      radial-gradient(circle at 86% 18%, rgba(255,255,255,calc(var(--reactive-pulse) * 0.28)), transparent 34%),
-      radial-gradient(circle at 50% 92%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.56)), transparent 44%),
-      var(--black);}
     .fs-header{padding:14px 4vw;}
-    .fs-main{padding:22px 4vw 30px;border-right:none;}
+    .fs-header-actions{gap:6px;flex-shrink:0;}
+    .fs-info-toggle{display:inline-flex;}
+    .fs-player.info-open .fs-info-toggle{background:var(--white);border-color:var(--white);color:var(--black);}
+    .fs-body { display:flex;flex-direction:column;overflow:hidden; }
+    .fs-queue-panel { position:fixed;left:4vw;right:4vw;bottom:14px;z-index:30;display:flex;border:1px solid var(--line);background:rgba(0,0,0,0.82);backdrop-filter:blur(18px);max-height:45vh;min-height:0;border-radius:14px;box-shadow:0 22px 90px rgba(0,0,0,0.72);opacity:0;pointer-events:none;transform:translateY(18px) scale(0.98);transition:opacity 0.2s,transform 0.2s;overflow:hidden; }
+    .fs-player.info-open .fs-queue-panel{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
+    .fs-queue-head{padding:12px 4vw;font-size:0.62rem;border-bottom:1px solid var(--line-soft);}
+    .fs-queue-list{display:none;}
+    .archive-meta{padding:14px 4vw 18px;border-top:none;font-size:0.68rem;overflow-y:auto;}
+    .fs-player{background:
+      radial-gradient(circle at 14% 18%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.54)), transparent 38%),
+      radial-gradient(circle at 86% 18%, rgba(255,255,255,calc(var(--reactive-pulse) * 0.24)), transparent 34%),
+      radial-gradient(circle at 50% 92%, rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(var(--reactive-pulse) * 0.48)), transparent 44%),
+      var(--black);}
+    .fs-main{padding:22px 4vw 30px;border-right:none;justify-content:center;min-height:66vh;}
+    .fs-meta{align-items:center;text-align:center;margin-bottom:18px;}
     .fs-main::before{animation:none;opacity:calc(0.18 + var(--reactive-pulse) * 0.55);}
     .fs-visualizer{opacity:0.58;}
-    .fs-title { font-size:2.25rem;max-width:13ch;}
+    .fs-title { font-size:2.25rem;max-width:13ch;text-align:center;}
+    .fs-sub{text-align:center;}
     .fs-cover { width: 140px; height: 140px; }
     .fs-readouts{grid-template-columns:1fr 1fr 1fr;gap:6px;}
     .fs-readout{padding:8px;font-size:0.58rem;}
     .fs-media-stage { position:relative; inset:auto; height:38vh; margin-bottom:24px; }
+    .fs-player.media-mode .fs-body{grid-template-columns:1fr;}
+    .fs-player.media-mode .fs-main{padding:14px 4vw 24px;border-right:none;justify-content:center;}
+    .fs-player.media-mode .fs-media-stage{position:relative;inset:auto;height:62vh;margin:0 0 14px;border-radius:6px;background-size:18px 18px;background-position:0 0, 9px 9px;}
+    .fs-player.image-mode .fs-media-stage img{max-width:calc(100% - 58px);}
+    .gallery-nav{width:28px;height:44px;}
+    .fs-player.media-mode .fs-meta{position:relative;left:auto;right:auto;bottom:auto;padding:12px;margin:0;}
+    .fs-player.media-mode .fs-title{font-size:1.45rem;max-width:100%;}
+    .fs-player.media-mode .fs-readouts{display:none;}
     .fs-controls { grid-template-columns:1fr; gap:10px; }
+    .fs-buttons{justify-content:center;}
+    .fs-time{text-align:center;}
     .topbar{align-items:flex-start;gap:12px;flex-direction:column;}
     .utility-btns{width:100%;justify-content:space-between;align-items:flex-start;}
     .auth-tools{justify-content:flex-start;}
     .status-strip{grid-template-columns:1fr 1fr;}
+    .explorer-head{align-items:center;gap:10px;}
+    .explorer-title{flex:0 1 auto;min-width:0;font-size:0.72rem;padding:7px 8px;letter-spacing:0.08em;}
+    .explorer-head-actions{width:auto;margin-left:auto;gap:7px;justify-content:flex-end;flex:0 0 auto;}
+    .explorer-count{font-size:0.64rem;}
+    .timeline-head{align-items:center;flex-direction:row;padding:14px 4vw;gap:10px;}
+    .timeline-title{font-size:0.88rem;white-space:nowrap;}
+    .timeline-head-actions{gap:5px;overflow-x:auto;max-width:62vw;padding-bottom:2px;}
+    .timeline-head button{font-size:0.55rem;padding:5px 7px;white-space:nowrap;}
+    .timeline-track{grid-template-columns:1fr;padding:4vh 4vw 7vh;}
+    .timeline-node{padding:28px 18px;min-height:140px;}
+    .timeline-day-head{grid-template-columns:1fr;gap:10px;}
+    .timeline-asset{grid-template-columns:18px minmax(0,1fr) auto;gap:9px;}
+    .timeline-asset-meta,.timeline-asset-ver{grid-column:2;font-size:0.58rem;}
+    .timeline-info{grid-column:3;grid-row:1 / span 2;padding:5px 7px;}
+  }
+  @media (max-width: 430px) and (orientation: portrait){
+    .fs-header{gap:6px;padding:10px 8px;}
+    .fs-header .wordmark{font-size:0.68rem;letter-spacing:0.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .fs-header-actions{gap:4px;}
+    .fs-header-actions .action-trigger{font-size:0.52rem;padding:5px 6px;}
+    .explorer-head{gap:7px;}
+    .explorer-title{font-size:0.64rem;padding:6px 7px;}
+    .explorer-head-actions{gap:5px;}
+    .explorer-head-actions .action-trigger{font-size:0.58rem;padding:5px 7px;}
+    .explorer-count{font-size:0.58rem;letter-spacing:0.02em;}
+    .timeline-head{padding:10px 8px;gap:6px;}
+    .timeline-title{font-size:0.72rem;letter-spacing:0.02em;}
+    .timeline-head-actions{flex:1;max-width:none;gap:3px;justify-content:flex-end;overflow:visible;}
+    .timeline-head button{font-size:0.48rem;padding:4px 5px;}
   }
 </style>
 </head>
@@ -303,21 +466,91 @@
 
 <div class="wrap">
   <div class="topbar">
-    <div class="wordmark">akrasia <span>/ archive os</span></div>
+    <div class="wordmark">akrasia <span>/ archive</span></div>
     <div class="utility-btns">
       <div class="action-trigger admin-only" onclick="togglePanel()">system panel</div>
       <div class="auth-tools">
         <input type="email" id="authEmail" placeholder="admin email" style="display:none;">
         <button class="action-trigger" id="authLogin" onclick="adminLogin()" style="display:none;">send admin link</button>
         <button class="action-trigger" id="authLogout" onclick="adminLogout()" style="display:none;">logout</button>
-        <span class="auth-status" id="authStatus">view only</span>
+        <span class="auth-status" id="authStatus"></span>
       </div>
     </div>
   </div>
 
   <div class="control-panel" id="controlPanel">
-    
-    <!-- DYNAMIC FILTERS -->
+    <div class="panel-sect primary-panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-kicker">admin upload</div>
+          <div class="panel-title">index new assets</div>
+        </div>
+        <div class="panel-copy">Files, folder, date, mood, notes, and links live in one flow now.</div>
+      </div>
+      <form class="injector-form dual" id="injectForm">
+        <div class="field-group">
+          <div class="field-group-title">01 / files</div>
+          <div class="file-drop">
+            <div class="label-mini">core file(s)</div>
+            <input type="file" id="injFile" multiple required>
+          </div>
+          <div class="label-mini cover-row full">album cover</div>
+          <input type="file" id="injCover" class="cover-row full" accept="image/*">
+        </div>
+
+        <div class="field-group">
+          <div class="field-group-title">02 / placement</div>
+          <select id="injBatch" class="full-width" required>
+            <!-- Populated dynamically via JS -->
+          </select>
+          <input type="text" id="injSubfolder" class="span-2" placeholder="subfolder path (optional)">
+          <input type="date" id="injDate" title="asset date">
+        </div>
+
+        <div class="field-group">
+          <div class="field-group-title">03 / identity</div>
+          <input type="text" id="injTitle" class="span-2" placeholder="display title / batch prefix">
+          <input type="text" id="injVer" placeholder="version (e.g. v2)" required>
+          <select id="injType" onchange="toggleCoverInput()">
+            <option value="audio">asset: audio</option>
+            <option value="text">asset: text</option>
+            <option value="image">asset: image</option>
+            <option value="video">asset: video</option>
+          </select>
+          <input type="text" id="injMood" class="span-3" placeholder="custom tag / mood" required>
+          <input type="color" id="injMoodColor" value="#ffffff" title="mood color">
+        </div>
+
+        <div class="field-group">
+          <div class="field-group-title">04 / notes + links</div>
+          <textarea id="injNotes" class="full" rows="3" placeholder="notes (optional)"></textarea>
+          <input type="url" id="injSpotify" class="span-2" placeholder="spotify link (optional)">
+          <input type="url" id="injApple" class="span-2" placeholder="apple music link (optional)">
+          <input type="url" id="injYoutube" class="span-2" placeholder="youtube / video link (optional)">
+          <input type="url" id="injSoundcloud" class="span-2" placeholder="soundcloud / dsp link (optional)">
+        </div>
+
+        <div class="upload-progress" id="uploadProgress">
+          <div class="upload-progress-label"><span id="uploadProgressText">preparing upload</span><span id="uploadProgressPct">0%</span></div>
+          <div class="upload-progress-track"><div class="upload-progress-fill" id="uploadProgressFill"></div></div>
+        </div>
+        <button type="button" onclick="handleFileInject()">index selected file(s)</button>
+      </form>
+    </div>
+
+    <div class="panel-sect quick-stack">
+      <h3>quick setup</h3>
+      <div class="quick-row">
+        <button class="mini-btn" type="button" onclick="quickMood('raw','#d8d8d8')">raw</button>
+        <button class="mini-btn" type="button" onclick="quickMood('ambient','#8fb7ff')">ambient</button>
+        <button class="mini-btn" type="button" onclick="quickMood('aggressive','#ff4f4f')">aggressive</button>
+      </div>
+      <div class="quick-row">
+        <button class="mini-btn" type="button" onclick="setAssetDateToday()">today</button>
+        <button class="mini-btn" type="button" onclick="clearUploadForm()">clear form</button>
+      </div>
+    </div>
+
     <div class="panel-sect">
       <h3>isolate index</h3>
       <div class="filter-grid" id="filterGrid">
@@ -332,49 +565,10 @@
       </div>
     </div>
 
-    <!-- ADMIN MAINTENANCE -->
     <div class="panel-sect">
       <h3>maintenance</h3>
       <form class="injector-form" id="folderForm">
-        <button type="button" onclick="removePlaceholders()">remove placeholder content</button>
-      </form>
-    </div>
-
-    <!-- INJECT FILES (WITH DYNAMIC FOLDERS & VERSIONS) -->
-    <div class="panel-sect">
-      <h3>inject local asset</h3>
-      <form class="injector-form dual" id="injectForm">
-        <input type="text" id="injTitle" placeholder="display title / batch prefix">
-        <input type="text" id="injVer" placeholder="version (e.g. v2)" required>
-        
-        <select id="injBatch" class="full-width" required>
-          <!-- Populated dynamically via JS -->
-        </select>
-        <input type="text" id="injSubfolder" placeholder="subfolder path (optional)">
-        <input type="date" id="injDate" title="asset date">
-        
-        <select id="injType" onchange="toggleCoverInput()">
-          <option value="audio">asset: audio</option>
-          <option value="text">asset: text</option>
-          <option value="image">asset: image</option>
-          <option value="video">asset: video</option>
-        </select>
-        
-        <input type="text" id="injMood" placeholder="custom tag / mood" required>
-        <input type="color" id="injMoodColor" value="#ffffff" title="mood color">
-        <input type="text" id="injNotes" placeholder="notes (optional)">
-        <input type="url" id="injSpotify" placeholder="spotify link (optional)">
-        <input type="url" id="injApple" placeholder="apple music link (optional)">
-        <input type="url" id="injYoutube" placeholder="youtube / video link (optional)">
-        <input type="url" id="injSoundcloud" placeholder="soundcloud / dsp link (optional)">
-        
-        <div class="label-mini">core file(s):</div>
-        <input type="file" id="injFile" multiple required>
-        
-        <div class="label-mini cover-row">album cover (optional):</div>
-        <input type="file" id="injCover" class="cover-row" accept="image/*">
-
-        <button type="button" onclick="handleFileInject()">index file to active directory</button>
+        <button class="danger-btn" type="button" onclick="removePlaceholders()">remove placeholder content</button>
       </form>
     </div>
   </div>
@@ -382,14 +576,32 @@
   <section class="explorer">
     <div class="explorer-head">
       <div class="explorer-title" onclick="adminIndexTap()">index / active</div>
-      <div class="explorer-count" id="itemCount">3 files active</div>
+      <div class="explorer-head-actions">
+        <button class="action-trigger" type="button" onclick="toggleTimelineView()">timeline</button>
+        <div class="explorer-count" id="itemCount">3 files active</div>
+      </div>
     </div>
 
     <div class="status-strip">
       <div class="status-cell"><strong id="statAudio">0</strong>audio</div>
       <div class="status-cell"><strong id="statVisual">0</strong>visual</div>
       <div class="status-cell"><strong id="statText">0</strong>text</div>
-      <div class="status-cell"><strong id="statAccess">view</strong>access</div>
+      <div class="status-cell"><strong id="statAccess">open</strong>access</div>
+    </div>
+
+    <div class="timeline-panel" id="timelinePanel">
+      <div class="timeline-head">
+        <div>
+          <div class="timeline-title">akrasia <span>/ timeline</span></div>
+          <div class="timeline-subtitle">scroll the archive by date</div>
+        </div>
+        <div class="timeline-head-actions">
+          <button type="button" onclick="toggleTimelineSort()" id="timelineSortBtn">newest</button>
+          <button type="button" onclick="clearTimelineFilter()">all dates</button>
+          <button type="button" onclick="closeTimelineView()">minimize [-]</button>
+        </div>
+      </div>
+      <div class="timeline-track" id="timelineTrack"></div>
     </div>
 
     <div class="explorer-tools admin-only">
@@ -426,19 +638,19 @@
             <div class="icon-cell"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
             <div class="name-cell">pray and leave it there</div>
             <div class="dim-cell">06.24.26</div><div class="dim-cell">v3</div><div class="pill mood-pill">ambient</div><div class="dim-cell">9mb</div><div class="pill">audio</div>
-            <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
+            <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn edit-btn admin-only">[edit]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
           </div>
           <div class="frow" data-placeholder="true" data-mood-color="#ffffff" style="--mood-color:#ffffff" data-text-content="trusting the layout, look at the codes..." data-title="pray and leave it there — lyrics" data-name="akrasia_b04_v3_lyrics.txt" data-date="202606240710" data-ver="v3" data-mood="text" data-type="text" data-size="3kb">
             <div class="icon-cell"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M14 3v5h5" fill="none"/></svg></div>
             <div class="name-cell">pray and leave it there — lyrics</div>
             <div class="dim-cell">06.24.26</div><div class="dim-cell">v3</div><div class="pill mood-pill">text</div><div class="dim-cell">3kb</div><div class="pill">text</div>
-            <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
+            <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn edit-btn admin-only">[edit]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
           </div>
           <div class="frow" data-placeholder="true" data-mood-color="#d8d8d8" style="--mood-color:#d8d8d8" data-img-src="" data-title="035mm_004 log" data-name="akrasia_b04_035mm_004.jpg" data-date="202606151309" data-ver="v1" data-mood="raw" data-type="image" data-size="13mb">
             <div class="icon-cell"><svg viewBox="0 0 24 24"><path d="M3 7h18v13H3z"/><circle cx="8" cy="11" r="1.5" fill="currentColor"/><path d="M3 17l5-5 4 4 4-5 4 6"/></svg></div>
             <div class="name-cell">035mm_004 log</div>
             <div class="dim-cell">06.15.26</div><div class="dim-cell">v1</div><div class="pill mood-pill">raw</div><div class="dim-cell">13mb</div><div class="pill">image</div>
-            <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
+            <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn edit-btn admin-only">[edit]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
           </div>
         </div>
       </div>
@@ -466,6 +678,31 @@
     <div class="viewport-body props-grid" id="propsBody"></div>
   </div>
 </div>
+<div class="viewport-overlay" id="editViewport">
+  <div class="viewport-box" style="max-width: 620px;">
+    <div class="viewport-head"><span>edit indexed item</span><button class="viewport-close" onclick="closeViewport('editViewport')">[x]</button></div>
+    <div class="viewport-body">
+      <form id="editForm" class="edit-grid" onsubmit="event.preventDefault(); saveEditedAsset();">
+        <input type="hidden" id="editRowKey">
+        <input type="text" id="editTitle" placeholder="title">
+        <input type="text" id="editVer" placeholder="version">
+        <input type="date" id="editDate" title="asset date">
+        <input type="text" id="editFolder" placeholder="folder path">
+        <input type="text" id="editMood" placeholder="mood / tag">
+        <input type="color" id="editMoodColor" value="#ffffff" title="mood color">
+        <textarea class="full" id="editNotes" rows="4" placeholder="notes"></textarea>
+        <input class="full" type="url" id="editSpotify" placeholder="spotify link">
+        <input class="full" type="url" id="editApple" placeholder="apple music link">
+        <input class="full" type="url" id="editYoutube" placeholder="youtube / video link">
+        <input class="full" type="url" id="editSoundcloud" placeholder="soundcloud / dsp link">
+      </form>
+      <div class="edit-actions">
+        <button class="secondary" type="button" onclick="closeViewport('editViewport')">cancel</button>
+        <button type="button" onclick="saveEditedAsset()">save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="player-bar" id="playerBar">
   <div class="pb-ctrls">
@@ -487,8 +724,11 @@
 
 <div class="fs-player" id="fsPlayer">
   <div class="fs-header">
-    <div class="wordmark">akrasia <span>/ audio framework</span></div>
-    <button class="action-trigger" onclick="toggleFullscreen()">minimize [-]</button>
+    <div class="wordmark" id="fsModeLabel">akrasia <span>/ archive</span></div>
+    <div class="fs-header-actions">
+      <button class="action-trigger fs-info-toggle" id="fsInfoToggle" onclick="toggleNowInfo()">info</button>
+      <button class="action-trigger" onclick="toggleFullscreen()">minimize [-]</button>
+    </div>
   </div>
   <div class="fs-body">
     <div class="fs-main">
@@ -541,16 +781,24 @@
   var nextAudioPreload = null;
   var audioQueue = [];
   var queueIndex = -1;
+  var activeTimelineDate = null;
+  var timelineAscending = false;
+  var activeVisualRow = null;
   var activeMediaType = 'audio';
   var supabaseClient = null;
   var isAdmin = false;
   var isRemoteReady = false;
   var adminTapCount = 0;
   var draggedExplorerItem = null;
+  var editingRow = null;
 
   var audioCtx = null, analyser = null, sourceNode = null, dataArray = null;
   var reactiveBase = { r: 255, g: 255, b: 255 };
   var reactiveHueShift = 0;
+  var visualEnergy = 0;
+  var visualBass = 0;
+  var visualBeat = 0;
+  var visualBeatCooldown = 0;
   var isCompactVisual = window.matchMedia('(max-width: 980px)').matches;
   var visualFrame = 0;
   const canvas = document.getElementById('visualizerCanvas');
@@ -560,7 +808,23 @@
     if(!isAdmin) return alert('admin login required.');
     document.getElementById('controlPanel').classList.toggle('active');
   }
-  function toggleFullscreen() { document.getElementById('fsPlayer').classList.toggle('active'); resizeCanvas(); }
+  function toggleFullscreen() {
+    var fs = document.getElementById('fsPlayer');
+    fs.classList.toggle('active');
+    if(!fs.classList.contains('active')) closeNowInfo();
+    resizeCanvas();
+  }
+  function toggleNowInfo() {
+    var fs = document.getElementById('fsPlayer');
+    var isOpen = fs.classList.toggle('info-open');
+    var btn = document.getElementById('fsInfoToggle');
+    if(btn) btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+  function closeNowInfo() {
+    document.getElementById('fsPlayer').classList.remove('info-open');
+    var btn = document.getElementById('fsInfoToggle');
+    if(btn) btn.setAttribute('aria-expanded', 'false');
+  }
   function closeViewport(id) { document.getElementById(id).classList.remove('active'); }
   window.addEventListener('resize', () => { isCompactVisual = window.matchMedia('(max-width: 980px)').matches; resizeCanvas(); });
   function resizeCanvas() {
@@ -587,6 +851,13 @@
     document.documentElement.style.setProperty('--reactive-g', reactiveBase.g);
     document.documentElement.style.setProperty('--reactive-b', reactiveBase.b);
     document.documentElement.style.setProperty('--reactive-accent', rgbToHex(reactiveBase));
+  }
+
+  function setMoodTheme(color) {
+    var rgb = hexToRgb(color || '#ffffff');
+    document.documentElement.style.setProperty('--theme-r', rgb.r);
+    document.documentElement.style.setProperty('--theme-g', rgb.g);
+    document.documentElement.style.setProperty('--theme-b', rgb.b);
   }
 
   function readCoverColor(src, fallbackColor) {
@@ -653,7 +924,7 @@
     var email = session && session.user ? session.user.email : '';
     isAdmin = email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
     document.body.classList.toggle('is-admin', isAdmin);
-    document.getElementById('authStatus').textContent = isAdmin ? 'admin' : 'view only';
+    document.getElementById('authStatus').textContent = isAdmin ? 'admin' : '';
     document.getElementById('authLogin').style.display = 'none';
     document.getElementById('authLogout').style.display = isAdmin ? 'inline' : 'none';
     document.getElementById('authEmail').style.display = 'none';
@@ -764,6 +1035,46 @@
     if(field && !field.value) field.value = new Date().toISOString().slice(0, 10);
   }
 
+  function setAssetDateToday() {
+    var field = document.getElementById('injDate');
+    if(field) field.value = new Date().toISOString().slice(0, 10);
+  }
+
+  function quickMood(name, color) {
+    var mood = document.getElementById('injMood');
+    var moodColor = document.getElementById('injMoodColor');
+    if(mood) mood.value = name;
+    if(moodColor) moodColor.value = color;
+  }
+
+  function clearUploadForm() {
+    var form = document.getElementById('injectForm');
+    if(form) form.reset();
+    toggleCoverInput();
+    setAssetDateToday();
+  }
+
+  function setUploadProgress(percent, text) {
+    var box = document.getElementById('uploadProgress');
+    var fill = document.getElementById('uploadProgressFill');
+    var pct = document.getElementById('uploadProgressPct');
+    var label = document.getElementById('uploadProgressText');
+    var value = Math.max(0, Math.min(100, Math.round(percent || 0)));
+    if(box) box.classList.toggle('active', value > 0 && value < 100 || !!text);
+    if(fill) fill.style.width = value + '%';
+    if(pct) pct.textContent = value + '%';
+    if(label) label.textContent = text || 'uploading';
+  }
+
+  function resetUploadProgress(delay) {
+    window.clearTimeout(window.uploadProgressTimer);
+    window.uploadProgressTimer = window.setTimeout(() => {
+      var box = document.getElementById('uploadProgress');
+      if(box) box.classList.remove('active');
+      setUploadProgress(0, '');
+    }, delay || 700);
+  }
+
   // ---- DYNAMIC DIRECTORY UPDATER ----
   function updateDirectoryDropdown() {
     var select = document.getElementById('injBatch');
@@ -817,8 +1128,10 @@
   }
 
   function setFilter(tag, target) {
+    activeTimelineDate = null;
     activeFilter = tag;
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.timeline-node').forEach(node => node.classList.remove('active'));
     var activeChip = target || Array.from(document.querySelectorAll('.filter-chip')).find(c => c.textContent === tag || c.textContent === `type: ${tag}`);
     if(activeChip) activeChip.classList.add('active');
 
@@ -837,7 +1150,7 @@
         if (row.getAttribute('data-mood') === tag || row.getAttribute('data-type') === tag) {
           row.style.display = 'grid';
           var clone = row.cloneNode(true);
-          clone.addEventListener('click', (e) => handleRowClick(e, row));
+          clone.addEventListener('click', (e) => { e.stopPropagation(); handleRowClick(e, row); });
           smartList.appendChild(clone);
         } else {
           row.style.display = 'grid';
@@ -845,6 +1158,124 @@
       });
     }
     updateCounts(); buildQueue();
+  }
+
+  function baseRows() {
+    return Array.from(document.querySelectorAll('[data-batch-target] .frow'));
+  }
+
+  function timelineDateForRow(row) {
+    return row.getAttribute('data-asset-date') || dateFromSortKey(row.getAttribute('data-date')) || '';
+  }
+
+  function dateFromSortKey(value) {
+    var raw = String(value || '');
+    if(raw.length < 8) return '';
+    return `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
+  }
+
+  function toggleTimelineView() {
+    var panel = document.getElementById('timelinePanel');
+    if(!panel) return;
+    panel.classList.toggle('active');
+    buildTimeline();
+  }
+
+  function closeTimelineView() {
+    var panel = document.getElementById('timelinePanel');
+    if(panel) panel.classList.remove('active');
+  }
+
+  function toggleTimelineSort() {
+    timelineAscending = !timelineAscending;
+    var btn = document.getElementById('timelineSortBtn');
+    if(btn) btn.textContent = timelineAscending ? 'oldest' : 'newest';
+    buildTimeline();
+  }
+
+  function buildTimeline() {
+    var track = document.getElementById('timelineTrack');
+    if(!track) return;
+    var groups = {};
+    baseRows().forEach(row => {
+      var day = timelineDateForRow(row);
+      if(!day) return;
+      if(!groups[day]) groups[day] = { rows: [], moods: {} };
+      groups[day].rows.push(row);
+      var mood = row.getAttribute('data-mood') || 'raw';
+      groups[day].moods[mood] = row.getAttribute('data-mood-color') || moodColorFor(mood);
+    });
+    var days = Object.keys(groups).sort();
+    if(!timelineAscending) days.reverse();
+    track.innerHTML = days.length ? '' : '<div class="timeline-node"><div class="timeline-date">no dates</div><div class="timeline-count">add dated assets</div></div>';
+    days.forEach(day => {
+      var node = document.createElement('section');
+      node.className = 'timeline-node' + (day === activeTimelineDate ? ' active' : '');
+      node.dataset.timelineDay = day;
+      var moodColors = Object.values(groups[day].moods);
+      var leadColor = moodColors[0] || '#ffffff';
+      node.style.setProperty('--dot-color', leadColor);
+      node.style.animationDelay = `${Math.min(0.36, days.indexOf(day) * 0.035)}s`;
+      var dots = moodColors.slice(0, 5).map(color => `<span class="timeline-dot" style="--dot-color:${escapeAttr(color)}"></span>`).join('');
+      var assets = groups[day].rows.map((row, index) => {
+        return `<button class="timeline-asset" type="button" data-row-key="${escapeAttr(timelineRowKey(row))}">
+          <span class="timeline-asset-icon"></span>
+          <strong>${escapeHtml(row.getAttribute('data-title') || 'untitled')}</strong>
+          <span class="timeline-asset-meta">${escapeHtml(row.getAttribute('data-type') || 'asset')}</span>
+          <span class="timeline-asset-ver">${escapeHtml(row.getAttribute('data-ver') || 'v1')}</span>
+          <span class="timeline-info" data-row-key="${escapeAttr(timelineRowKey(row))}">[info]</span>
+        </button>`;
+      }).join('');
+      node.innerHTML = `
+        <div class="timeline-day-head" onclick="toggleTimelineDay('${escapeAttr(day)}')">
+          <div>
+            <div class="timeline-date">${displayDateFromISO(day)}</div>
+            <div class="timeline-count">${groups[day].rows.length} indexed</div>
+            <div class="timeline-moods">${dots}</div>
+          </div>
+          <div class="timeline-expand">${day === activeTimelineDate ? 'collapse' : 'expand'}</div>
+        </div>
+        <div class="timeline-assets">${assets}</div>
+      `;
+      track.appendChild(node);
+    });
+    track.querySelectorAll('.timeline-asset').forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if(e.target.classList.contains('timeline-info')) return openTimelineInfo(e.target.getAttribute('data-row-key'));
+        openTimelineAsset(this.getAttribute('data-row-key'));
+      });
+    });
+  }
+
+  function timelineRowKey(row) {
+    return row.getAttribute('data-id') || row.getAttribute('data-name') || row.getAttribute('data-title') || '';
+  }
+
+  function toggleTimelineDay(day) {
+    activeTimelineDate = activeTimelineDate === day ? null : day;
+    buildTimeline();
+  }
+
+  function openTimelineAsset(key) {
+    var row = baseRows().find(item => timelineRowKey(item) === key);
+    if(!row) return;
+    handleRowClick({ target: row }, row);
+    if(row.getAttribute('data-type') === 'audio') {
+      document.getElementById('fsPlayer').classList.add('active');
+      resizeCanvas();
+    }
+  }
+
+  function openTimelineInfo(key) {
+    var row = baseRows().find(item => timelineRowKey(item) === key);
+    if(row) showProperties(row);
+  }
+
+  function clearTimelineFilter() {
+    activeTimelineDate = null;
+    setFilter('all');
+    buildTimeline();
   }
 
   // ---- FILE INJECTION ----
@@ -887,6 +1318,7 @@
     ensureFolder(batch);
     updateDirectoryDropdown();
     generateFilterChip(mood, moodColor);
+    setUploadProgress(4, files.length > 1 ? `preparing ${files.length} files` : 'preparing file');
 
     if(isRemoteReady) {
       try {
@@ -894,7 +1326,9 @@
           var file = files[i];
           var uploadTitle = titleForUpload(file, title, i, files.length);
           var sizeStr = (file.size / 1024 / 1024).toFixed(2) + 'mb';
+          var startPct = (i / files.length) * 92 + 4;
           if(submitBtn) submitBtn.textContent = files.length > 1 ? `uploading ${i + 1}/${files.length}...` : 'uploading...';
+          setUploadProgress(startPct, files.length > 1 ? `uploading ${i + 1}/${files.length}` : 'uploading file');
           var remoteRecord = await saveRemoteAsset({
             file,
             coverFile,
@@ -912,7 +1346,9 @@
             links
           });
           createRowFromRecord(remoteRecord, true);
+          setUploadProgress(((i + 1) / files.length) * 92 + 4, files.length > 1 ? `indexed ${i + 1}/${files.length}` : 'indexed file');
         }
+        setUploadProgress(100, 'upload complete');
         document.getElementById('injectForm').reset();
         toggleCoverInput();
         setDefaultAssetDate();
@@ -920,10 +1356,13 @@
         updateDirectoryDropdown();
         updateCounts();
         buildQueue();
-        if(submitBtn) submitBtn.textContent = 'index file to active directory';
+        if(submitBtn) submitBtn.textContent = 'index selected file(s)';
+        resetUploadProgress(950);
         return;
       } catch(err) {
-        if(submitBtn) submitBtn.textContent = 'index file to active directory';
+        if(submitBtn) submitBtn.textContent = 'index selected file(s)';
+        setUploadProgress(0, 'upload failed');
+        resetUploadProgress(1400);
         alert(err.message || 'upload failed.');
         return;
       }
@@ -937,12 +1376,15 @@
     files.forEach((file, i) => {
       var uploadTitle = titleForUpload(file, title, i, files.length);
       var sizeStr = (file.size / 1024 / 1024).toFixed(2) + 'mb';
+      setUploadProgress(((i + 1) / files.length) * 92 + 4, files.length > 1 ? `indexing ${i + 1}/${files.length}` : 'indexing file');
       createRow(file, file.name, uploadTitle, batch, mood, type, sizeStr, dateStr, coverUrl, ver, notes, links, moodColor, assetDate, true);
     });
+    setUploadProgress(100, 'indexed locally');
     document.getElementById('injectForm').reset();
     toggleCoverInput();
     setDefaultAssetDate();
     setFilter(activeFilter);
+    resetUploadProgress(950);
   }
 
   async function loadRemoteArchive() {
@@ -1230,7 +1672,7 @@
       <div class="name-cell">${escapeHtml(record.title || 'untitled file')}</div>
       <div class="dim-cell">${dateDisplay}</div><div class="dim-cell">${escapeHtml(record.version || 'v1')}</div><div class="pill mood-pill">${escapeHtml(record.mood || 'raw')}</div>
       <div class="dim-cell">${escapeHtml(record.size_label || '')}</div><div class="pill">${escapeHtml(type)}</div>
-      <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
+      <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn edit-btn admin-only">[edit]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
     `;
     targetBatchList.appendChild(row);
     attachExplorerDrag(row);
@@ -1346,7 +1788,7 @@
         <div class="name-cell">${escapeHtml(title)}</div>
         <div class="dim-cell">${escapeHtml(date)}</div><div class="dim-cell">${escapeHtml(ver)}</div><div class="pill mood-pill">${escapeHtml(mood)}</div>
         <div class="dim-cell">${escapeHtml(size)}</div><div class="pill">${escapeHtml(type)}</div>
-        <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
+        <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn edit-btn admin-only">[edit]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
       `;
       targetBatchList.appendChild(row);
       attachExplorerDrag(row);
@@ -1368,14 +1810,16 @@
     document.getElementById('statAudio').textContent = audio;
     document.getElementById('statVisual').textContent = visual;
     document.getElementById('statText').textContent = text;
-    document.getElementById('statAccess').textContent = isAdmin ? 'admin' : 'view';
+    document.getElementById('statAccess').textContent = isAdmin ? 'admin' : 'open';
     document.getElementById('emptyState').classList.toggle('active', rows.length === 0);
+    buildTimeline();
   }
 
   document.addEventListener('click', function(e) {
     var row = e.target.closest('.frow');
     if (!row) return;
     if (e.target.classList.contains('info-btn')) return showProperties(row);
+    if (e.target.classList.contains('edit-btn')) return openEditAsset(row);
     if (e.target.classList.contains('delete-btn')) return removeAsset(row);
     handleRowClick(e, row);
   });
@@ -1420,6 +1864,7 @@
   }
 
   function handleRowClick(e, rowElement) {
+    rowElement = canonicalRow(rowElement);
     var type = rowElement.getAttribute('data-type');
     if(type === 'text') {
       document.getElementById('txtViewTitle').textContent = rowElement.getAttribute('data-title');
@@ -1447,22 +1892,132 @@
     document.getElementById('propsViewport').classList.add('active');
   }
 
+  function canonicalRow(row) {
+    var id = row.getAttribute('data-id');
+    if(id) return Array.from(document.querySelectorAll(`.frow[data-id="${cssEscape(id)}"]`)).find(item => !item.closest('#smartFilterList')) || row;
+    var name = row.getAttribute('data-name');
+    return Array.from(document.querySelectorAll('.frow')).find(item => !item.closest('#smartFilterList') && item.getAttribute('data-name') === name) || row;
+  }
+
+  function openEditAsset(row) {
+    if(!requireAdmin()) return;
+    editingRow = canonicalRow(row);
+    document.getElementById('editRowKey').value = editingRow.getAttribute('data-id') || editingRow.getAttribute('data-name') || '';
+    document.getElementById('editTitle').value = editingRow.getAttribute('data-title') || '';
+    document.getElementById('editVer').value = editingRow.getAttribute('data-ver') || '';
+    document.getElementById('editDate').value = editingRow.getAttribute('data-asset-date') || '';
+    document.getElementById('editFolder').value = editingRow.getAttribute('data-sub') || '';
+    document.getElementById('editMood').value = editingRow.getAttribute('data-mood') || '';
+    document.getElementById('editMoodColor').value = editingRow.getAttribute('data-mood-color') || moodColorFor(editingRow.getAttribute('data-mood') || 'raw');
+    document.getElementById('editNotes').value = editingRow.getAttribute('data-notes') || '';
+    document.getElementById('editSpotify').value = editingRow.getAttribute('data-spotify') || '';
+    document.getElementById('editApple').value = editingRow.getAttribute('data-apple') || '';
+    document.getElementById('editYoutube').value = editingRow.getAttribute('data-youtube') || '';
+    document.getElementById('editSoundcloud').value = editingRow.getAttribute('data-soundcloud') || '';
+    document.getElementById('editViewport').classList.add('active');
+  }
+
+  function applyEditedValues(row, values) {
+    var oldBatch = row.getAttribute('data-sub') || 'uncategorized';
+    row.setAttribute('data-title', values.title);
+    row.setAttribute('data-ver', values.ver);
+    row.setAttribute('data-asset-date', values.assetDate);
+    row.setAttribute('data-date', sortDateFromISO(values.assetDate));
+    row.setAttribute('data-sub', values.batch);
+    row.setAttribute('data-mood', values.mood);
+    row.setAttribute('data-mood-color', values.moodColor);
+    row.style.setProperty('--mood-color', values.moodColor);
+    row.setAttribute('data-notes', values.notes);
+    row.setAttribute('data-spotify', values.links.spotify);
+    row.setAttribute('data-apple', values.links.apple);
+    row.setAttribute('data-youtube', values.links.youtube);
+    row.setAttribute('data-soundcloud', values.links.soundcloud);
+
+    var nameCell = row.querySelector('.name-cell');
+    if(nameCell) nameCell.textContent = values.title;
+    var dims = row.querySelectorAll('.dim-cell');
+    if(dims[0]) dims[0].textContent = displayDateFromISO(values.assetDate);
+    if(dims[1]) dims[1].textContent = values.ver;
+    var moodPill = row.querySelector('.mood-pill');
+    if(moodPill) moodPill.textContent = values.mood;
+
+    if(values.batch !== oldBatch) {
+      ensureFolder(values.batch).appendChild(row);
+      removeEmptyFolders();
+    }
+  }
+
+  async function saveEditedAsset() {
+    if(!requireAdmin() || !editingRow) return;
+    var values = {
+      title: document.getElementById('editTitle').value.trim() || 'untitled file',
+      ver: document.getElementById('editVer').value.trim() || 'v1',
+      assetDate: document.getElementById('editDate').value || new Date().toISOString().slice(0, 10),
+      batch: normalizeFolderPath(document.getElementById('editFolder').value) || 'uncategorized',
+      mood: document.getElementById('editMood').value.toLowerCase().trim() || 'raw',
+      moodColor: document.getElementById('editMoodColor').value || '#ffffff',
+      notes: document.getElementById('editNotes').value.trim(),
+      links: {
+        spotify: document.getElementById('editSpotify').value.trim(),
+        apple: document.getElementById('editApple').value.trim(),
+        youtube: document.getElementById('editYoutube').value.trim(),
+        soundcloud: document.getElementById('editSoundcloud').value.trim()
+      }
+    };
+
+    var assetId = editingRow.getAttribute('data-id');
+    if(isRemoteReady && assetId) {
+      var result = await supabaseClient.from('archive_assets').update({
+        title: values.title,
+        version: values.ver,
+        asset_date: values.assetDate,
+        batch: values.batch,
+        mood: values.mood,
+        mood_color: values.moodColor,
+        notes: values.notes,
+        spotify_url: values.links.spotify,
+        apple_url: values.links.apple,
+        youtube_url: values.links.youtube,
+        soundcloud_url: values.links.soundcloud
+      }).eq('id', assetId);
+      if(result.error) return alert(result.error.message);
+    }
+
+    applyEditedValues(editingRow, values);
+    generateFilterChip(values.mood, values.moodColor);
+    closeViewport('editViewport');
+    updateDirectoryDropdown();
+    updateCounts();
+    buildQueue();
+    setFilter(activeFilter);
+    if(editingRow.classList.contains('playing')) {
+      document.getElementById('pbTitle').textContent = values.title;
+      document.getElementById('fsTitle').textContent = values.title;
+      updateNowPlayingDetails(editingRow, editingRow.getAttribute('data-type') || activeMediaType);
+      renderMeta(editingRow);
+    }
+    editingRow = null;
+  }
+
   function showMediaInNowPlaying(row, type) {
     activeMediaType = type;
+    activeVisualRow = row;
+    clearInterval(window.mockTimer);
     if(currentAudio) { currentAudio.pause(); setPlayIcon(true); }
     setPlayingState(false);
     document.querySelectorAll('.frow.playing').forEach(r => r.classList.remove('playing'));
     row.classList.add('playing');
+    document.getElementById('fsPlayer').classList.add('media-mode', `${type}-mode`);
+    closeNowInfo();
+    document.getElementById('fsPlayer').classList.remove('audio-mode', type === 'image' ? 'video-mode' : 'image-mode');
+    document.getElementById('fsModeLabel').innerHTML = `akrasia <span>/ ${type} viewer</span>`;
 
     var comboSub = `${row.getAttribute('data-sub')} Â· ${row.getAttribute('data-ver')} Â· ${type}`;
     document.getElementById('pbTitle').textContent = row.getAttribute('data-title');
     document.getElementById('pbSub').textContent = comboSub;
     document.getElementById('fsTitle').textContent = row.getAttribute('data-title');
     document.getElementById('fsSub').textContent = comboSub;
-    document.getElementById('pbTime').textContent = type === 'video' ? 'video preview' : 'image preview';
-    document.getElementById('fsTime').textContent = document.getElementById('pbTime').textContent;
-    document.getElementById('pbFill').style.width = '0%';
-    document.getElementById('fsFill').style.width = '0%';
+    setProgressDisplay(0, type === 'video' ? 'video preview' : 'image preview');
     document.getElementById('playerBar').classList.add('active');
     document.getElementById('fsPlayer').classList.add('active');
     animateTrackSwap();
@@ -1478,6 +2033,10 @@
     var fsCover = document.getElementById('fsCover');
     stage.innerHTML = '';
     if(type === 'audio') {
+      document.getElementById('fsPlayer').classList.remove('media-mode', 'image-mode', 'video-mode');
+      document.getElementById('fsPlayer').classList.add('audio-mode');
+      closeNowInfo();
+      document.getElementById('fsModeLabel').innerHTML = 'akrasia <span>/ now playing</span>';
       stage.classList.remove('active');
       visualizer.classList.remove('hidden');
       return;
@@ -1487,10 +2046,14 @@
     visualizer.classList.add('hidden');
     stage.classList.add('active');
     if(type === 'image') {
+      var src = row.getAttribute('data-img-src') || row.getAttribute('data-cover') || '';
       var img = document.createElement('img');
-      img.src = row.getAttribute('data-img-src') || row.getAttribute('data-cover') || '';
+      img.src = src;
       img.alt = row.getAttribute('data-title') || 'archive preview';
+      img.loading = 'eager';
       stage.appendChild(img);
+      addGalleryControls(stage, type);
+      readCoverColor(src, row.getAttribute('data-mood-color') || moodColorFor(row.getAttribute('data-mood') || 'raw'));
     } else if(type === 'video') {
       var video = document.createElement('video');
       video.src = row.getAttribute('data-video-src') || '';
@@ -1500,7 +2063,44 @@
       video.autoplay = true;
       video.loop = true;
       stage.appendChild(video);
+      addGalleryControls(stage, type);
     }
+  }
+
+  function addGalleryControls(stage, type) {
+    var list = visualRows(type);
+    if(list.length <= 1) return;
+    var prev = document.createElement('button');
+    prev.className = 'gallery-nav prev';
+    prev.type = 'button';
+    prev.textContent = '<';
+    prev.onclick = (e) => { e.stopPropagation(); playVisualSibling(type, -1); };
+    var next = document.createElement('button');
+    next.className = 'gallery-nav next';
+    next.type = 'button';
+    next.textContent = '>';
+    next.onclick = (e) => { e.stopPropagation(); playVisualSibling(type, 1); };
+    var chip = document.createElement('div');
+    var index = Math.max(0, list.findIndex(row => row === canonicalRow(activeVisualRow || list[0])));
+    chip.className = 'gallery-chip';
+    chip.textContent = `${index + 1}/${list.length}`;
+    stage.appendChild(prev);
+    stage.appendChild(next);
+    stage.appendChild(chip);
+  }
+
+  function visualRows(type) {
+    return baseRows().filter(row => row.getAttribute('data-type') === type);
+  }
+
+  function playVisualSibling(type, dir) {
+    var list = visualRows(type);
+    if(!list.length) return;
+    var current = canonicalRow(activeVisualRow || list[0]);
+    var index = list.findIndex(row => row === current);
+    if(index === -1) index = 0;
+    var nextIndex = (index + dir + list.length) % list.length;
+    showMediaInNowPlaying(list[nextIndex], type);
   }
 
   function renderMeta(row) {
@@ -1515,8 +2115,7 @@
     var linkHtml = links.length ? links.map(item => `<a href="${escapeAttr(item[1])}" target="_blank" rel="noopener">${escapeHtml(item[0])}</a>`).join('') : '<span>no links added</span>';
     meta.innerHTML = `
       <div class="meta-section-title">notes</div>
-      <div>${escapeHtml(row.getAttribute('data-notes') || 'no notes yet')}</div>
-      <br>
+      ${renderNotesHtml(row.getAttribute('data-notes') || '')}
       <div class="meta-section-title">dsp / content links</div>
       <div class="link-stack">${linkHtml}</div>
       <div class="meta-grid">
@@ -1528,10 +2127,18 @@
     `;
   }
 
+  function renderNotesHtml(notes) {
+    var clean = String(notes || '').trim();
+    if(!clean) return '<div class="notes-card notes-empty">no notes yet</div>';
+    var paragraphs = clean.split(/\n{2,}/).map(part => `<p>${escapeHtml(part).replace(/\n/g, '<br>')}</p>`).join('');
+    return `<div class="notes-card">${paragraphs}</div>`;
+  }
+
   function updateNowPlayingDetails(row, type) {
     var title = row.getAttribute('data-title') || 'untitled';
     var mood = row.getAttribute('data-mood') || 'raw';
     var moodColor = row.getAttribute('data-mood-color') || moodColorFor(mood);
+    setMoodTheme(moodColor);
     var source = row.getAttribute('data-file-url') || row.getAttribute('data-file') || row.getAttribute('data-img-src') || row.getAttribute('data-video-src') ? 'indexed' : 'placeholder';
     var qText = '--';
     var nextText = 'none';
@@ -1544,7 +2151,7 @@
     } else {
       qText = type;
     }
-    document.getElementById('fsStateBadge').textContent = type === 'audio' ? 'playing' : `${type} viewer`;
+    document.getElementById('fsStateBadge').textContent = type === 'audio' ? 'playing' : (type === 'image' ? 'viewing' : 'previewing');
     document.getElementById('fsTypeBadge').textContent = type;
     document.getElementById('fsMoodBadge').textContent = mood;
     document.documentElement.style.setProperty('--active-mood-color', moodColor);
@@ -1593,6 +2200,11 @@
   function playTrackFromQueue(index) {
     if(index < 0 || index >= audioQueue.length) return;
     activeMediaType = 'audio';
+    activeVisualRow = null;
+    document.getElementById('fsPlayer').classList.remove('media-mode', 'image-mode', 'video-mode');
+    document.getElementById('fsPlayer').classList.add('audio-mode');
+    closeNowInfo();
+    document.getElementById('fsModeLabel').innerHTML = 'akrasia <span>/ now playing</span>';
     queueIndex = index; var row = audioQueue[queueIndex];
     animateTrackSwap();
     document.querySelectorAll('.frow.playing').forEach(r => r.classList.remove('playing'));
@@ -1606,6 +2218,7 @@
     document.getElementById('fsSub').textContent = comboSub;
     document.getElementById('playerBar').classList.add('active');
     renderFullscreenMedia(row, 'audio');
+    resetAudioProgress();
     
     var cover = row.getAttribute('data-cover');
     var fsCover = document.getElementById('fsCover');
@@ -1617,8 +2230,10 @@
     updateNowPlayingDetails(row, 'audio');
     renderMeta(row);
 
-    if(currentAudio)
- { currentAudio.pause(); currentAudio.removeAttribute('src'); }
+    if(currentAudio) {
+      currentAudio.pause();
+      currentAudio.removeAttribute('src');
+    }
 
     var file = row.getAttribute('data-file');
     if(file) {
@@ -1626,7 +2241,10 @@
       nextAudioPreload = null;
       currentAudio.crossOrigin = "anonymous"; currentAudio.loop = isLooping;
       setupWebAudio(currentAudio);
-      currentAudio.addEventListener('timeupdate', updateTime); currentAudio.addEventListener('ended', handleTrackEnd);
+      var trackAudio = currentAudio;
+      currentAudio.addEventListener('loadedmetadata', () => { if(currentAudio === trackAudio) updateTime(); }, { once: true });
+      currentAudio.addEventListener('timeupdate', () => { if(currentAudio === trackAudio) updateTime(); });
+      currentAudio.addEventListener('ended', () => { if(currentAudio === trackAudio) handleTrackEnd(); });
       currentAudio.addEventListener('canplay', preloadNextTrack, { once: true });
       if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
       currentAudio.play().then(() => { setPlayIcon(false); setPlayingState(true); }).catch(e => { setPlayIcon(true); setPlayingState(false); });
@@ -1669,6 +2287,36 @@
   document.getElementById('pbPlay').onclick = toggleCurrentPlayback;
   document.getElementById('fsPlay').onclick = toggleCurrentPlayback;
 
+  document.addEventListener('keydown', function(e) {
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if(['input','textarea','select'].includes(tag) || (e.target && e.target.isContentEditable)) return;
+    var fsActive = document.getElementById('fsPlayer').classList.contains('active');
+    var timelineActive = document.getElementById('timelinePanel').classList.contains('active');
+    if(e.key === 'Escape') {
+      if(fsActive) {
+        var fs = document.getElementById('fsPlayer');
+        if(fs.classList.contains('info-open')) { closeNowInfo(); return; }
+        fs.classList.remove('active');
+        return;
+      }
+      if(timelineActive) { closeTimelineView(); return; }
+      document.querySelectorAll('.viewport-overlay.active').forEach(view => view.classList.remove('active'));
+    }
+    if(!fsActive) return;
+    if(e.key === ' ' || e.code === 'Space') {
+      e.preventDefault();
+      toggleCurrentPlayback();
+    } else if(e.key === 'ArrowRight') {
+      e.preventDefault();
+      if(activeMediaType === 'image' || activeMediaType === 'video') playVisualSibling(activeMediaType, 1);
+      else playNextTrack();
+    } else if(e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if(activeMediaType === 'image' || activeMediaType === 'video') playVisualSibling(activeMediaType, -1);
+      else playPrevTrack();
+    }
+  });
+
   document.getElementById('pbClose').onclick = () => {
     document.getElementById('playerBar').classList.remove('active'); document.getElementById('fsPlayer').classList.remove('active');
     if(currentAudio) currentAudio.pause();
@@ -1705,15 +2353,23 @@
   }
   function fmt(time) { if(isNaN(time)) return "00:00"; var m = Math.floor(time/60), s = Math.floor(time%60); return (m<10?'0':'')+m+':'+(s<10?'0':'')+s; }
 
+  function setProgressDisplay(percent, text) {
+    var safePercent = Math.max(0, Math.min(100, Number(percent) || 0)) + '%';
+    document.getElementById('pbFill').style.width = safePercent;
+    document.getElementById('fsFill').style.width = safePercent;
+    document.getElementById('pbTime').textContent = text;
+    document.getElementById('fsTime').textContent = text;
+  }
+
+  function resetAudioProgress() {
+    clearInterval(window.mockTimer);
+    setProgressDisplay(0, '00:00 / 00:00');
+  }
+
   function updateTime() {
     if(!currentAudio || !currentAudio.duration) return;
     var c = currentAudio.currentTime, d = currentAudio.duration;
-    var pct = (c / d * 100) + '%';
-    var timeText = fmt(c) + ' / ' + fmt(d);
-    document.getElementById('pbFill').style.width = pct;
-    document.getElementById('fsFill').style.width = pct;
-    document.getElementById('pbTime').textContent = timeText;
-    document.getElementById('fsTime').textContent = timeText;
+    setProgressDisplay(c / d * 100, fmt(c) + ' / ' + fmt(d));
   }
 
   function updateTimeMock() {
@@ -1724,13 +2380,8 @@
       tick++;
       if(tick % 4 === 0) c++;
       if(c>d) handleTrackEnd();
-      var pct = (c / d * 100) + '%';
-      var timeText = fmt(c) + ' / ' + fmt(d);
-      document.getElementById('pbFill').style.width = pct;
-      document.getElementById('fsFill').style.width = pct;
-      document.getElementById('pbTime').textContent = timeText;
-      document.getElementById('fsTime').textContent = timeText;
-      var pulse = 0.22 + Math.abs(Math.sin(tick * 0.72)) * (isCompactVisual ? 0.74 : 0.52);
+      setProgressDisplay(c / d * 100, fmt(c) + ' / ' + fmt(d));
+      var pulse = 0.14 + Math.abs(Math.sin(tick * 0.36)) * (isCompactVisual ? 0.22 : 0.18);
       document.documentElement.style.setProperty('--reactive-pulse', pulse.toFixed(3));
     }, 250);
   }
@@ -1745,6 +2396,7 @@
     if(!audioCtx) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       analyser = audioCtx.createAnalyser(); analyser.fftSize = isCompactVisual ? 128 : 256;
+      analyser.smoothingTimeConstant = 0.88;
       dataArray = new Uint8Array(analyser.frequencyBinCount); drawVisualizer();
     }
     if(sourceNode) sourceNode.disconnect();
@@ -1755,7 +2407,6 @@
     requestAnimationFrame(drawVisualizer);
     if(!analyser || !currentAudio || currentAudio.paused) return;
     visualFrame++;
-    if(isCompactVisual && visualFrame % 2 !== 0) return;
     analyser.getByteFrequencyData(dataArray);
     
     var sum = 0, low = 0, mid = 0, high = 0;
@@ -1771,8 +2422,19 @@
     var energy = (sum / dataArray.length) / 255;
     var bass = low / 255;
     var treble = high / 255;
+    visualEnergy += (energy - visualEnergy) * 0.075;
+    visualBass += (bass - visualBass) * 0.11;
+    visualBeatCooldown = Math.max(0, visualBeatCooldown - 1);
+    var beatThreshold = Math.max(0.18, visualBass * 1.18 + 0.04);
+    if(bass > beatThreshold && bass > visualBass + 0.055 && visualBeatCooldown === 0) {
+      visualBeat = Math.min(1, visualBeat + 0.34 + bass * 0.26);
+      visualBeatCooldown = isCompactVisual ? 14 : 11;
+    }
+    visualBeat *= 0.90;
+    var hype = Math.max(0, Math.min(1, (visualEnergy - 0.20) * 2.6 + visualBass * 0.72 + visualBeat * 0.42));
+    var tempoPulse = Math.min(0.92, visualEnergy * (0.62 + hype * 0.72) + visualBeat * (0.34 + hype * 0.28));
     var activeColor = reactiveBandColor(low, mid, high, energy);
-    document.documentElement.style.setProperty('--reactive-pulse', Math.min(1, energy * (isCompactVisual ? 2.1 : 1.45) + bass * (isCompactVisual ? 0.42 : 0.28)).toFixed(3));
+    document.documentElement.style.setProperty('--reactive-pulse', tempoPulse.toFixed(3));
     document.documentElement.style.setProperty('--reactive-r', Math.round(activeColor.r));
     document.documentElement.style.setProperty('--reactive-g', Math.round(activeColor.g));
     document.documentElement.style.setProperty('--reactive-b', Math.round(activeColor.b));
@@ -1785,19 +2447,19 @@
     canvasCtx.globalCompositeOperation = 'lighter';
 
     var points = [
-      [w * 0.12, h * 0.18, bass],
-      [w * 0.88, h * 0.20, treble],
-      [w * 0.18, h * 0.82, energy],
+      [w * 0.12, h * 0.18, visualBass],
+      [w * 0.88, h * 0.20, treble * 0.55 + visualEnergy * 0.35],
+      [w * 0.18, h * 0.82, visualEnergy],
       [w * 0.78, h * 0.78, mid / 255],
-      [w * 0.50, h * 0.48, (bass + energy) / 2]
+      [w * 0.50, h * 0.48, tempoPulse]
     ];
-    if(isCompactVisual) points = [points[0], points[2], points[4]];
+    if(isCompactVisual) points = [points[0], points[4]];
     points.forEach((p, i) => {
-      var radius = (isCompactVisual ? 150 : 110) + p[2] * (isCompactVisual ? 360 : 460);
+      var radius = (isCompactVisual ? 120 : 95) + p[2] * (isCompactVisual ? 220 + hype * 180 : 300 + hype * 220);
       if(i === 4) radius *= 1.2;
       var grad = canvasCtx.createRadialGradient(p[0], p[1], 0, p[0], p[1], radius);
-      grad.addColorStop(0, `${glow}${(isCompactVisual ? 0.52 : 0.34) * p[2]})`);
-      grad.addColorStop(0.48, `${glow}${(isCompactVisual ? 0.24 : 0.15) * p[2]})`);
+      grad.addColorStop(0, `${glow}${((isCompactVisual ? 0.34 : 0.24) + hype * 0.18) * p[2]})`);
+      grad.addColorStop(0.48, `${glow}${((isCompactVisual ? 0.17 : 0.11) + hype * 0.10) * p[2]})`);
       grad.addColorStop(1, `${glow}0)`);
       canvasCtx.fillStyle = grad;
       canvasCtx.beginPath();
@@ -1805,25 +2467,27 @@
       canvasCtx.fill();
     });
 
-    canvasCtx.lineWidth = 1 + bass * 5;
-    canvasCtx.strokeStyle = `${glow}${0.30 + energy * 0.32})`;
+    canvasCtx.lineWidth = 1 + visualBeat * (2.4 + hype * 2.8);
+    canvasCtx.strokeStyle = `${glow}${0.20 + tempoPulse * (0.34 + hype * 0.18)})`;
     canvasCtx.beginPath();
-    var waveStep = isCompactVisual ? 34 : 18;
-    for(var x = 0; x <= w; x += waveStep) {
-      var idx = Math.floor((x / w) * (dataArray.length - 1));
-      var y = h * 0.52 + Math.sin(x * 0.012 + reactiveHueShift * Math.PI * 2) * (18 + bass * 70) - (dataArray[idx] / 255) * h * 0.22;
-      if(x === 0) canvasCtx.moveTo(x, y);
-      else canvasCtx.lineTo(x, y);
+    if(!isCompactVisual || visualFrame % 2 === 0) {
+      var waveStep = isCompactVisual ? 44 : 18;
+      for(var x = 0; x <= w; x += waveStep) {
+        var idx = Math.floor((x / w) * (dataArray.length - 1));
+        var y = h * 0.52 + Math.sin(x * 0.012 + reactiveHueShift * Math.PI * 2) * (12 + visualBass * (34 + hype * 42)) - (dataArray[idx] / 255) * h * (0.12 + hype * 0.10);
+        if(x === 0) canvasCtx.moveTo(x, y);
+        else canvasCtx.lineTo(x, y);
+      }
+      canvasCtx.stroke();
     }
-    canvasCtx.stroke();
 
-    var barCount = isCompactVisual ? 24 : 44;
+    var barCount = isCompactVisual ? 14 : 44;
     var barW = w / barCount;
     for(var i = 0; i < barCount; i++) {
       var idx = Math.floor((i / barCount) * dataArray.length);
-      var value = dataArray[idx] / 255;
-      var barH = value * h * 0.32;
-      canvasCtx.fillStyle = `${glow}${0.11 + value * 0.28})`;
+      var value = (dataArray[idx] / 255) * (0.45 + hype * 0.35) + visualEnergy * 0.38 + visualBeat * (0.12 + hype * 0.16);
+      var barH = value * h * (0.20 + hype * 0.13);
+      canvasCtx.fillStyle = `${glow}${0.08 + value * (0.18 + hype * 0.14)})`;
       canvasCtx.fillRect(i * barW, h - barH, Math.max(2, barW - 7), barH);
       canvasCtx.fillRect(i * barW, 0, Math.max(2, barW - 7), barH * 0.48);
     }
