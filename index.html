@@ -536,7 +536,7 @@
   }
   @media (max-width: 430px) and (orientation: portrait){
     .mode-word{min-width:0;letter-spacing:0.02em;}
-    .topbar{padding:0 8px;gap:6px;}
+    .topbar{padding:0 8px 0 14px;gap:6px;}
     .topbar .wordmark{min-width:0;white-space:nowrap;font-size:0.86rem;letter-spacing:0.02em;}
     .header-actions{gap:4px;}
     .header-actions .action-trigger{font-size:0.48rem;padding:5px 6px;}
@@ -557,6 +557,7 @@
     <div class="wordmark" id="appModeLabel">akrasia <span>/ <span class="mode-word" id="appSectionLabel">archive</span></span></div>
     <div class="utility-btns">
       <div class="header-actions header-actions-archive">
+        <button class="action-trigger" type="button" onclick="toggleTimelineView()">timeline</button>
         <div class="action-trigger admin-only" onclick="togglePanel()">system panel</div>
         <div class="auth-tools">
           <input type="email" id="authEmail" placeholder="admin email" style="display:none;">
@@ -679,7 +680,6 @@
     <div class="explorer-head">
       <div class="explorer-title" onclick="adminIndexTap()">index / active</div>
       <div class="explorer-head-actions">
-        <button class="action-trigger" type="button" onclick="toggleTimelineView()">timeline</button>
         <div class="explorer-count" id="itemCount">3 files active</div>
       </div>
     </div>
@@ -925,7 +925,7 @@
     document.getElementById(id).classList.remove('active');
     if(id === 'propsViewport' || id === 'editViewport' || id === 'textViewport' || id === 'imageViewport') restoreUnderlyingSection();
   }
-  window.addEventListener('resize', () => { isCompactVisual = window.matchMedia('(max-width: 980px)').matches; resizeCanvas(); alignImmersiveRail(); });
+  window.addEventListener('resize', () => { isCompactVisual = window.matchMedia('(max-width: 980px)').matches; resizeCanvas(); alignImmersiveRail(); syncTimelineCardHeights(); });
   document.getElementById('timelineTrack').addEventListener('scroll', alignImmersiveRail);
   function resizeCanvas() {
     var scale = isCompactVisual ? 0.55 : 1;
@@ -1435,6 +1435,7 @@
         openTimelineAsset(this.getAttribute('data-row-key'));
       });
     });
+    window.requestAnimationFrame(syncTimelineCardHeights);
   }
 
   function buildImmersiveTimeline(track, groups, days) {
@@ -1508,8 +1509,19 @@
     document.querySelectorAll('.timeline-node').forEach(node => {
       var isActive = node.dataset.timelineDay === activeTimelineDate;
       node.classList.toggle('active', isActive);
+      node.style.height = '';
       var expand = node.querySelector('.timeline-expand');
       if(expand) expand.textContent = isActive ? 'collapse' : 'expand';
+    });
+    window.requestAnimationFrame(syncTimelineCardHeights);
+  }
+
+  function syncTimelineCardHeights() {
+    document.querySelectorAll('.timeline-node').forEach(node => {
+      node.style.height = '';
+      if(!node.classList.contains('active')) return;
+      var requiredHeight = Math.ceil(node.scrollHeight + 2);
+      node.style.height = requiredHeight + 'px';
     });
   }
 
