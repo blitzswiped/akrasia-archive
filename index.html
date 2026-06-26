@@ -184,7 +184,8 @@
   .timeline-asset:hover strong{color:var(--black);}
   .timeline-asset-icon{width:14px;height:14px;border:1px solid currentColor;border-radius:3px;opacity:0.8;}
   .timeline-asset-meta{font-size:0.62rem;white-space:nowrap;}
-  .timeline-asset-ver{font-size:0.62rem;white-space:nowrap;color:inherit;}
+  .timeline-asset-ver{font-size:0.74rem;font-weight:800;white-space:nowrap;color:var(--white);}
+  .timeline-asset:hover .timeline-asset-ver{color:var(--black);}
   .timeline-info{border:1px solid currentColor;border-radius:999px;padding:4px 8px;font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:inherit;background:transparent;cursor:pointer;justify-self:end;}
   .timeline-info:hover{background:var(--black);color:var(--white);border-color:var(--black);}
   .timeline-panel.immersive{background:
@@ -214,7 +215,7 @@
   .immersive-empty{border:1px solid var(--line-soft);padding:34px 38px;font-family:'JetBrains Mono',monospace;color:var(--dim-2);}
 
   .col-head{
-    display:grid; grid-template-columns:30px 1fr 100px 60px 90px 60px 60px 140px;
+    display:grid; grid-template-columns:30px minmax(180px,1fr) 170px 72px 90px 60px 60px 140px;
     align-items:center; padding:10px 8px; border-top:2px solid var(--white); border-bottom:2px solid var(--white);
     font-family:'JetBrains Mono', monospace; font-size:0.66rem; color:var(--dim-2); background:rgba(0,0,0,0.82); position:sticky; top:var(--app-header-h); z-index:50; backdrop-filter:blur(8px);
   }
@@ -252,7 +253,7 @@
   .folder-block.dragging, .frow.dragging{opacity:0.42;}
 
   .frow{
-    display:grid; grid-template-columns:30px 1fr 100px 60px 90px 60px 60px 140px;
+    display:grid; grid-template-columns:30px minmax(180px,1fr) 170px 72px 90px 60px 60px 140px;
     align-items:center; padding:14px 8px; border-bottom:1px solid var(--line-soft); cursor:pointer; transition:background 0.16s,color 0.16s, transform 0.16s, box-shadow 0.16s;
     animation:itemIn 0.28s cubic-bezier(0.16,1,0.3,1);
   }
@@ -267,6 +268,10 @@
   .icon-cell svg{width:16px;height:16px;stroke:var(--white);fill:none;stroke-width:1.6;}
   .name-cell{min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-weight:600; font-size:0.9rem; padding-right:14px; font-family:'JetBrains Mono', monospace;}
   .dim-cell{font-family:'JetBrains Mono', monospace; font-size:0.74rem; color:var(--dim);}
+  .date-cell{white-space:nowrap;font-size:0.68rem;}
+  .version-cell{font-size:0.92rem;font-weight:800;color:var(--white);}
+  .frow:hover .version-cell,.frow.playing .version-cell{color:var(--black);}
+  .frow.row-drop-target{box-shadow:inset 0 2px 0 var(--white);}
   .pill{border:1px solid var(--white); padding:3px 9px; font-family:'JetBrains Mono', monospace; font-size:0.66rem; width:fit-content; text-align:center; color:var(--dim-2); border-radius:999px;}
   .pill.mood-pill{border-style:solid; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color:var(--mood-color, var(--dim-2)); border-color:color-mix(in srgb, var(--mood-color, var(--white)) 72%, transparent); background:color-mix(in srgb, var(--mood-color, var(--white)) 13%, transparent);}
   
@@ -526,7 +531,7 @@
     .timeline-asset-icon{grid-column:1;grid-row:1 / span 4;align-self:start;margin-top:2px;}
     .timeline-asset strong{grid-column:2;grid-row:1;white-space:normal;overflow-wrap:anywhere;}
     .timeline-asset-meta{grid-column:2;grid-row:2;font-size:0.58rem;white-space:normal;overflow-wrap:anywhere;}
-    .timeline-asset-ver{grid-column:2;grid-row:3;font-size:0.58rem;white-space:normal;overflow-wrap:anywhere;}
+    .timeline-asset-ver{grid-column:2;grid-row:3;font-size:0.72rem;white-space:normal;overflow-wrap:anywhere;}
     .timeline-info{grid-column:2;grid-row:4;justify-self:start;padding:5px 7px;margin-top:2px;}
     .timeline-panel.immersive .timeline-track{padding:4vh 86px 8vh 4vw;}
     .immersive-timeline-list{width:100%;gap:30px;}
@@ -761,6 +766,7 @@
         <input type="date" id="editDate" title="asset date">
         <input type="time" id="editTime" title="asset time">
         <input type="text" id="editFolder" placeholder="folder path">
+        <input type="number" id="editPosition" min="1" step="1" placeholder="list position">
         <input type="text" id="editMood" placeholder="mood / tag">
         <input type="color" id="editMoodColor" value="#ffffff" title="mood color">
         <textarea class="full" id="editNotes" rows="4" placeholder="notes"></textarea>
@@ -1162,7 +1168,44 @@
   function displayDateTime(dateValue, timeValue) {
     var date = displayDateFromISO(dateValue);
     if(!date) return '';
-    return timeValue ? `${date} ${timeValue}` : date;
+    return timeValue ? `${date} ${formatTwelveHourTime(timeValue)} ${easternTimeLabel(dateValue)}` : date;
+  }
+
+  function formatTwelveHourTime(timeValue) {
+    var parts = String(timeValue || '').split(':');
+    var hour = parseInt(parts[0], 10);
+    if(!Number.isFinite(hour)) return String(timeValue || '');
+    var minute = String(parts[1] || '00').padStart(2, '0').slice(0, 2);
+    var suffix = hour >= 12 ? 'PM' : 'AM';
+    var displayHour = hour % 12 || 12;
+    return `${displayHour}:${minute} ${suffix}`;
+  }
+
+  function easternTimeLabel(dateValue) {
+    if(!dateValue) return 'ET';
+    try {
+      var probe = new Date(`${String(dateValue).slice(0, 10)}T12:00:00Z`);
+      var zonePart = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', timeZoneName: 'short' })
+        .formatToParts(probe)
+        .find(part => part.type === 'timeZoneName');
+      return zonePart && /^(EST|EDT)$/.test(zonePart.value) ? zonePart.value : 'ET';
+    } catch(error) {
+      return 'ET';
+    }
+  }
+
+  function easternDateTimeParts(dateValue) {
+    try {
+      var formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+      });
+      var parts = {};
+      formatter.formatToParts(dateValue).forEach(part => { if(part.type !== 'literal') parts[part.type] = part.value; });
+      return { date: `${parts.year}-${parts.month}-${parts.day}`, time: `${parts.hour}:${parts.minute}` };
+    } catch(error) {
+      return { date: new Date().toISOString().slice(0, 10), time: '00:00' };
+    }
   }
 
   function setDefaultAssetDate() {
@@ -1319,6 +1362,11 @@
     return row.getAttribute('data-asset-time') || timeFromSortKey(row.getAttribute('data-date')) || '';
   }
 
+  function timelineDisplayTimeForRow(row) {
+    var time = timelineTimeForRow(row);
+    return time ? `${formatTwelveHourTime(time)} ${easternTimeLabel(timelineDateForRow(row))}` : '';
+  }
+
   function dateFromSortKey(value) {
     var raw = String(value || '');
     if(raw.length < 8) return '';
@@ -1416,7 +1464,7 @@
         return `<button class="timeline-asset" type="button" data-row-key="${escapeAttr(timelineRowKey(row))}">
           <span class="timeline-asset-icon"></span>
           <strong>${escapeHtml(row.getAttribute('data-title') || 'untitled')}</strong>
-          <span class="timeline-asset-meta">${escapeHtml(timelineTimeForRow(row) || row.getAttribute('data-type') || 'asset')}</span>
+          <span class="timeline-asset-meta">${escapeHtml(timelineDisplayTimeForRow(row) || row.getAttribute('data-type') || 'asset')}</span>
           <span class="timeline-asset-ver">${escapeHtml(row.getAttribute('data-ver') || 'v1')}</span>
           <span class="timeline-info" data-row-key="${escapeAttr(timelineRowKey(row))}">[info]</span>
         </button>`;
@@ -1467,7 +1515,7 @@
             <span class="immersive-file-sub">${escapeHtml(sub)} / ${escapeHtml(type)} / ${escapeHtml(ver)}</span>
           </span>
           <span class="immersive-file-actions">
-            <span class="immersive-file-time">${escapeHtml(timelineTimeForRow(row) || String(index + 1).padStart(2, '0'))}</span>
+            <span class="immersive-file-time">${escapeHtml(timelineDisplayTimeForRow(row) || String(index + 1).padStart(2, '0'))}</span>
             <span class="immersive-info" data-row-key="${escapeAttr(timelineRowKey(row))}">info</span>
           </span>
         </button>`;
@@ -1716,7 +1764,11 @@
     }
 
     document.querySelectorAll('.folder-block[data-standard-folder]').forEach(folder => folder.remove());
-    result.data.forEach(record => createRowFromRecord(record, true));
+    result.data.sort((a, b) => {
+      var aOrder = Number.isFinite(Number(a.sort_order)) ? Number(a.sort_order) : Number.MAX_SAFE_INTEGER;
+      var bOrder = Number.isFinite(Number(b.sort_order)) ? Number(b.sort_order) : Number.MAX_SAFE_INTEGER;
+      return aOrder - bOrder;
+    }).forEach(record => createRowFromRecord(record, true));
     updateDirectoryDropdown();
     updateCounts();
     buildQueue();
@@ -1758,6 +1810,8 @@
 
   function attachExplorerDrag(item) {
     if(!item || item.id === 'smartFilterFolderBlock') return;
+    if(item.dataset.dragBound === 'true') return;
+    item.dataset.dragBound = 'true';
     item.draggable = true;
     item.addEventListener('dragstart', function(e) {
       if(!isAdmin) {
@@ -1773,8 +1827,14 @@
     item.addEventListener('dragend', function() {
       item.classList.remove('dragging');
       document.querySelectorAll('.folder-block.drag-over').forEach(folder => folder.classList.remove('drag-over'));
+      document.querySelectorAll('.frow.row-drop-target').forEach(row => row.classList.remove('row-drop-target'));
       draggedExplorerItem = null;
     });
+    if(item.classList.contains('frow')) {
+      item.addEventListener('dragover', handleRowDragOver);
+      item.addEventListener('dragleave', handleRowDragLeave);
+      item.addEventListener('drop', handleRowDrop);
+    }
   }
 
   function initExplorerDrag() {
@@ -1793,6 +1853,56 @@
     if(folder) folder.classList.remove('drag-over');
   }
 
+  function handleRowDragOver(e) {
+    if(!isAdmin || !draggedExplorerItem || !draggedExplorerItem.classList.contains('frow') || draggedExplorerItem === e.currentTarget) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.add('row-drop-target');
+  }
+
+  function handleRowDragLeave(e) {
+    e.currentTarget.classList.remove('row-drop-target');
+  }
+
+  function handleRowDrop(e) {
+    if(!isAdmin || !draggedExplorerItem || !draggedExplorerItem.classList.contains('frow')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var targetRow = e.currentTarget;
+    if(targetRow === draggedExplorerItem) return;
+    targetRow.classList.remove('row-drop-target');
+    var oldList = draggedExplorerItem.parentElement;
+    var targetList = targetRow.parentElement;
+    var targetPath = targetList.getAttribute('data-batch-target');
+    var insertAfter = e.clientY > targetRow.getBoundingClientRect().top + targetRow.getBoundingClientRect().height / 2;
+    targetList.insertBefore(draggedExplorerItem, insertAfter ? targetRow.nextSibling : targetRow);
+    if(targetPath && draggedExplorerItem.getAttribute('data-sub') !== targetPath) {
+      draggedExplorerItem.setAttribute('data-sub', targetPath);
+      saveMovedRowBatch(draggedExplorerItem, targetPath);
+    }
+    explorerSortKey = '';
+    updateSortIndicators();
+    persistRowOrder(targetList);
+    if(oldList && oldList !== targetList) persistRowOrder(oldList);
+    buildQueue();
+    renderQueueList();
+  }
+
+  async function persistRowOrder(list) {
+    if(!list) return;
+    var rows = Array.from(list.children).filter(child => child.classList && child.classList.contains('frow'));
+    var updates = [];
+    rows.forEach((row, index) => {
+      var order = index * 1000;
+      row.setAttribute('data-sort-order', order);
+      var assetId = row.getAttribute('data-id');
+      if(isRemoteReady && assetId) updates.push(supabaseClient.from('archive_assets').update({ sort_order: order }).eq('id', assetId));
+    });
+    if(!updates.length) return;
+    var results = await Promise.all(updates);
+    if(results.some(result => result.error)) document.getElementById('authStatus').textContent = 'order not saved';
+  }
+
   function handleFolderDrop(e) {
     if(!isAdmin || !draggedExplorerItem) return;
     e.preventDefault();
@@ -1805,9 +1915,14 @@
     if(!targetList) return;
 
     if(draggedExplorerItem.classList.contains('frow')) {
+      var oldList = draggedExplorerItem.parentElement;
       targetList.appendChild(draggedExplorerItem);
       draggedExplorerItem.setAttribute('data-sub', targetPath);
       saveMovedRowBatch(draggedExplorerItem, targetPath);
+      explorerSortKey = '';
+      updateSortIndicators();
+      persistRowOrder(targetList);
+      if(oldList && oldList !== targetList) persistRowOrder(oldList);
     } else if(draggedExplorerItem.classList.contains('folder-block')) {
       var oldPath = draggedExplorerItem.getAttribute('data-standard-folder');
       if(targetPath.indexOf(oldPath + '/') === 0) return;
@@ -1949,15 +2064,20 @@
     var assetDate = record.asset_date || '';
     var assetTime = record.asset_time || '';
     var created = record.created_at ? new Date(record.created_at) : new Date();
-    var fallbackTime = `${String(created.getHours()).padStart(2, '0')}:${String(created.getMinutes()).padStart(2, '0')}`;
-    var dateDisplay = assetDate ? displayDateTime(assetDate, assetTime) : `${String(created.getMonth() + 1).padStart(2, '0')}.${String(created.getDate()).padStart(2, '0')}.${String(created.getFullYear()).slice(-2)} ${fallbackTime}`;
-    var dateSort = assetDate ? sortKeyFromDateTime(assetDate, assetTime) : `${created.getFullYear()}${String(created.getMonth() + 1).padStart(2, '0')}${String(created.getDate()).padStart(2, '0')}${String(created.getHours()).padStart(2, '0')}${String(created.getMinutes()).padStart(2, '0')}`;
+    var easternCreated = easternDateTimeParts(created);
+    var fallbackTime = easternCreated.time;
+    var fallbackDate = easternCreated.date;
+    var effectiveDate = assetDate || fallbackDate;
+    var effectiveTime = assetTime || fallbackTime;
+    var dateDisplay = displayDateTime(effectiveDate, effectiveTime);
+    var dateSort = sortKeyFromDateTime(effectiveDate, effectiveTime);
 
     row.setAttribute('data-name', record.filename || record.title || 'remote asset');
     row.setAttribute('data-title', record.title || 'untitled file');
     row.setAttribute('data-date', dateSort);
-    row.setAttribute('data-asset-date', assetDate || `${created.getFullYear()}-${String(created.getMonth() + 1).padStart(2, '0')}-${String(created.getDate()).padStart(2, '0')}`);
-    row.setAttribute('data-asset-time', assetTime || fallbackTime);
+    row.setAttribute('data-asset-date', effectiveDate);
+    row.setAttribute('data-asset-time', effectiveTime);
+    row.setAttribute('data-sort-order', Number.isFinite(Number(record.sort_order)) ? Number(record.sort_order) : Number.MAX_SAFE_INTEGER);
     row.setAttribute('data-ver', record.version || 'v1');
     row.setAttribute('data-mood', record.mood || 'raw');
     row.setAttribute('data-mood-color', record.mood_color || moodColorFor(record.mood || 'raw'));
@@ -1989,7 +2109,7 @@
     row.innerHTML = `
       <div class="icon-cell">${icon}</div>
       <div class="name-cell">${escapeHtml(record.title || 'untitled file')}</div>
-      <div class="dim-cell">${dateDisplay}</div><div class="dim-cell">${escapeHtml(record.version || 'v1')}</div><div class="pill mood-pill">${escapeHtml(record.mood || 'raw')}</div>
+      <div class="dim-cell date-cell">${dateDisplay}</div><div class="dim-cell version-cell">${escapeHtml(record.version || 'v1')}</div><div class="pill mood-pill">${escapeHtml(record.mood || 'raw')}</div>
       <div class="dim-cell">${escapeHtml(record.size_label || '')}</div><div class="pill">${escapeHtml(type)}</div>
       <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn edit-btn admin-only">[edit]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
     `;
@@ -2070,6 +2190,7 @@
     row.setAttribute('data-asset-date', assetDate || '');
     row.setAttribute('data-asset-time', assetTime || '');
     row.setAttribute('data-ver', ver);
+    row.setAttribute('data-sort-order', targetBatchList.querySelectorAll(':scope > .frow').length * 1000);
     row.setAttribute('data-mood', mood);
     row.setAttribute('data-mood-color', moodColor || '#ffffff');
     row.style.setProperty('--mood-color', moodColor || '#ffffff');
@@ -2112,7 +2233,7 @@
       row.innerHTML = `
         <div class="icon-cell">${icon}</div>
         <div class="name-cell">${escapeHtml(title)}</div>
-        <div class="dim-cell">${escapeHtml(date)}</div><div class="dim-cell">${escapeHtml(ver)}</div><div class="pill mood-pill">${escapeHtml(mood)}</div>
+        <div class="dim-cell date-cell">${escapeHtml(date)}</div><div class="dim-cell version-cell">${escapeHtml(ver)}</div><div class="pill mood-pill">${escapeHtml(mood)}</div>
         <div class="dim-cell">${escapeHtml(size)}</div><div class="pill">${escapeHtml(type)}</div>
         <div class="row-actions"><button class="action-btn info-btn">[info]</button><button class="action-btn edit-btn admin-only">[edit]</button><button class="action-btn delete-btn admin-only">[remove]</button></div>
       `;
@@ -2244,6 +2365,8 @@
     document.getElementById('editDate').value = editingRow.getAttribute('data-asset-date') || '';
     document.getElementById('editTime').value = editingRow.getAttribute('data-asset-time') || timeFromSortKey(editingRow.getAttribute('data-date')) || '';
     document.getElementById('editFolder').value = editingRow.getAttribute('data-sub') || '';
+    var positionRows = Array.from(editingRow.parentElement.children).filter(item => item.classList && item.classList.contains('frow'));
+    document.getElementById('editPosition').value = Math.max(1, positionRows.indexOf(editingRow) + 1);
     document.getElementById('editMood').value = editingRow.getAttribute('data-mood') || '';
     document.getElementById('editMoodColor').value = editingRow.getAttribute('data-mood-color') || moodColorFor(editingRow.getAttribute('data-mood') || 'raw');
     document.getElementById('editNotes').value = editingRow.getAttribute('data-notes') || '';
@@ -2257,6 +2380,7 @@
 
   function applyEditedValues(row, values) {
     var oldBatch = row.getAttribute('data-sub') || 'uncategorized';
+    var oldList = row.parentElement;
     row.setAttribute('data-title', values.title);
     row.setAttribute('data-ver', values.ver);
     row.setAttribute('data-asset-date', values.assetDate);
@@ -2284,6 +2408,14 @@
       ensureFolder(values.batch).appendChild(row);
       removeEmptyFolders();
     }
+    var targetList = row.parentElement;
+    var siblings = Array.from(targetList.children).filter(item => item.classList && item.classList.contains('frow') && item !== row);
+    var targetIndex = Math.max(0, Math.min(siblings.length, values.position - 1));
+    targetList.insertBefore(row, siblings[targetIndex] || null);
+    explorerSortKey = '';
+    updateSortIndicators();
+    persistRowOrder(targetList);
+    if(oldList && oldList !== targetList) persistRowOrder(oldList);
   }
 
   async function saveEditedAsset() {
@@ -2294,6 +2426,7 @@
       assetDate: document.getElementById('editDate').value || new Date().toISOString().slice(0, 10),
       assetTime: document.getElementById('editTime').value || '',
       batch: normalizeFolderPath(document.getElementById('editFolder').value) || 'uncategorized',
+      position: Math.max(1, parseInt(document.getElementById('editPosition').value, 10) || 1),
       mood: document.getElementById('editMood').value.toLowerCase().trim() || 'raw',
       moodColor: document.getElementById('editMoodColor').value || '#ffffff',
       notes: document.getElementById('editNotes').value.trim(),
