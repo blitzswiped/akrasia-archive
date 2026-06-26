@@ -141,14 +141,14 @@
 
   /* ===== EXPLORER ===== */
   .explorer{padding:4.5vh 5vw 17vh;}
-  .explorer-head{ display:flex;justify-content:space-between;align-items:flex-end; margin-bottom:14px; gap:20px; }
-  .explorer-title{font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:700;line-height:1;letter-spacing:0.12em;border:1px solid var(--line);padding:7px 10px;color:var(--dim-2);cursor:pointer;user-select:none;}
-  .explorer-count{font-family:'JetBrains Mono', monospace;font-size:0.7rem;color:var(--dim);letter-spacing:0.04em;}
-  .status-strip{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line-soft);border-left:none;border-right:none;margin-bottom:18px;}
-  .status-cell{padding:10px 0;font-family:'JetBrains Mono', monospace;font-size:0.68rem;color:var(--dim-2);border-right:1px solid var(--line-soft);transition:background 0.2s;}
-  .status-cell:hover{background:rgba(255,255,255,0.04);}
-  .status-cell:last-child{border-right:none;}
-  .status-cell strong{display:block;color:var(--white);font-size:0.78rem;margin-bottom:2px;}
+  .explorer-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 0 8px;gap:14px;border-bottom:1px solid var(--line-soft);}
+  .explorer-title{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:0.74rem;font-weight:700;line-height:1;letter-spacing:0.04em;color:var(--dim-2);cursor:pointer;user-select:none;}
+  .explorer-title::before{content:"";width:3px;height:13px;background:var(--white);box-shadow:0 0 10px rgba(255,255,255,0.22);}
+  .explorer-count{font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--dim);letter-spacing:0.02em;white-space:nowrap;}
+  .status-strip{display:flex;align-items:center;gap:4px;}
+  .status-cell{display:flex;align-items:center;gap:5px;padding:4px 7px;font-family:'JetBrains Mono',monospace;font-size:0.56rem;color:var(--dim);border:1px solid var(--line-soft);border-radius:999px;background:rgba(255,255,255,0.018);white-space:nowrap;}
+  body.is-admin .status-cell.admin-only{display:flex;}
+  .status-cell strong{order:2;color:var(--white);font-size:0.62rem;}
   .explorer-head-actions{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;justify-content:flex-end;white-space:nowrap;}
   .explorer-head-actions .action-trigger{background:rgba(255,255,255,0.025);}
   .timeline-panel{position:fixed;inset:var(--app-header-h) 0 0;z-index:440;display:flex;flex-direction:column;opacity:0;visibility:hidden;pointer-events:none;transition:opacity 0.22s ease, visibility 0.22s;border:none;margin:0;padding:0;background:
@@ -174,7 +174,7 @@
   .timeline-expand{border:1px solid var(--line);border-radius:999px;padding:6px 9px;color:var(--dim-2);font-size:0.62rem;white-space:nowrap;}
   .timeline-moods{display:flex;gap:4px;margin-top:8px;}
   .timeline-dot{width:8px;height:8px;border-radius:999px;background:var(--dot-color,var(--white));box-shadow:0 0 12px var(--dot-color,var(--white));}
-  .timeline-assets{display:none;grid-auto-rows:max-content;gap:8px;margin-top:26px;overflow:visible;}
+  .timeline-assets{display:none;grid-auto-rows:max-content;gap:8px;margin-top:26px;padding-bottom:18px;overflow:visible;}
   .timeline-node.active .timeline-assets{display:grid;animation:timelineAssetsIn 0.20s ease both;}
   @keyframes timelineAssetsIn{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:translateY(0);}}
   .timeline-node.active .timeline-asset{animation:itemIn 0.24s cubic-bezier(0.16,1,0.3,1) both;}
@@ -193,11 +193,11 @@
     var(--black);}
   .timeline-panel.immersive .timeline-track{position:relative;display:block;padding:7vh 15vw 10vh 5vw;max-width:none;}
   .immersive-timeline-list{width:min(980px,100%);display:grid;gap:44px;}
-  .immersive-day{display:grid;grid-template-columns:150px minmax(0,1fr);gap:28px;align-items:start;animation:timelineNodeIn 0.32s cubic-bezier(0.16,1,0.3,1) both;}
+  .immersive-day{display:grid;grid-template-columns:150px minmax(0,1fr);gap:28px;align-items:start;min-width:0;overflow:visible;animation:timelineNodeIn 0.32s cubic-bezier(0.16,1,0.3,1) both;}
   .immersive-day-label{position:sticky;top:92px;font-family:'Inter',sans-serif;font-weight:800;font-size:clamp(1.3rem,2.8vw,2.4rem);line-height:0.96;color:var(--white);}
   .immersive-day-label span{display:block;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;font-weight:500;color:var(--dim-2);}
-  .immersive-files{display:grid;gap:10px;}
-  .immersive-file{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line-soft);background:rgba(255,255,255,0.026);backdrop-filter:blur(10px);padding:13px 14px;border-radius:var(--radius);color:var(--dim-2);font-family:'JetBrains Mono',monospace;font-size:0.68rem;text-align:left;cursor:pointer;transition:all 0.15s;}
+  .immersive-files{display:grid;grid-auto-rows:max-content;gap:10px;min-width:0;overflow:visible;}
+  .immersive-file{width:100%;min-height:0;display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line-soft);background:rgba(255,255,255,0.026);backdrop-filter:blur(10px);padding:13px 14px;border-radius:var(--radius);color:var(--dim-2);font-family:'JetBrains Mono',monospace;font-size:0.68rem;text-align:left;cursor:pointer;transition:all 0.15s;}
   .immersive-file:hover{background:var(--white);border-color:var(--white);color:var(--black);transform:translateX(5px);}
   .immersive-file:hover strong{color:var(--black);}
   .immersive-file-icon{width:15px;height:18px;border:1px solid currentColor;border-radius:3px;box-shadow:5px 5px 0 rgba(255,255,255,0.05);}
@@ -218,8 +218,15 @@
     align-items:center; padding:10px 8px; border-top:2px solid var(--white); border-bottom:2px solid var(--white);
     font-family:'JetBrains Mono', monospace; font-size:0.66rem; color:var(--dim-2); background:rgba(0,0,0,0.82); position:sticky; top:var(--app-header-h); z-index:50; backdrop-filter:blur(8px);
   }
-  .sort-trigger{ cursor:pointer; user-select:none; }
-  .sort-trigger:hover{ color:var(--white); }
+  .sort-trigger{display:inline-flex;align-items:center;gap:6px;color:var(--dim-2);font-family:'JetBrains Mono',monospace;font-size:0.66rem;cursor:pointer;user-select:none;}
+  .sort-trigger:hover,.sort-trigger.active{color:var(--white);}
+  .sort-icon{position:relative;width:8px;height:12px;flex:0 0 8px;opacity:0.48;}
+  .sort-icon::before,.sort-icon::after{content:"";position:absolute;left:1px;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;}
+  .sort-icon::before{top:1px;border-bottom:4px solid currentColor;}
+  .sort-icon::after{bottom:1px;border-top:4px solid currentColor;}
+  .sort-trigger.active .sort-icon{opacity:1;}
+  .sort-trigger.active.asc .sort-icon::after{opacity:0.18;}
+  .sort-trigger.active.desc .sort-icon::before{opacity:0.18;}
 
   .explorer-tools{display:flex;gap:8px;align-items:center;margin:0 0 14px;border:1px solid var(--line-soft);padding:8px;background:rgba(255,255,255,0.025);}
   .explorer-tools input{flex:1;min-width:0;background:#050505;border:1px solid var(--line);color:var(--white);padding:9px 10px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;border-radius:6px;}
@@ -503,9 +510,8 @@
     .topbar{gap:10px;padding:0 4vw;}
     .utility-btns{width:auto;justify-content:flex-end;align-items:center;}
     .auth-tools{justify-content:flex-start;}
-    .status-strip{grid-template-columns:1fr 1fr;}
     .explorer-head{align-items:center;gap:10px;}
-    .explorer-title{flex:0 1 auto;min-width:0;font-size:0.72rem;padding:7px 8px;letter-spacing:0.08em;}
+    .explorer-title{flex:0 1 auto;min-width:0;font-size:0.70rem;letter-spacing:0.03em;}
     .explorer-head-actions{width:auto;margin-left:auto;gap:7px;justify-content:flex-end;flex:0 0 auto;}
     .explorer-count{font-size:0.64rem;}
     .header-actions{gap:6px;}
@@ -539,9 +545,9 @@
     .topbar{padding:0 8px 0 14px;gap:6px;}
     .topbar .wordmark{min-width:0;white-space:nowrap;font-size:0.86rem;letter-spacing:0.02em;}
     .header-actions{gap:4px;}
-    .header-actions .action-trigger{font-size:0.48rem;padding:5px 6px;}
+    .header-actions .action-trigger{font-size:0.54rem;padding:6px 8px;}
     .explorer-head{gap:7px;}
-    .explorer-title{font-size:0.64rem;padding:6px 7px;}
+    .explorer-title{font-size:0.68rem;}
     .explorer-head-actions{gap:5px;}
     .explorer-head-actions .action-trigger{font-size:0.58rem;padding:5px 7px;}
     .explorer-count{font-size:0.58rem;letter-spacing:0.02em;}
@@ -678,17 +684,15 @@
 
   <section class="explorer">
     <div class="explorer-head">
-      <div class="explorer-title" onclick="adminIndexTap()">index / active</div>
+      <div class="explorer-title" onclick="adminIndexTap()">archive index</div>
       <div class="explorer-head-actions">
-        <div class="explorer-count" id="itemCount">3 files active</div>
+        <div class="status-strip">
+          <div class="status-cell">audio<strong id="statAudio">0</strong></div>
+          <div class="status-cell">visual<strong id="statVisual">0</strong></div>
+          <div class="status-cell admin-only">access<strong id="statAccess">admin</strong></div>
+        </div>
+        <div class="explorer-count" id="itemCount">3 indexed</div>
       </div>
-    </div>
-
-    <div class="status-strip">
-      <div class="status-cell"><strong id="statAudio">0</strong>audio</div>
-      <div class="status-cell"><strong id="statVisual">0</strong>visual</div>
-      <div class="status-cell"><strong id="statText">0</strong>text</div>
-      <div class="status-cell"><strong id="statAccess">open</strong>access</div>
     </div>
 
     <div class="timeline-panel" id="timelinePanel">
@@ -697,10 +701,10 @@
 
     <div class="col-head">
       <div></div>
-      <div class="sort-trigger" onclick="triggerSort('title')">title [sort]</div>
-      <div class="sort-trigger" onclick="triggerSort('date')">modified [sort]</div>
-      <div class="sort-trigger" onclick="triggerSort('ver')">ver [sort]</div>
-      <div class="sort-trigger" onclick="triggerSort('mood')">mood [sort]</div>
+      <button class="sort-trigger" data-sort="title" type="button" onclick="triggerSort('title')" title="sort by title">title<span class="sort-icon" aria-hidden="true"></span></button>
+      <button class="sort-trigger" data-sort="date" type="button" onclick="triggerSort('date')" title="sort by modified date">modified<span class="sort-icon" aria-hidden="true"></span></button>
+      <button class="sort-trigger" data-sort="ver" type="button" onclick="triggerSort('ver')" title="sort by version">ver<span class="sort-icon" aria-hidden="true"></span></button>
+      <button class="sort-trigger" data-sort="mood" type="button" onclick="triggerSort('mood')" title="sort by mood">mood<span class="sort-icon" aria-hidden="true"></span></button>
       <div>size</div>
       <div>type</div>
       <div></div>
@@ -838,6 +842,8 @@
   const STORAGE_BUCKET = 'archive-assets';
 
   var activeFilter = 'all';
+  var explorerSortKey = '';
+  var explorerSortDirection = 1;
   var isLooping = false;
   var currentAudio = null;
   var nextAudioPreload = null;
@@ -1489,14 +1495,16 @@
     var rail = track.querySelector('.immersive-rail');
     if(!rail) return;
     var railRect = rail.getBoundingClientRect();
+    var trackRect = track.getBoundingClientRect();
+    var usableRail = Math.max(1, railRect.height - 40);
     rail.querySelectorAll('.immersive-rail-mark').forEach(mark => {
       var day = mark.getAttribute('data-rail-day');
       var section = track.querySelector(`[data-immersive-day="${cssEscape(day)}"]`);
       if(!section) return;
       var sectionRect = section.getBoundingClientRect();
-      var top = sectionRect.top - railRect.top + Math.min(36, sectionRect.height * 0.18);
-      var maxTop = Math.max(16, railRect.height - 16);
-      mark.style.top = Math.max(16, Math.min(maxTop, top)) + 'px';
+      var contentTop = sectionRect.top - trackRect.top + track.scrollTop;
+      var ratio = Math.max(0, Math.min(1, contentTop / Math.max(1, track.scrollHeight)));
+      mark.style.top = (20 + ratio * usableRail) + 'px';
     });
   }
 
@@ -1516,11 +1524,60 @@
     window.requestAnimationFrame(syncTimelineCardHeights);
   }
 
+  function triggerSort(key) {
+    if(explorerSortKey === key) {
+      explorerSortDirection *= -1;
+    } else {
+      explorerSortKey = key;
+      explorerSortDirection = key === 'date' ? -1 : 1;
+    }
+    sortExplorerRows();
+    updateSortIndicators();
+    buildQueue();
+    renderQueueList();
+  }
+
+  function sortExplorerRows() {
+    if(!explorerSortKey) return;
+    var lists = Array.from(document.querySelectorAll('[data-batch-target]'));
+    var smartList = document.getElementById('smartFilterList');
+    if(smartList) lists.push(smartList);
+    lists.forEach(list => {
+      var rows = Array.from(list.children).filter(child => child.classList && child.classList.contains('frow'));
+      rows.sort((a, b) => {
+        var aValue = explorerSortValue(a, explorerSortKey);
+        var bValue = explorerSortValue(b, explorerSortKey);
+        var result = aValue.localeCompare(bValue, undefined, { numeric: true, sensitivity: 'base' });
+        if(result === 0) result = (a.getAttribute('data-title') || '').localeCompare(b.getAttribute('data-title') || '', undefined, { numeric: true, sensitivity: 'base' });
+        return result * explorerSortDirection;
+      });
+      rows.forEach(row => list.appendChild(row));
+    });
+  }
+
+  function explorerSortValue(row, key) {
+    if(key === 'title') return row.getAttribute('data-title') || row.getAttribute('data-name') || '';
+    if(key === 'date') return row.getAttribute('data-date') || '';
+    if(key === 'ver') return row.getAttribute('data-ver') || '';
+    if(key === 'mood') return row.getAttribute('data-mood') || '';
+    return '';
+  }
+
+  function updateSortIndicators() {
+    document.querySelectorAll('.sort-trigger[data-sort]').forEach(button => {
+      var active = button.getAttribute('data-sort') === explorerSortKey;
+      button.classList.toggle('active', active);
+      button.classList.toggle('asc', active && explorerSortDirection === 1);
+      button.classList.toggle('desc', active && explorerSortDirection === -1);
+      button.setAttribute('aria-label', `sort by ${button.getAttribute('data-sort')}${active ? (explorerSortDirection === 1 ? ', ascending' : ', descending') : ''}`);
+    });
+  }
+
   function syncTimelineCardHeights() {
     document.querySelectorAll('.timeline-node').forEach(node => {
       node.style.height = '';
       if(!node.classList.contains('active')) return;
-      var requiredHeight = Math.ceil(node.scrollHeight + 2);
+      var requiredHeight = Math.ceil(node.scrollHeight + 22);
       node.style.height = requiredHeight + 'px';
     });
   }
@@ -2074,11 +2131,9 @@
     var rows = Array.from(document.querySelectorAll('[data-batch-target] .frow'));
     var audio = rows.filter(row => row.getAttribute('data-type') === 'audio').length;
     var visual = rows.filter(row => ['image','video'].includes(row.getAttribute('data-type'))).length;
-    var text = rows.filter(row => row.getAttribute('data-type') === 'text').length;
-    document.getElementById('itemCount').textContent = `${rows.length} files active`;
+    document.getElementById('itemCount').textContent = `${rows.length} indexed`;
     document.getElementById('statAudio').textContent = audio;
     document.getElementById('statVisual').textContent = visual;
-    document.getElementById('statText').textContent = text;
     document.getElementById('statAccess').textContent = isAdmin ? 'admin' : 'open';
     document.getElementById('emptyState').classList.toggle('active', rows.length === 0);
     buildTimeline();
