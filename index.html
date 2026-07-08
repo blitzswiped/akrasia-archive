@@ -99,7 +99,14 @@
   .live-announcement-bar{position:fixed;left:0;right:0;top:var(--app-header-h);z-index:599;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:2px solid var(--white);background:#000;padding:12px 5vw;font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--white);backdrop-filter:blur(14px);box-shadow:0 18px 60px rgba(0,0,0,0.46);border-radius:0;}
   .live-announcement-bar button{border:1px solid var(--white);padding:3px 8px;font-size:0.68rem;color:var(--white);cursor:pointer;border-radius:0;background:#000;}
   .live-announcement-bar button:hover{background:var(--white);color:var(--black);}
+  .live-major-announcement{position:fixed;inset:var(--app-header-h) 0 0;z-index:620;display:grid;place-items:center;background:rgba(0,0,0,0.36);backdrop-filter:blur(16px) saturate(1.15);pointer-events:auto;}
+  .live-major-card{width:min(720px,calc(100% - 32px));border:1px solid rgba(255,255,255,0.52);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,0.14),rgba(0,0,0,0.82));box-shadow:0 40px 160px rgba(0,0,0,0.72),0 0 90px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.24);padding:34px;text-align:center;}
+  .live-major-kicker{font-family:'JetBrains Mono',monospace;font-size:0.70rem;color:rgb(var(--live-r,255),var(--live-g,255),var(--live-b,255));letter-spacing:0.16em;margin-bottom:16px;}
+  .live-major-text{font-size:clamp(2.2rem,7vw,5.8rem);font-weight:800;line-height:0.92;color:var(--white);text-shadow:0 0 42px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.25);}
+  .live-major-sub{margin:18px auto 0;max-width:52ch;font-family:'JetBrains Mono',monospace;font-size:0.82rem;line-height:1.6;color:var(--dim-2);}
+  .live-major-card button{margin-top:24px;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:0.64rem;color:var(--dim-2);}
   @media (prefers-reduced-motion:no-preference){.live-announcement-bar{animation:announcementIn 0.24s cubic-bezier(0.16,1,0.3,1) both;}@keyframes announcementIn{from{opacity:0;transform:translateY(-100%);}to{opacity:1;transform:translateY(0);}}}
+  @media (prefers-reduced-motion:no-preference){.live-major-card{animation:majorAnnouncementIn 0.52s cubic-bezier(0.16,1,0.3,1) both;}@keyframes majorAnnouncementIn{from{opacity:0;transform:scale(0.96) translateY(18px);filter:blur(8px);}to{opacity:1;transform:scale(1) translateY(0);filter:blur(0);}}}
 
   /* ===== CONTROL PANEL ===== */
   .control-panel { background: rgba(3,3,3,0.88); border-bottom: 2px solid var(--white); padding: 26px 5vw; display: none; grid-template-columns:minmax(0,1.55fr) minmax(280px,0.65fr); gap: 16px; box-shadow:0 18px 60px rgba(0,0,0,0.7); align-items:start; backdrop-filter:blur(18px) saturate(1.12); max-height:calc(100vh - var(--app-header-h)); overflow-y:auto; overscroll-behavior:contain; }
@@ -160,14 +167,31 @@
   .live-dashboard textarea,.live-control-stack textarea{resize:vertical;min-height:58px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;border-radius:0;background:#000;}
   .admin-chat-feed,.stats-list{border:1px solid var(--line-soft);background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);border-radius:0;overflow:auto;}
   .admin-chat-feed{height:390px;padding:8px 0;}
+  .admin-chat-feed.banned-feed{height:190px;margin-top:10px;}
+  .mini-toggle{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 9px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--dim-2);background:rgba(255,255,255,0.025);}
+  .mini-toggle input{width:auto;padding:0;accent-color:#fff;}
+  .live-queue-list{display:grid;gap:6px;max-height:220px;overflow:auto;border:1px solid var(--line-soft);border-radius:10px;background:rgba(0,0,0,0.36);padding:8px;}
+  .live-queue-item{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line-soft);border-radius:8px;padding:8px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;background:rgba(255,255,255,0.025);}
+  .live-queue-item.active{border-color:rgb(var(--live-r),var(--live-g),var(--live-b));box-shadow:0 0 18px rgba(var(--live-r),var(--live-g),var(--live-b),0.18);}
+  .live-queue-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--white);font-weight:700;}
+  .live-queue-sub{display:block;color:var(--dim);font-weight:400;margin-top:2px;}
+  .live-queue-actions{display:flex;gap:4px;}
+  .live-queue-actions button{width:24px;height:24px;border:1px solid var(--line);border-radius:6px;font-size:0.56rem;color:var(--dim-2);}
+  .stats-tools{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:8px;margin-bottom:10px;}
+  .stats-tools input,.stats-tools select{font-family:'JetBrains Mono',monospace;font-size:0.66rem;background:rgba(0,0,0,0.62);}
   .stats-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--white);}
   .stats-total{font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--dim-2);margin-bottom:10px;}
-  .stats-row{display:grid;grid-template-columns:42px minmax(0,1fr) 100px 130px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-soft);font-family:'JetBrains Mono',monospace;font-size:0.72rem;border-radius:0;}
+  .stats-row{display:grid;grid-template-columns:42px minmax(0,1fr) 88px 110px 120px;gap:12px;align-items:center;padding:10px 8px;border-bottom:1px solid var(--line-soft);font-family:'JetBrains Mono',monospace;font-size:0.68rem;border-radius:8px;cursor:pointer;}
+  .stats-row:hover{background:rgba(255,255,255,0.07);}
   .stats-row:last-child{border-bottom:none;}
   .stats-rank{color:var(--dim);width:32px;}
   .stats-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .stats-name small{display:block;color:var(--dim);font-size:0.56rem;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .stats-count{color:var(--white);font-weight:600;}
   .stats-date{color:var(--dim);white-space:nowrap;}
+  body.intro-active .wrap{opacity:0;pointer-events:none;}
+  body.archive-arriving .wrap{animation:archiveArrive 0.42s cubic-bezier(0.16,1,0.3,1) both;}
+  @keyframes archiveArrive{from{opacity:0;filter:blur(10px);transform:scale(1.015);}to{opacity:1;filter:blur(0);transform:scale(1);}}
 
   /* ===== EXPLORER ===== */
   .explorer{padding:4.5vh 5vw 17vh;}
@@ -255,8 +279,17 @@
   .live-hero{position:relative;z-index:2;align-self:center;display:grid;grid-template-columns:minmax(180px,320px) minmax(0,1fr);gap:clamp(22px,4vw,54px);align-items:center;max-width:min(1120px,100%);}
   .live-title{font-size:clamp(3rem,9vw,9rem);font-weight:800;line-height:0.82;letter-spacing:0;text-shadow:0 0 70px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.24);}
   .live-sub{font-family:'JetBrains Mono',monospace;font-size:clamp(0.72rem,1vw,0.92rem);line-height:1.6;color:var(--dim-2);max-width:64ch;}
-  .live-media-preview{width:100%;max-width:320px;aspect-ratio:1;border:1px solid rgba(255,255,255,0.42);background:rgba(255,255,255,0.035);box-shadow:18px 18px 0 rgba(255,255,255,0.06),0 24px 120px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.18);object-fit:cover;}
-  .live-media-preview.empty{display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--dim);}
+  .live-media-preview{position:relative;width:100%;max-width:380px;aspect-ratio:1;border:1px solid rgba(255,255,255,0.42);background:rgba(255,255,255,0.035);box-shadow:18px 18px 0 rgba(255,255,255,0.06),0 24px 120px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.18);overflow:hidden;display:grid;place-items:center;}
+  .live-media-preview.empty{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--dim);}
+  .live-media-preview img,.live-media-preview video{width:100%;height:100%;object-fit:cover;display:block;}
+  .live-media-preview video{background:#000;}
+  .live-media-preview .live-art-fallback{display:grid;place-items:center;width:100%;height:100%;font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--dim-2);background:radial-gradient(circle at 36% 32%,rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.22),transparent 42%),#050505;}
+  .live-audio-pulse{position:absolute;inset:0;display:flex;align-items:end;gap:4px;padding:18px;opacity:0.42;pointer-events:none;mix-blend-mode:screen;}
+  .live-audio-pulse i{flex:1;min-width:3px;height:18%;background:linear-gradient(180deg,#fff,rgb(var(--live-r,255),var(--live-g,255),var(--live-b,255)));box-shadow:0 0 18px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.35);animation:liveMeterOn 1.2s ease-in-out infinite alternate;}
+  .live-audio-pulse i:nth-child(2n){animation-duration:0.82s}.live-audio-pulse i:nth-child(3n){animation-duration:1.6s}.live-audio-pulse i:nth-child(5n){animation-duration:1s}
+  .live-stage-info{position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px;max-width:min(720px,100%);}
+  .live-stage-chip{border:1px solid var(--line-soft);background:rgba(0,0,0,0.42);backdrop-filter:blur(12px);border-radius:10px;padding:9px;font-family:'JetBrains Mono',monospace;font-size:0.56rem;color:var(--dim);}
+  .live-stage-chip strong{display:block;margin-top:4px;color:var(--white);font-family:'Inter',sans-serif;font-size:0.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .live-actions{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
   .live-action{border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-family:'JetBrains Mono',monospace;font-size:0.64rem;color:var(--dim-2);background:rgba(0,0,0,0.34);cursor:pointer;transition:all 0.15s;}
   .live-action:hover,.live-action.primary{background:var(--white);border-color:var(--white);color:var(--black);box-shadow:0 0 26px rgba(255,255,255,0.12);}
@@ -295,6 +328,7 @@
   .live-chat-banned{border:1px solid #cc3333;color:#ff6f6f;padding:8px;font-family:'JetBrains Mono',monospace;font-size:0.66rem;border-radius:0;}
   .live-notes{border:1px solid var(--line-soft);border-radius:10px;padding:12px;background:rgba(0,0,0,0.44);backdrop-filter:blur(14px);font-family:'JetBrains Mono',monospace;font-size:0.62rem;line-height:1.5;color:var(--dim-2);overflow:auto;max-height:18vh;}
   .live-chat-toggle{display:none;}
+  .live-mobile-tabs{display:none;}
   .live-notes strong{display:block;color:var(--white);font-family:'Inter',sans-serif;font-size:0.8rem;margin-bottom:8px;}
   .live-rail{position:absolute;right:4vw;top:6vh;bottom:7vh;width:1px;background:linear-gradient(transparent,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.85),var(--white),transparent);box-shadow:0 0 24px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.45);}
   .live-rail::before,.live-rail::after{content:"";position:absolute;left:50%;width:13px;height:13px;border:2px solid var(--white);border-radius:50%;background:#000;transform:translateX(-50%);box-shadow:0 0 20px rgba(255,255,255,0.32);}
@@ -803,8 +837,8 @@
   .timeline-assets{gap:10px;margin-top:34px;padding:0 0 18px;}.timeline-node.active .timeline-assets{animation:timelineSequenceIn 0.34s cubic-bezier(0.16,1,0.3,1) both;}@keyframes timelineSequenceIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
   .timeline-asset{min-height:58px;border-color:var(--line-soft);border-radius:7px;background:rgba(0,0,0,0.34);padding:13px 15px;}.timeline-asset:hover{transform:translateX(7px);}
   .timeline-panel.immersive{background:radial-gradient(circle at 72% 38%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.20),transparent 38%),linear-gradient(90deg,rgba(255,255,255,0.025),transparent 46%),#000;}
-  .timeline-panel.immersive .timeline-track{padding:8vh 15vw 14vh 6vw;}.timeline-panel.immersive .timeline-track::before{display:none;}
-  .immersive-timeline-list{width:min(1080px,100%);gap:72px;}.immersive-day{grid-template-columns:210px minmax(0,1fr);gap:42px;padding-bottom:30px;border-bottom:1px solid var(--line-soft);}.immersive-day-label{top:36px;font-size:clamp(2rem,4vw,4.5rem);text-shadow:0 0 34px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.16);}.immersive-files{gap:8px;}.immersive-file{border-radius:7px;background:rgba(255,255,255,0.025);padding:15px 16px;}.immersive-file:hover{transform:translateX(8px);}
+  .timeline-panel.immersive .timeline-track{padding:8vh clamp(92px,12vw,160px) 14vh 6vw;overflow-x:hidden;}.timeline-panel.immersive .timeline-track::before{display:none;}
+  .immersive-timeline-list{width:min(1180px,100%);gap:72px;min-width:0;}.immersive-day{grid-template-columns:clamp(168px,22vw,280px) minmax(0,1fr);gap:clamp(26px,4vw,64px);padding-bottom:30px;border-bottom:1px solid var(--line-soft);min-width:0;}.immersive-day-label{top:calc(var(--app-header-h) + 24px);font-size:clamp(1.9rem,3.8vw,4.35rem);text-shadow:0 0 34px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.16);max-width:100%;overflow-wrap:anywhere;z-index:2;}.immersive-files{gap:8px;min-width:0;overflow:hidden;}.immersive-file{border-radius:7px;background:rgba(255,255,255,0.025);padding:15px 16px;min-width:0;}.immersive-file:hover{transform:translateX(8px);}
   .immersive-rail{top:calc(var(--app-header-h) + 34px);bottom:36px;}.immersive-rail::before{background:linear-gradient(transparent,rgb(var(--reactive-r),var(--reactive-g),var(--reactive-b)),var(--white),transparent);box-shadow:0 0 16px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.34);}.immersive-rail-mark::after{border-color:rgb(var(--reactive-r),var(--reactive-g),var(--reactive-b));box-shadow:0 0 20px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.48);}
 
   @media (max-width: 980px){
@@ -967,12 +1001,24 @@
     .live-sub{font-size:0.66rem;max-width:42ch;}
     .live-media-preview{width:min(190px,46vw);box-shadow:10px 10px 0 rgba(255,255,255,0.06),0 18px 70px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.20);}
     .live-rail{right:18px;top:28px;bottom:28px;}
-    .live-side{position:fixed;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));z-index:4;border:1px solid rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.38);border-radius:14px;padding:10px;background:linear-gradient(180deg,rgba(255,255,255,0.12),rgba(0,0,0,0.86));backdrop-filter:blur(18px) saturate(1.18);display:block;max-height:42svh;overflow:hidden;box-shadow:0 22px 80px rgba(0,0,0,0.68),0 0 44px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.16);}
-    .live-side:not(.chat-open){max-height:58px;}
-    .live-side:not(.chat-open) > :not(.live-chat-toggle):not(.live-chat){display:none;}
+    .live-stage-info{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-width:100%;}.live-stage-chip{padding:7px;font-size:0.50rem;}.live-stage-chip strong{font-size:0.68rem;}
+    .live-mobile-tabs{position:fixed;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));z-index:6;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px;border:1px solid rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.36);border-radius:14px;background:rgba(0,0,0,0.72);backdrop-filter:blur(18px) saturate(1.18);box-shadow:0 18px 60px rgba(0,0,0,0.62);}
+    .live-mobile-tabs button{height:36px;border:1px solid var(--line-soft);border-radius:10px;font-family:'JetBrains Mono',monospace;font-size:0.60rem;color:var(--dim-2);background:rgba(255,255,255,0.035);}
+    .live-mobile-tabs button.active{background:var(--white);color:var(--black);border-color:var(--white);}
+    .live-side{position:fixed;left:10px;right:10px;bottom:calc(max(10px,env(safe-area-inset-bottom)) + 58px);z-index:5;border:1px solid rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.38);border-radius:14px;padding:10px;background:linear-gradient(180deg,rgba(255,255,255,0.12),rgba(0,0,0,0.86));backdrop-filter:blur(18px) saturate(1.18);display:none;max-height:44svh;overflow:hidden;box-shadow:0 22px 80px rgba(0,0,0,0.68),0 0 44px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.16);}
+    .live-room[data-mobile-tab="chat"] .live-side,.live-room[data-mobile-tab="details"] .live-side{display:block;}
+    .live-room[data-mobile-tab="details"] .live-chat{display:none;}
+    .live-room[data-mobile-tab="details"] .live-notes{display:block;}
+    .live-room[data-mobile-tab="watch"] .live-side{display:none;}
+    .live-side:not(.chat-open){max-height:44svh;}
+    .live-side:not(.chat-open) > :not(.live-chat-toggle):not(.live-chat){display:block;}
+    .live-room[data-mobile-tab="chat"] .live-side > :not(.live-chat-toggle):not(.live-chat){display:none!important;}
+    .live-room[data-mobile-tab="chat"] .live-chat{display:grid!important;}
+    .live-room[data-mobile-tab="details"] .live-side > .live-chat{display:none!important;}
+    .live-room[data-mobile-tab="details"] .live-side > :not(.live-chat-toggle):not(.live-chat){display:block!important;}
     .live-chat-toggle{display:flex;width:100%;height:36px;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line-soft);border-radius:10px;padding:0 11px;background:rgba(0,0,0,0.42);font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--white);cursor:pointer;}
     .live-chat-toggle strong{font-family:'Inter',sans-serif;font-size:0.82rem;}
-    .live-side:not(.chat-open) .live-chat{display:none;}
+    .live-side:not(.chat-open) .live-chat{display:grid;}
     .live-status{grid-template-columns:repeat(4,minmax(0,1fr));}
     .live-stat{padding:8px 7px;font-size:0.50rem;}
     .live-stat strong{font-size:0.72rem;}
@@ -987,7 +1033,7 @@
     .chat-message,.chat-message.admin-view{grid-template-columns:1fr auto;gap:5px 8px;}
     .chat-name,.chat-text{grid-column:1;}
     .chat-time{grid-column:2;grid-row:1;}
-    .live-notes{display:none;}
+    .live-notes{display:none;max-height:28svh;}
     .fs-player.audio-mode .fs-main{justify-content:center;padding:14px 5vw max(16px,env(safe-area-inset-bottom));}
     .fs-player.audio-mode .fs-meta,.fs-player.audio-mode .fs-meta:has(.fs-cover.active){display:grid;grid-template-columns:1fr;grid-template-areas:"cover" "badges" "title" "sub";justify-items:center;align-content:center;width:100%;margin:0 0 18px;column-gap:0;text-align:center;overflow:visible;}
     .fs-player.audio-mode .fs-cover{grid-area:cover;width:min(54vw,220px);height:auto;aspect-ratio:1;margin:0 0 18px;box-shadow:10px 10px 0 rgba(255,255,255,0.07),0 22px 70px rgba(0,0,0,0.58);}
@@ -1098,7 +1144,7 @@
     .intro-entry{padding:12px;}.intro-entry-count strong{font-size:4.2rem;}.intro-entry-count span{margin-top:10px;}
   }
   @media (prefers-reduced-motion: reduce){
-    .intro-slide,.intro-index-row,.intro-bars i,.intro-day,.intro-progress::after,.archive-form-enter,.player-bar.active{animation:none!important;transition:none!important;}
+    .intro-slide,.intro-index-row,.intro-bars i,.intro-day,.intro-progress::after,.archive-form-enter,.player-bar.active,body.archive-arriving .wrap{animation:none!important;transition:none!important;}
   }
 
   /* Final progress treatment: waveform scrubber with played/remaining split. */
@@ -1142,8 +1188,8 @@
     <article class="intro-slide active" data-intro-accent="255,255,255">
       <div>
         <div class="intro-kicker">01 / before the album</div>
-        <h1 class="intro-title">everything that became akrasia.</h1>
-        <p class="intro-copy">Songs, versions, images, and fragments collected without forcing them into one final shape. <strong>Start anywhere.</strong></p>
+        <h1 class="intro-title">enter the archive.</h1>
+        <p class="intro-copy">Songs, versions, images, and fragments stay alive here without being forced into one final shape. <strong>Start anywhere.</strong></p>
       </div>
       <div class="intro-demo">
         <div class="intro-origin">
@@ -1232,9 +1278,26 @@
         </div>
       </div>
     </article>
+    <article class="intro-slide" data-intro-accent="255,74,74">
+      <div>
+        <div class="intro-kicker">08 / live room</div>
+        <h2 class="intro-title">when the archive goes live.</h2>
+        <p class="intro-copy">A broadcast room for first listens, visual drops, countdowns, queues, announcements, and chat. Viewers follow the signal in one place while the archive stays untouched underneath.</p>
+      </div>
+      <div class="intro-demo">
+        <div class="intro-demo-head"><strong>akrasia / live</strong><span>on air / room 01</span></div>
+        <div class="intro-demo-body">
+          <div class="intro-player-demo">
+            <div class="intro-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="intro-now"><div class="intro-cover"></div><div class="intro-track">live signal</div><div class="intro-track-sub">queue 03 / countdown / chat</div><div class="intro-progress"></div></div>
+          </div>
+          <div class="intro-notes"><strong>major announcement</strong><br>new version starting next.<br><br><strong>chat</strong><br>angel: stay locked in<br>room: 48 watching</div>
+        </div>
+      </div>
+    </article>
     <article class="intro-slide" data-intro-accent="255,211,112">
       <div>
-        <div class="intro-kicker">08 / the unreleased vault</div>
+        <div class="intro-kicker">09 / the unreleased vault</div>
         <h2 class="intro-title">one hundred ways into akrasia.</h2>
         <p class="intro-copy">A demo can become a version, a version can become a release, and a cover can preserve the exact mood around it. This archive holds the scale of the album without hiding the smallest detail. <strong>Enter anywhere. Follow what changes.</strong></p>
       </div>
@@ -1245,7 +1308,7 @@
     </article>
   </div>
   <div class="intro-footer">
-    <div class="intro-footer-left"><span class="intro-step-label" id="introStepLabel">01 / 08</span><div class="intro-dots" id="introDots"></div></div>
+    <div class="intro-footer-left"><span class="intro-step-label" id="introStepLabel">01 / 09</span><div class="intro-dots" id="introDots"></div></div>
     <div class="intro-footer-right"><button class="intro-nav" id="introBack" type="button" onclick="changeIntroSlide(-1)">back</button><button class="intro-nav primary" id="introNext" type="button" onclick="changeIntroSlide(1)">next</button></div>
   </div>
 </section>
@@ -1274,6 +1337,7 @@
       <div class="header-actions header-actions-live">
         <span class="live-viewer-badge" id="liveViewerBadgeHeader">0 watching</span>
         <button class="action-trigger admin-only" type="button" onclick="broadcastCurrentLiveState()">sync now</button>
+        <button class="action-trigger admin-only" type="button" onclick="stopLiveRoom()">end live</button>
         <button class="action-trigger" type="button" onclick="joinLiveRoom()">join room</button>
         <button class="action-trigger" type="button" onclick="closeLiveRoom()">minimize [-]</button>
       </div>
@@ -1287,6 +1351,14 @@
   <div class="live-announcement-bar" id="liveAnnouncementBar" style="display:none;">
     <span id="liveAnnouncementText"></span>
     <button type="button" onclick="dismissAnnouncement()" aria-label="dismiss">x</button>
+  </div>
+  <div class="live-major-announcement" id="liveMajorAnnouncement" style="display:none;">
+    <div class="live-major-card">
+      <div class="live-major-kicker">live announcement</div>
+      <div class="live-major-text" id="liveMajorText"></div>
+      <div class="live-major-sub" id="liveMajorSub"></div>
+      <button type="button" onclick="dismissAnnouncement()">dismiss</button>
+    </div>
   </div>
 
   <div class="control-panel" id="controlPanel">
@@ -1413,21 +1485,62 @@
           <div class="live-stat">source<strong id="dashLiveSourceText">archive</strong></div>
         </div>
         <div class="live-control-stack">
+          <div class="label-mini">custom live title / notes</div>
+          <input type="text" id="liveCustomTitle" placeholder="optional broadcast title">
+          <textarea id="liveCustomNotes" rows="3" placeholder="optional live notes"></textarea>
+          <div class="label-mini">cover / accent</div>
+          <input type="file" id="liveCustomCover" accept="image/*">
+          <input type="color" id="liveCustomMoodColor" value="#ffffff" title="live accent color">
           <div class="label-mini">broadcast asset</div>
           <select id="liveAssetSelectDash"></select>
           <div class="quick-row">
             <button class="mini-btn" type="button" onclick="goLiveWithSelection('liveAssetSelectDash')">start selected</button>
+            <button class="mini-btn" type="button" onclick="addSelectedArchiveToLiveQueue('liveAssetSelectDash')">queue selected</button>
             <button class="mini-btn" type="button" onclick="broadcastCurrentLiveState()">sync position</button>
           </div>
-          <div class="label-mini">live-only file</div>
+          <div class="label-mini">private live item</div>
+          <input type="file" id="livePrivateFileInput" accept="audio/*,video/*,image/*">
+          <input type="file" id="livePrivateCoverInput" accept="image/*">
+          <input type="text" id="livePrivateTitleInput" placeholder="private item title">
+          <textarea id="livePrivateNotesInput" rows="2" placeholder="private item notes"></textarea>
+          <input type="text" id="livePrivateFolderInput" placeholder="private folder / collection">
+          <div class="quick-row">
+            <button class="mini-btn" type="button" onclick="savePrivateLiveItem()">preload private</button>
+            <button class="mini-btn" type="button" onclick="addPrivateLiveItemToQueue()">queue private</button>
+          </div>
+          <select id="privateLiveItemSelect"></select>
+          <div class="label-mini">live-only file now</div>
           <input type="file" id="liveFileInputDash" accept="audio/*,video/*,image/*">
           <input type="text" id="liveTitleInputDash" placeholder="live title">
           <div class="quick-row">
             <button class="mini-btn" type="button" onclick="goLiveWithFile('liveFileInputDash','liveTitleInputDash')">broadcast file</button>
             <button class="mini-btn" type="button" onclick="stopLiveRoom()">end session</button>
           </div>
+          <div class="label-mini">live queue</div>
+          <div class="quick-row">
+            <button class="mini-btn" type="button" onclick="startLiveQueue()">start queue</button>
+            <button class="mini-btn" type="button" onclick="pauseLiveQueue()">pause queue</button>
+            <button class="mini-btn" type="button" onclick="resumeLiveQueue()">resume</button>
+            <button class="mini-btn" type="button" onclick="nextLiveQueueItem()">next</button>
+            <button class="mini-btn" type="button" onclick="prevLiveQueueItem()">previous</button>
+            <button class="mini-btn" type="button" onclick="clearLiveQueue()">clear</button>
+          </div>
+          <input type="text" id="liveFolderQueueInput" placeholder="folder path to add to live queue">
+          <div class="quick-row">
+            <button class="mini-btn" type="button" onclick="addFolderToLiveQueue()">add folder</button>
+            <label class="mini-toggle"><input type="checkbox" id="liveAutoplayToggle" checked> autoplay</label>
+            <label class="mini-toggle"><input type="checkbox" id="liveFolderAutoplayToggle" checked> folder autoplay</label>
+          </div>
+          <input type="number" id="liveImageDuration" min="3" max="120" value="12" placeholder="image seconds">
+          <div class="live-queue-list" id="liveQueueList"></div>
           <div class="label-mini">countdown target (optional)</div>
           <input type="datetime-local" id="liveCountdownInputDash">
+          <select id="liveCountdownAction">
+            <option value="room">after countdown: show live room</option>
+            <option value="selected">after countdown: start selected item</option>
+            <option value="queue">after countdown: start queue</option>
+          </select>
+          <label class="mini-toggle"><input type="checkbox" id="liveCountdownAutoStart"> auto-start at zero</label>
           <div class="quick-row">
             <button class="mini-btn" type="button" onclick="setLiveCountdown('liveCountdownInputDash')">set countdown</button>
             <button class="mini-btn" type="button" onclick="clearLiveCountdown()">clear</button>
@@ -1437,12 +1550,26 @@
           <div class="quick-row">
             <button class="mini-btn" type="button" onclick="sendAnnouncement(false,'liveAnnounceInputDash')">send</button>
             <button class="mini-btn" type="button" onclick="sendAnnouncement(true,'liveAnnounceInputDash')">pin</button>
+            <button class="mini-btn" type="button" onclick="sendAnnouncement('major','liveAnnounceInputDash')">major</button>
+            <button class="mini-btn" type="button" onclick="dismissAnnouncement()">clear</button>
           </div>
         </div>
       </div>
       <div class="panel-sect live-admin-chat">
         <h3>chat moderation</h3>
+        <div class="quick-row">
+          <select id="timeoutLength">
+            <option value="1">1 min</option>
+            <option value="5">5 min</option>
+            <option value="10" selected>10 min</option>
+            <option value="30">30 min</option>
+            <option value="60">1 hour</option>
+            <option value="1440">24 hours</option>
+          </select>
+          <button class="mini-btn" type="button" onclick="loadBannedUsers()">refresh bans</button>
+        </div>
         <div class="admin-chat-feed" id="adminChatFeed"></div>
+        <div class="admin-chat-feed banned-feed" id="bannedUsersFeed"></div>
       </div>
     </div>
     <div class="panel-tab-pane" id="tab-stats">
@@ -1450,6 +1577,15 @@
         <div class="stats-head">
           <span>play stats</span>
           <button class="mini-btn" onclick="loadPlayStats()" type="button">refresh</button>
+        </div>
+        <div class="stats-tools">
+          <input type="search" id="statsSearch" placeholder="search stats">
+          <select id="statsSort" onchange="loadPlayStats()">
+            <option value="plays">most played</option>
+            <option value="recent">recent plays</option>
+            <option value="title">title</option>
+            <option value="folder">folder</option>
+          </select>
         </div>
         <div class="stats-total" id="statsTotalPlays">total plays: --</div>
         <div class="stats-list" id="statsPlayList"></div>
@@ -1474,7 +1610,7 @@
       <div class="timeline-track" id="timelineTrack"></div>
     </div>
 
-    <section class="live-room" id="liveRoom" aria-hidden="true">
+    <section class="live-room" id="liveRoom" data-mobile-tab="watch" aria-hidden="true">
       <div class="live-stage">
         <div class="live-signal-field" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
         <div class="live-kicker" id="liveKicker">offline / waiting for signal</div>
@@ -1487,6 +1623,12 @@
             </div>
             <div class="live-title" id="liveTitle">live room</div>
             <div class="live-sub" id="liveSub">join when angel starts a session. music, videos, images, and archive notes can all be pushed live into the room.</div>
+            <div class="live-stage-info">
+              <div class="live-stage-chip">status<strong id="liveStageStatus">offline</strong></div>
+              <div class="live-stage-chip">item<strong id="liveStageItem">waiting</strong></div>
+              <div class="live-stage-chip">queue<strong id="liveStageQueue">--</strong></div>
+              <div class="live-stage-chip">time<strong id="liveStageTime">--</strong></div>
+            </div>
             <div class="live-countdown" id="liveCountdown" style="display:none;">
               <div class="live-countdown-label">live starts in</div>
               <div class="live-countdown-clock" id="liveCountdownClock">00:00:00</div>
@@ -1501,6 +1643,11 @@
         </div>
         <div class="live-meter" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
         <div class="live-rail" aria-hidden="true"></div>
+      </div>
+      <div class="live-mobile-tabs" id="liveMobileTabs" role="tablist" aria-label="live room sections">
+        <button class="active" type="button" onclick="setLiveMobileTab('watch')">watch</button>
+        <button type="button" onclick="setLiveMobileTab('chat')">chat</button>
+        <button type="button" onclick="setLiveMobileTab('details')">details</button>
       </div>
       <aside class="live-side" id="liveSide">
         <button class="live-chat-toggle" type="button" onclick="toggleLiveChatSheet()"><strong>live chat</strong><span id="liveChatToggleCount">0 messages</span></button>
@@ -1711,6 +1858,13 @@
   run once in supabase dashboard:
 
   alter table archive_live_state add column if not exists countdown_target timestamptz;
+  alter table archive_live_state add column if not exists queue jsonb default '[]'::jsonb;
+  alter table archive_live_state add column if not exists queue_index integer default -1;
+  alter table archive_live_state add column if not exists queue_length integer default 0;
+  alter table archive_live_state add column if not exists countdown_action text default 'room';
+  alter table archive_live_state add column if not exists countdown_auto_start boolean default false;
+  alter table archive_live_state add column if not exists live_notes text;
+  alter table archive_live_state add column if not exists live_cover text;
 
   create table if not exists live_chat (
     id uuid default gen_random_uuid() primary key,
@@ -1724,6 +1878,7 @@
 
   create table if not exists live_banned_tokens (
     user_token text primary key,
+    username text,
     banned_at timestamptz default now(),
     reason text,
     expires_at timestamptz
@@ -1733,7 +1888,23 @@
     id uuid default gen_random_uuid() primary key,
     room_id text default 'main',
     message text not null,
+    subtitle text,
+    kind text default 'normal',
     is_pinned boolean default false,
+    created_at timestamptz default now()
+  );
+
+  create table if not exists private_live_items (
+    id uuid default gen_random_uuid() primary key,
+    title text not null,
+    notes text,
+    type text not null,
+    folder text default 'private live',
+    mood_color text default '#ffffff',
+    file_url text,
+    cover_url text,
+    storage_path text,
+    cover_storage_path text,
     created_at timestamptz default now()
   );
 
@@ -1761,6 +1932,7 @@
   alter table live_banned_tokens enable row level security;
   alter table live_announcements enable row level security;
   alter table play_counts enable row level security;
+  alter table private_live_items enable row level security;
 
   drop policy if exists "anyone can insert chat" on live_chat;
   create policy "anyone can insert chat" on live_chat for insert with check (true);
@@ -1780,6 +1952,9 @@
   create policy "public can read announcements" on live_announcements for select using (true);
   drop policy if exists "admin can insert announcements" on live_announcements;
   create policy "admin can insert announcements" on live_announcements for insert to authenticated with check (auth.email() = 'angelyzyy@gmail.com');
+
+  drop policy if exists "admin can manage private live items" on private_live_items;
+  create policy "admin can manage private live items" on private_live_items for all to authenticated using (auth.email() = 'angelyzyy@gmail.com') with check (auth.email() = 'angelyzyy@gmail.com');
 
   drop policy if exists "public can read play counts" on play_counts;
   create policy "public can read play counts" on play_counts for select using (true);
@@ -1817,10 +1992,22 @@
   var isLiveFollower = false;
   var liveTempUrls = [];
   var activeLiveDirectState = null;
+  var livePlaybackEl = null;
+  var liveQueue = [];
+  var liveQueueIndex = -1;
+  var liveQueuePlaying = false;
+  var liveQueueAutoplay = true;
+  var liveFolderAutoplay = true;
+  var liveImageTimer = null;
+  var privateLiveItems = [];
+  var liveCountdownAction = 'room';
+  var liveCountdownAutoStart = false;
+  var countdownAutoStarted = false;
   var countdownTimer = null;
   var chatChannel = null;
   var chatMessages = [];
   var chatBanned = false;
+  var bannedUsers = [];
   var announcementTimer = null;
   var announcementChannel = null;
   var statsTimer = null;
@@ -1865,6 +2052,8 @@
       element.classList.remove('archive-form-enter');
       element.style.removeProperty('--form-delay');
     });
+    document.body.classList.add('intro-active');
+    document.body.classList.remove('archive-arriving');
     introIndex = 0;
     renderIntroSlide();
     overlay.classList.add('active');
@@ -1879,10 +2068,13 @@
     try { localStorage.setItem('akrasia-intro-v3', 'seen'); } catch(error) {}
     window.clearInterval(introLocationTimer);
     overlay.classList.add('departing');
+    document.body.classList.remove('intro-active');
+    document.body.classList.add('archive-arriving');
     assembleArchiveView();
     window.setTimeout(() => {
       overlay.classList.remove('active', 'departing');
       overlay.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('archive-arriving');
     }, 900);
   }
 
@@ -1939,7 +2131,7 @@
     });
     var active = slides[introIndex];
     overlay.style.setProperty('--intro-accent', active.getAttribute('data-intro-accent') || '255,255,255');
-    var introModes = ['prologue', 'map', 'explorer', 'versions', 'now playing', 'image viewer', 'timeline', 'vault'];
+    var introModes = ['prologue', 'map', 'explorer', 'versions', 'now playing', 'image viewer', 'timeline', 'live', 'vault'];
     var modeWord = document.getElementById('introModeWord');
     var nextMode = introModes[introIndex] || 'archive';
     if(modeWord && modeWord.textContent !== nextMode) {
@@ -2013,6 +2205,9 @@
     }
     if(name === 'live-control') {
       refreshLiveAssetSelect();
+      loadPrivateLiveItems();
+      loadBannedUsers();
+      renderLiveQueue();
       renderAdminChatFeed();
       updateLiveDashboard();
     }
@@ -2038,6 +2233,10 @@
     setAppSection(live && live.classList.contains('active') ? 'live' : (timeline && timeline.classList.contains('active') ? 'timeline' : 'archive'));
   }
   function toggleFullscreen() {
+    if(isLiveFollower) {
+      openLiveRoom();
+      return;
+    }
     var fs = document.getElementById('fsPlayer');
     fs.classList.toggle('active');
     if(!fs.classList.contains('active')) {
@@ -2062,6 +2261,10 @@
     window.setTimeout(resizeCanvas, 260);
   }
   function openMiniPlayerNotes() {
+    if(isLiveFollower) {
+      openLiveRoom();
+      return;
+    }
     var fs = document.getElementById('fsPlayer');
     fs.classList.add('active', 'info-open');
     var btn = document.getElementById('fsInfoToggle');
@@ -2261,6 +2464,7 @@
     document.getElementById('timelinePanel').classList.remove('active');
     document.getElementById('liveRoom').classList.add('active');
     document.getElementById('liveRoom').setAttribute('aria-hidden', 'false');
+    setLiveMobileTab('watch');
     setAppSection('live');
     refreshLiveAssetSelect();
     renderLiveState(liveState);
@@ -2272,6 +2476,10 @@
   }
 
   function closeLiveRoom() {
+    if(!isAdmin) {
+      exitLiveFollowerMode();
+      stopLivePlayback();
+    }
     document.getElementById('liveRoom').classList.remove('active');
     document.getElementById('liveRoom').setAttribute('aria-hidden', 'true');
     restoreUnderlyingSection();
@@ -2336,6 +2544,38 @@
     return row.getAttribute('data-id') || row.getAttribute('data-name') || row.getAttribute('data-title') || '';
   }
 
+  function liveCustomOverrides() {
+    var title = document.getElementById('liveCustomTitle')?.value.trim() || '';
+    var notes = document.getElementById('liveCustomNotes')?.value.trim() || '';
+    var mood = document.getElementById('liveCustomMoodColor')?.value || '';
+    return {
+      title: title || undefined,
+      notes: notes || undefined,
+      mood_color: mood || undefined
+    };
+  }
+
+  async function liveCustomCoverUrl() {
+    var input = document.getElementById('liveCustomCover');
+    var file = input && input.files && input.files[0];
+    if(!file) return '';
+    if(isRemoteReady && supabaseClient && isAdmin) {
+      var safeName = file.name.replace(/[^a-z0-9._-]+/gi, '-');
+      var path = `live/covers/${Date.now()}-${safeName}`;
+      var upload = await supabaseClient.storage.from(STORAGE_BUCKET).upload(path, file, { upsert:false });
+      if(!upload.error) return supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+    }
+    return URL.createObjectURL(file);
+  }
+
+  function queueMeta() {
+    return {
+      queue: liveQueue.map(item => ({ key:item.key, title:item.title, type:item.type, source:item.source })),
+      queue_index: liveQueueIndex,
+      queue_length: liveQueue.length
+    };
+  }
+
   function findLiveRow(key) {
     if(!key) return null;
     return baseRows().find(row => row.getAttribute('data-id') === key || row.getAttribute('data-name') === key || row.getAttribute('data-title') === key) || null;
@@ -2393,17 +2633,19 @@
       position: currentTime || 0,
       playing,
       updated_at: new Date().toISOString(),
-      countdown_target: null
+      countdown_target: null,
+      countdown_action: liveCountdownAction,
+      countdown_auto_start: liveCountdownAutoStart
     };
-    return Object.assign(state, overrides || {});
+    return Object.assign(state, queueMeta(), liveCustomOverrides(), overrides || {});
   }
 
   function liveStateFromDirect(base, overrides) {
     var state = Object.assign({}, base || activeLiveDirectState || {});
-    var media = document.querySelector('#fsMediaStage video');
-    if(state.type === 'audio' && currentAudio) {
-      state.position = currentAudio.currentTime || 0;
-      state.playing = !currentAudio.paused;
+    var media = livePlaybackEl || document.querySelector('#livePreview video');
+    if(state.type === 'audio' && livePlaybackEl) {
+      state.position = livePlaybackEl.currentTime || 0;
+      state.playing = !livePlaybackEl.paused;
     } else if(state.type === 'video' && media) {
       state.position = media.currentTime || 0;
       state.playing = !media.paused;
@@ -2412,7 +2654,9 @@
     state.is_live = true;
     state.updated_at = new Date().toISOString();
     state.countdown_target = null;
-    return Object.assign(state, overrides || {});
+    state.countdown_action = liveCountdownAction;
+    state.countdown_auto_start = liveCountdownAutoStart;
+    return Object.assign(state, queueMeta(), overrides || {});
   }
 
   function liveSyncedPosition(state) {
@@ -2426,10 +2670,20 @@
   function renderLiveState(state) {
     state = state || { is_live: false };
     liveState = state;
+    liveCountdownAction = state.countdown_action || liveCountdownAction || 'room';
+    liveCountdownAutoStart = Boolean(state.countdown_auto_start);
+    var countdownActionEl = document.getElementById('liveCountdownAction');
+    var countdownAutoEl = document.getElementById('liveCountdownAutoStart');
+    if(countdownActionEl) countdownActionEl.value = liveCountdownAction;
+    if(countdownAutoEl) countdownAutoEl.checked = liveCountdownAutoStart;
     var row = findLiveRow(state.asset_key);
     var isLive = Boolean(state.is_live);
     document.body.classList.toggle('is-live', isLive);
-    if(!isLive) setLiveFollower(false);
+    if(!isLive) {
+      setLiveFollower(false);
+      activeLiveDirectState = null;
+      stopLivePlayback();
+    }
     var liveBtn = document.getElementById('liveHeaderBtn');
     if(liveBtn) {
       liveBtn.setAttribute('aria-pressed', isLive ? 'true' : 'false');
@@ -2448,6 +2702,11 @@
     document.getElementById('liveTypeText').textContent = type;
     document.getElementById('liveSourceText').textContent = isLive ? 'live from angel' : 'archive';
     document.getElementById('liveTimeText').textContent = isLive ? fmt(liveSyncedPosition(state)) : '--';
+    var queueText = isLive && Number.isFinite(Number(state.queue_length)) && Number(state.queue_length) > 0 ? `${(Number(state.queue_index) || 0) + 1}/${Number(state.queue_length)}` : '--';
+    document.getElementById('liveStageStatus').textContent = isLive ? (state.playing ? 'on air' : 'armed') : 'offline';
+    document.getElementById('liveStageItem').textContent = title;
+    document.getElementById('liveStageQueue').textContent = queueText;
+    document.getElementById('liveStageTime').textContent = isLive ? fmt(liveSyncedPosition(state)) : '--';
     var notes = state.notes || (row && row.getAttribute('data-notes')) || '';
     document.getElementById('liveNotes').innerHTML = `<strong>room notes</strong>${escapeHtml(notes || 'no notes are attached to the current live item yet.')}`;
     setMoodTheme(state.mood_color || (row && row.getAttribute('data-mood-color')) || '#ffffff');
@@ -2474,6 +2733,9 @@
     if(!requireAdmin()) return;
     var input = document.getElementById(inputId || 'liveCountdownInput');
     if(!input || !input.value) return;
+    liveCountdownAction = document.getElementById('liveCountdownAction')?.value || 'room';
+    liveCountdownAutoStart = Boolean(document.getElementById('liveCountdownAutoStart')?.checked);
+    countdownAutoStarted = false;
     var iso = new Date(input.value).toISOString();
     var mirror = document.getElementById(inputId === 'liveCountdownInputDash' ? 'liveCountdownInput' : 'liveCountdownInputDash');
     if(mirror) mirror.value = input.value;
@@ -2481,6 +2743,8 @@
       countdown_target: iso,
       is_live: false,
       room_id: 'main',
+      countdown_action: liveCountdownAction,
+      countdown_auto_start: liveCountdownAutoStart,
       updated_at: new Date().toISOString()
     }));
   }
@@ -2505,6 +2769,7 @@
       if(diff === 0) {
         window.clearInterval(countdownTimer);
         clock.textContent = '00:00:00';
+        handleCountdownComplete();
         loadLiveState();
         return;
       }
@@ -2521,6 +2786,21 @@
     window.clearInterval(countdownTimer);
     var el = document.getElementById('liveCountdown');
     if(el) el.style.display = 'none';
+  }
+
+  function handleCountdownComplete() {
+    if(!isAdmin || !liveCountdownAutoStart || countdownAutoStarted) return;
+    countdownAutoStarted = true;
+    if(liveCountdownAction === 'queue') startLiveQueue();
+    else if(liveCountdownAction === 'selected') goLiveWithSelection('liveAssetSelectDash');
+    else openLiveRoom();
+  }
+
+  function setLiveMobileTab(tab) {
+    var room = document.getElementById('liveRoom');
+    if(!room) return;
+    room.setAttribute('data-mobile-tab', tab || 'watch');
+    document.querySelectorAll('#liveMobileTabs button').forEach(btn => btn.classList.toggle('active', btn.textContent.trim() === tab));
   }
 
   function setLiveColor(rgb) {
@@ -2557,18 +2837,21 @@
 
   function renderLivePreview(row, type, cover) {
     var preview = document.getElementById('livePreview');
+    if(!preview) return;
     preview.className = 'live-media-preview';
     preview.innerHTML = '';
-    var source = liveState.file_url || cover || (row && (type === 'image' ? row.getAttribute('data-img-src') : row.getAttribute('data-cover'))) || '';
-    if(type === 'image' && row) source = row.getAttribute('data-img-src') || source;
-    if(type === 'video' && row) source = row.getAttribute('data-video-src') || source;
+    var state = liveState || {};
+    var source = '';
+    if(type === 'image') source = state.file_url || (row && row.getAttribute('data-img-src')) || state.cover || cover || '';
+    else if(type === 'video') source = state.file_url || (row && row.getAttribute('data-video-src')) || '';
+    else source = state.cover || state.live_cover || cover || (row && (row.getAttribute('data-cover') || row.getAttribute('data-img-src'))) || '';
     if(source && (type === 'image' || type === 'audio')) {
       var img = document.createElement('img');
       img.src = source;
-      img.alt = '';
-      img.className = 'live-media-preview';
-      preview.replaceWith(img);
-      img.id = 'livePreview';
+      img.alt = state.title || 'live artwork';
+      img.onerror = function() { renderLiveFallback(preview, 'artwork unavailable'); };
+      preview.appendChild(img);
+      if(type === 'audio') addLiveAudioPulse(preview);
       return;
     }
     if(source && type === 'video') {
@@ -2576,14 +2859,32 @@
       video.src = source;
       video.muted = true;
       video.playsInline = true;
-      video.className = 'live-media-preview';
-      preview.replaceWith(video);
-      video.id = 'livePreview';
+      video.autoplay = Boolean(state.playing);
+      video.controls = false;
+      video.onerror = function() { renderLiveFallback(preview, 'video unavailable'); };
+      preview.appendChild(video);
       video.play().catch(() => {});
       return;
     }
+    if(type === 'audio') addLiveAudioPulse(preview);
     preview.classList.add('empty');
-    preview.textContent = type === 'text' ? 'text broadcast' : 'no artwork';
+    renderLiveFallback(preview, type === 'text' ? 'text broadcast' : 'no artwork');
+  }
+
+  function renderLiveFallback(container, text) {
+    container.innerHTML = '';
+    var fallback = document.createElement('div');
+    fallback.className = 'live-art-fallback';
+    fallback.textContent = text || 'artwork unavailable';
+    container.appendChild(fallback);
+  }
+
+  function addLiveAudioPulse(container) {
+    var pulse = document.createElement('div');
+    pulse.className = 'live-audio-pulse';
+    pulse.setAttribute('aria-hidden', 'true');
+    pulse.innerHTML = '<i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>';
+    container.appendChild(pulse);
   }
 
   function setupLiveRealtime() {
@@ -2683,9 +2984,9 @@
       '<span class="chat-name">' + escapeHtml(msg.username || 'listener') + '</span>' +
       '<span class="chat-text">' + escapeHtml(msg.message || '') + '</span>' +
       '<span class="chat-time">' + time + '</span>' +
-      (adminView && isAdmin ? '<button class="chat-mod-btn" onclick="hideChatMessage(this)" data-id="' + escapeAttr(msg.id || '') + '">hide</button>' +
-        '<button class="chat-mod-btn danger" onclick="banChatUser(this)" data-token="' + escapeAttr(msg.user_token || '') + '">ban</button>' +
-        '<button class="chat-mod-btn" onclick="timeoutChatUser(this)" data-token="' + escapeAttr(msg.user_token || '') + '">10min</button>' : '');
+      (adminView && isAdmin ? (msg.is_hidden ? '<button class="chat-mod-btn" onclick="unhideChatMessage(this)" data-id="' + escapeAttr(msg.id || '') + '">unhide</button>' : '<button class="chat-mod-btn" onclick="hideChatMessage(this)" data-id="' + escapeAttr(msg.id || '') + '">hide</button>') +
+        '<button class="chat-mod-btn danger" onclick="banChatUser(this)" data-token="' + escapeAttr(msg.user_token || '') + '" data-username="' + escapeAttr(msg.username || 'listener') + '">ban</button>' +
+        '<button class="chat-mod-btn" onclick="timeoutChatUser(this)" data-token="' + escapeAttr(msg.user_token || '') + '" data-username="' + escapeAttr(msg.username || 'listener') + '">timeout</button>' : '');
     return row;
   }
 
@@ -2743,23 +3044,78 @@
     renderAdminChatFeed();
   }
 
+  async function unhideChatMessage(btn) {
+    if(!requireAdmin() || !supabaseClient) return;
+    var id = btn.dataset.id;
+    if(!id) return;
+    await supabaseClient.from('live_chat').update({ is_hidden: false }).eq('id', id);
+    chatMessages = chatMessages.map(msg => msg.id === id ? Object.assign({}, msg, { is_hidden: false }) : msg);
+    renderLiveChatMessages();
+    renderAdminChatFeed();
+  }
+
   async function banChatUser(btn) {
     if(!requireAdmin() || !supabaseClient) return;
     var token = btn.dataset.token;
     if(!token) return;
-    await supabaseClient.from('live_banned_tokens').upsert({ user_token: token, reason: 'ban' }, { onConflict: 'user_token' });
+    await supabaseClient.from('live_banned_tokens').upsert({ user_token: token, username: btn.dataset.username || '', reason: 'ban', expires_at: null }, { onConflict: 'user_token' });
     await supabaseClient.from('live_chat').update({ is_hidden: true }).eq('user_token', token).eq('room_id', 'main');
     chatMessages = chatMessages.map(msg => msg.user_token === token ? Object.assign({}, msg, { is_hidden: true }) : msg);
     renderLiveChatMessages();
     renderAdminChatFeed();
+    loadBannedUsers();
   }
 
   async function timeoutChatUser(btn) {
     if(!requireAdmin() || !supabaseClient) return;
     var token = btn.dataset.token;
     if(!token) return;
-    var expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-    await supabaseClient.from('live_banned_tokens').upsert({ user_token: token, reason: 'timeout', expires_at: expires }, { onConflict: 'user_token' });
+    var minutes = Math.max(1, Number(document.getElementById('timeoutLength')?.value) || 10);
+    var expires = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+    await supabaseClient.from('live_banned_tokens').upsert({ user_token: token, username: btn.dataset.username || '', reason: 'timeout', expires_at: expires }, { onConflict: 'user_token' });
+    loadBannedUsers();
+  }
+
+  async function loadBannedUsers() {
+    var feed = document.getElementById('bannedUsersFeed');
+    if(!feed || !isAdmin) return;
+    if(!supabaseClient) {
+      feed.innerHTML = '<div class="panel-copy">moderation list needs supabase.</div>';
+      return;
+    }
+    var result = await supabaseClient.from('live_banned_tokens').select('*').order('banned_at', { ascending:false }).limit(100);
+    bannedUsers = result.data || [];
+    renderBannedUsers();
+  }
+
+  function renderBannedUsers() {
+    var feed = document.getElementById('bannedUsersFeed');
+    if(!feed) return;
+    feed.innerHTML = '';
+    if(!bannedUsers.length) {
+      feed.innerHTML = '<div class="panel-copy">no banned or timed-out users.</div>';
+      return;
+    }
+    bannedUsers.forEach(user => {
+      var row = document.createElement('div');
+      row.className = 'chat-message admin-view';
+      var exp = user.expires_at ? new Date(user.expires_at).toLocaleString([], { month:'2-digit', day:'2-digit', hour:'numeric', minute:'2-digit' }).toLowerCase() : 'permanent';
+      row.innerHTML =
+        '<span class="chat-name">' + escapeHtml(user.username || 'unknown') + '</span>' +
+        '<span class="chat-text">' + escapeHtml((user.reason || 'ban') + ' / ' + (user.user_token || '').slice(0, 12)) + '</span>' +
+        '<span class="chat-time">' + escapeHtml(exp) + '</span>' +
+        '<button class="chat-mod-btn" onclick="unbanChatUser(this)" data-token="' + escapeAttr(user.user_token || '') + '">unban</button>';
+      feed.appendChild(row);
+    });
+  }
+
+  async function unbanChatUser(btn) {
+    if(!requireAdmin() || !supabaseClient) return;
+    var token = btn.dataset.token;
+    if(!token) return;
+    await supabaseClient.from('live_banned_tokens').delete().eq('user_token', token);
+    bannedUsers = bannedUsers.filter(user => user.user_token !== token);
+    renderBannedUsers();
   }
 
   async function sendAnnouncement(pinned, inputId) {
@@ -2767,7 +3123,8 @@
     var input = document.getElementById(inputId || 'liveAnnounceInput');
     var message = (input ? input.value.trim() : '').slice(0, 200);
     if(!message) return;
-    var payload = { room_id: 'main', message, is_pinned: Boolean(pinned), created_at: new Date().toISOString() };
+    var kind = pinned === 'major' ? 'major' : (pinned ? 'pinned' : 'normal');
+    var payload = { room_id: 'main', message, kind, is_pinned: Boolean(pinned === true), created_at: new Date().toISOString() };
     if(supabaseClient) await supabaseClient.from('live_announcements').insert(payload);
     showAnnouncement(payload);
     if(liveChannel) liveChannel.send({ type: 'broadcast', event: 'announcement', payload });
@@ -2777,7 +3134,21 @@
   function showAnnouncement(data) {
     var bar = document.getElementById('liveAnnouncementBar');
     var text = document.getElementById('liveAnnouncementText');
+    var major = document.getElementById('liveMajorAnnouncement');
+    var majorText = document.getElementById('liveMajorText');
+    var majorSub = document.getElementById('liveMajorSub');
     if(!bar || !text) return;
+    if(data.kind === 'major') {
+      if(major && majorText) {
+        majorText.textContent = data.message || '';
+        if(majorSub) majorSub.textContent = data.subtitle || 'live room update';
+        major.style.display = '';
+      }
+      bar.style.display = 'none';
+      window.clearTimeout(announcementTimer);
+      if(!data.is_pinned) announcementTimer = window.setTimeout(dismissAnnouncement, 10000);
+      return;
+    }
     text.textContent = data.message || '';
     bar.style.display = '';
     window.clearTimeout(announcementTimer);
@@ -2786,7 +3157,9 @@
 
   function dismissAnnouncement() {
     var bar = document.getElementById('liveAnnouncementBar');
+    var major = document.getElementById('liveMajorAnnouncement');
     if(bar) bar.style.display = 'none';
+    if(major) major.style.display = 'none';
     window.clearTimeout(announcementTimer);
   }
 
@@ -2798,23 +3171,50 @@
 
   async function loadPlayStats() {
     if(!supabaseClient) return;
-    var result = await supabaseClient.from('play_counts').select('*').order('play_count', { ascending: false }).limit(50);
+    var sort = document.getElementById('statsSort')?.value || 'plays';
+    var query = supabaseClient.from('play_counts').select('*');
+    if(sort === 'recent') query = query.order('last_played', { ascending:false });
+    else query = query.order('play_count', { ascending: false });
+    var result = await query.limit(100);
     if(result.error || !result.data) return;
     var list = document.getElementById('statsPlayList');
     var totalEl = document.getElementById('statsTotalPlays');
     if(!list) return;
+    var rows = result.data.map(stat => {
+      var archiveRow = findLiveRow(stat.asset_key);
+      return {
+        stat,
+        row: archiveRow,
+        title: archiveRow ? archiveRow.getAttribute('data-title') : stat.asset_key,
+        version: archiveRow ? archiveRow.getAttribute('data-ver') : '--',
+        folder: archiveRow ? archiveRow.getAttribute('data-sub') : 'missing item',
+        type: archiveRow ? archiveRow.getAttribute('data-type') : 'unknown'
+      };
+    });
+    var search = (document.getElementById('statsSearch')?.value || '').toLowerCase().trim();
+    if(search) rows = rows.filter(item => `${item.title} ${item.version} ${item.folder} ${item.type}`.toLowerCase().includes(search));
+    if(sort === 'title') rows.sort((a,b) => String(a.title).localeCompare(String(b.title)));
+    if(sort === 'folder') rows.sort((a,b) => String(a.folder).localeCompare(String(b.folder)) || String(a.title).localeCompare(String(b.title)));
     var total = result.data.reduce((sum, row) => sum + (row.play_count || 0), 0);
     if(totalEl) totalEl.textContent = 'total plays: ' + total;
     list.innerHTML = '';
-    result.data.forEach((row, i) => {
-      var lastPlayed = row.last_played ? new Date(row.last_played).toLocaleDateString().toLowerCase() : '--';
+    rows.forEach((item, i) => {
+      var row = item.stat;
+      var lastPlayed = row.last_played ? new Date(row.last_played).toLocaleString([], { month:'2-digit', day:'2-digit', hour:'numeric', minute:'2-digit' }).toLowerCase() : '--';
       var el = document.createElement('div');
       el.className = 'stats-row';
+      el.dataset.key = row.asset_key || '';
       el.innerHTML =
         '<span class="stats-rank">#' + (i + 1) + '</span>' +
-        '<span class="stats-name">' + escapeHtml(row.asset_key || '--') + '</span>' +
+        '<span class="stats-name">' + escapeHtml(item.title || '--') + '<small>' + escapeHtml(item.folder + ' / ' + item.version + ' / ' + item.type) + '</small></span>' +
         '<span class="stats-count">' + (row.play_count || 0) + ' plays</span>' +
-        '<span class="stats-date">last: ' + lastPlayed + '</span>';
+        '<span class="stats-date">last: ' + lastPlayed + '</span>' +
+        '<span class="stats-date">' + (item.row ? 'open' : 'missing') + '</span>';
+      if(item.row) el.onclick = () => {
+        var type = item.row.getAttribute('data-type');
+        if(type === 'audio') { buildQueue(); playTrackFromQueue(audioQueue.findIndex(q => liveRowKey(q) === liveRowKey(item.row))); }
+        else showMediaInNowPlaying(item.row, type);
+      };
       list.appendChild(el);
     });
   }
@@ -2825,6 +3225,11 @@
     if(liveChannel) liveChannel.send({ type: 'broadcast', event: 'state', payload: state });
     if(!supabaseClient || !isAdmin) return;
     var result = await supabaseClient.from('archive_live_state').upsert(state, { onConflict: 'room_id' });
+    if(result && result.error && /schema cache|column|queue_|countdown_action|live_notes|live_cover/i.test(result.error.message || '')) {
+      var fallbackState = Object.assign({}, state);
+      ['queue','queue_index','queue_length','countdown_action','countdown_auto_start','live_notes','live_cover'].forEach(key => delete fallbackState[key]);
+      result = await supabaseClient.from('archive_live_state').upsert(fallbackState, { onConflict: 'room_id' });
+    }
     if(result && result.error) {
       var status = document.getElementById('authStatus');
       if(status) status.textContent = 'live not saved';
@@ -2850,22 +3255,27 @@
     if(liveState && liveState.is_live) applyLiveStateToViewer(liveState);
   }
 
-  function goLiveWithCurrent() {
+  async function goLiveWithCurrent() {
     if(!requireAdmin()) return;
     var row = currentBroadcastRow();
     if(!row) return alert('no archive item available to broadcast.');
     activeLiveDirectState = null;
-    saveLiveState(liveStateFromRow(row));
+    var cover = await liveCustomCoverUrl();
+    saveLiveState(liveStateFromRow(row, cover ? { cover } : {}));
     startLiveSyncLoop();
   }
 
-  function goLiveWithSelection(selectId) {
+  async function goLiveWithSelection(selectId) {
     if(!requireAdmin()) return;
     var select = document.getElementById(selectId || 'liveAssetSelect');
     var row = findLiveRow(select && select.value);
     if(!row) return alert('choose an archive item first.');
     activeLiveDirectState = null;
-    saveLiveState(liveStateFromRow(row, { playing: false, position: 0 }));
+    var cover = await liveCustomCoverUrl();
+    var state = liveStateFromRow(row, Object.assign({ playing: true, position: 0 }, cover ? { cover } : {}));
+    activeLiveDirectState = state;
+    playLiveDirectState(state, true);
+    saveLiveState(state);
     startLiveSyncLoop();
   }
 
@@ -2888,27 +3298,271 @@
       fileUrl = URL.createObjectURL(file);
       liveTempUrls.push(fileUrl);
     }
-    activeLiveDirectState = {
+    var coverOverride = await liveCustomCoverUrl();
+    var custom = liveCustomOverrides();
+    activeLiveDirectState = Object.assign({
       room_id:'main',
       is_live:true,
       asset_key:`live:${Date.now()}`,
-      title,
+      title:custom.title || title,
       type,
       version:'live',
       folder:'live room',
       mood:'live',
-      mood_color:'#ffffff',
-      notes:'live-only broadcast source',
-      cover:type === 'image' ? fileUrl : '',
+      mood_color:custom.mood_color || '#ffffff',
+      notes:custom.notes || 'live-only broadcast source',
+      cover:coverOverride || (type === 'image' ? fileUrl : ''),
       file_url:fileUrl,
       position:0,
       playing:type !== 'image',
       updated_at:new Date().toISOString(),
       countdown_target:null
-    };
+    }, queueMeta());
     playLiveDirectState(activeLiveDirectState, true);
     saveLiveState(liveStateFromDirect(activeLiveDirectState));
     startLiveSyncLoop();
+  }
+
+  function rowToLiveQueueItem(row) {
+    row = canonicalRow(row);
+    return {
+      source:'archive',
+      key:liveRowKey(row),
+      title:row.getAttribute('data-title') || 'untitled',
+      type:row.getAttribute('data-type') || 'audio',
+      version:row.getAttribute('data-ver') || 'v1',
+      folder:row.getAttribute('data-sub') || 'archive',
+      mood:row.getAttribute('data-mood') || 'raw',
+      mood_color:row.getAttribute('data-mood-color') || '#ffffff',
+      notes:row.getAttribute('data-notes') || '',
+      cover:row.getAttribute('data-cover') || row.getAttribute('data-img-src') || '',
+      file_url:row.getAttribute('data-file-url') || row.getAttribute('data-file') || row.getAttribute('data-img-src') || row.getAttribute('data-video-src') || ''
+    };
+  }
+
+  function privateToLiveQueueItem(item) {
+    return {
+      source:'private',
+      key:item.id || item.asset_key || ('private:' + Date.now()),
+      title:item.title || 'private live item',
+      type:item.type || 'audio',
+      version:'private',
+      folder:item.folder || 'private live',
+      mood:'live',
+      mood_color:item.mood_color || '#ffffff',
+      notes:item.notes || '',
+      cover:item.cover_url || item.cover || '',
+      file_url:item.file_url || ''
+    };
+  }
+
+  function queueItemToState(item, overrides) {
+    var custom = liveCustomOverrides();
+    return Object.assign({
+      room_id:'main',
+      is_live:true,
+      asset_key:item.key,
+      title:custom.title || item.title,
+      type:item.type,
+      version:item.version || 'live',
+      folder:item.folder || 'live queue',
+      mood:item.mood || 'live',
+      mood_color:custom.mood_color || item.mood_color || '#ffffff',
+      notes:custom.notes || item.notes || '',
+      cover:item.cover || '',
+      file_url:item.file_url || '',
+      position:0,
+      playing:item.type !== 'image',
+      updated_at:new Date().toISOString(),
+      countdown_target:null,
+      countdown_action:liveCountdownAction,
+      countdown_auto_start:liveCountdownAutoStart
+    }, queueMeta(), overrides || {});
+  }
+
+  function renderLiveQueue() {
+    var list = document.getElementById('liveQueueList');
+    if(!list) return;
+    list.innerHTML = '';
+    if(!liveQueue.length) {
+      list.innerHTML = '<div class="panel-copy">queue is empty.</div>';
+      return;
+    }
+    liveQueue.forEach((item, index) => {
+      var el = document.createElement('div');
+      el.className = 'live-queue-item' + (index === liveQueueIndex ? ' active' : '');
+      el.innerHTML =
+        '<span>' + (index + 1) + '</span>' +
+        '<div><span class="live-queue-title">' + escapeHtml(item.title) + '</span><span class="live-queue-sub">' + escapeHtml((item.folder || 'live') + ' / ' + item.type) + '</span></div>' +
+        '<div class="live-queue-actions"><button type="button" onclick="moveLiveQueueItem(' + index + ',-1)">^</button><button type="button" onclick="moveLiveQueueItem(' + index + ',1)">v</button><button type="button" onclick="removeLiveQueueItem(' + index + ')">x</button></div>';
+      list.appendChild(el);
+    });
+  }
+
+  function addSelectedArchiveToLiveQueue(selectId) {
+    if(!requireAdmin()) return;
+    var select = document.getElementById(selectId || 'liveAssetSelectDash');
+    var row = findLiveRow(select && select.value);
+    if(!row) return;
+    liveQueue.push(rowToLiveQueueItem(row));
+    if(liveQueueIndex < 0) liveQueueIndex = 0;
+    renderLiveQueue();
+  }
+
+  function addFolderToLiveQueue() {
+    if(!requireAdmin()) return;
+    var value = normalizeFolderPath(document.getElementById('liveFolderQueueInput')?.value || '');
+    if(!value) return;
+    baseRows().filter(row => normalizeFolderPath(row.getAttribute('data-sub')) === value && ['audio','image','video'].includes(row.getAttribute('data-type'))).forEach(row => liveQueue.push(rowToLiveQueueItem(row)));
+    if(liveQueueIndex < 0 && liveQueue.length) liveQueueIndex = 0;
+    renderLiveQueue();
+  }
+
+  function moveLiveQueueItem(index, direction) {
+    var target = index + direction;
+    if(target < 0 || target >= liveQueue.length) return;
+    var item = liveQueue.splice(index, 1)[0];
+    liveQueue.splice(target, 0, item);
+    if(liveQueueIndex === index) liveQueueIndex = target;
+    renderLiveQueue();
+  }
+
+  function removeLiveQueueItem(index) {
+    liveQueue.splice(index, 1);
+    if(liveQueueIndex >= liveQueue.length) liveQueueIndex = liveQueue.length - 1;
+    renderLiveQueue();
+  }
+
+  function clearLiveQueue() {
+    liveQueue = [];
+    liveQueueIndex = -1;
+    liveQueuePlaying = false;
+    renderLiveQueue();
+  }
+
+  async function startLiveQueue() {
+    if(!requireAdmin() || !liveQueue.length) return;
+    liveQueueAutoplay = document.getElementById('liveAutoplayToggle')?.checked !== false;
+    liveFolderAutoplay = document.getElementById('liveFolderAutoplayToggle')?.checked !== false;
+    if(liveQueueIndex < 0) liveQueueIndex = 0;
+    liveQueuePlaying = true;
+    await playLiveQueueItem(liveQueueIndex);
+  }
+
+  function pauseLiveQueue() {
+    liveQueuePlaying = false;
+    if(livePlaybackEl) livePlaybackEl.pause();
+    saveLiveState(Object.assign({}, liveState, { playing:false, updated_at:new Date().toISOString() }));
+  }
+
+  function resumeLiveQueue() {
+    liveQueuePlaying = true;
+    if(livePlaybackEl) livePlaybackEl.play().catch(() => {});
+    saveLiveState(Object.assign({}, liveState, { playing:true, updated_at:new Date().toISOString() }));
+  }
+
+  function nextLiveQueueItem() {
+    if(liveQueueIndex < liveQueue.length - 1) {
+      liveQueueIndex++;
+      playLiveQueueItem(liveQueueIndex);
+    } else {
+      liveQueuePlaying = false;
+      stopLiveRoom();
+    }
+  }
+
+  function prevLiveQueueItem() {
+    if(liveQueueIndex > 0) {
+      liveQueueIndex--;
+      playLiveQueueItem(liveQueueIndex);
+    }
+  }
+
+  async function playLiveQueueItem(index) {
+    if(index < 0 || index >= liveQueue.length) return;
+    liveQueueIndex = index;
+    var item = liveQueue[index];
+    var cover = await liveCustomCoverUrl();
+    var state = queueItemToState(item, cover ? { cover } : {});
+    activeLiveDirectState = state;
+    renderLiveQueue();
+    playLiveDirectState(state, true);
+    saveLiveState(state);
+    startLiveSyncLoop();
+  }
+
+  function handleLiveItemEnded() {
+    if(!isAdmin || !liveQueuePlaying || !liveQueueAutoplay) return;
+    nextLiveQueueItem();
+  }
+
+  async function savePrivateLiveItem() {
+    if(!requireAdmin()) return;
+    var fileInput = document.getElementById('livePrivateFileInput');
+    var file = fileInput && fileInput.files && fileInput.files[0];
+    if(!file) return alert('choose a private live file first.');
+    var coverInput = document.getElementById('livePrivateCoverInput');
+    var coverFile = coverInput && coverInput.files && coverInput.files[0];
+    var type = file.type.indexOf('audio/') === 0 ? 'audio' : (file.type.indexOf('video/') === 0 ? 'video' : 'image');
+    var title = document.getElementById('livePrivateTitleInput')?.value.trim() || file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ');
+    var notes = document.getElementById('livePrivateNotesInput')?.value.trim() || '';
+    var folder = normalizeFolderPath(document.getElementById('livePrivateFolderInput')?.value || 'private live') || 'private live';
+    var fileUrl = URL.createObjectURL(file);
+    var coverUrl = coverFile ? URL.createObjectURL(coverFile) : '';
+    var storagePath = '', coverPath = '';
+    if(isRemoteReady && supabaseClient) {
+      var safeName = file.name.replace(/[^a-z0-9._-]+/gi, '-');
+      storagePath = `live/private/${Date.now()}-${safeName}`;
+      var upload = await supabaseClient.storage.from(STORAGE_BUCKET).upload(storagePath, file, { upsert:false });
+      if(upload.error) return alert(upload.error.message || 'private upload failed.');
+      fileUrl = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(storagePath).data.publicUrl;
+      if(coverFile) {
+        var safeCover = coverFile.name.replace(/[^a-z0-9._-]+/gi, '-');
+        coverPath = `live/private/${Date.now()}-cover-${safeCover}`;
+        var coverUpload = await supabaseClient.storage.from(STORAGE_BUCKET).upload(coverPath, coverFile, { upsert:false });
+        if(!coverUpload.error) coverUrl = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(coverPath).data.publicUrl;
+      }
+    }
+    var itemId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + '-' + Math.random().toString(16).slice(2);
+    var item = { id:itemId, title, notes, type, folder, mood_color:document.getElementById('liveCustomMoodColor')?.value || '#ffffff', file_url:fileUrl, cover_url:coverUrl, storage_path:storagePath, cover_storage_path:coverPath };
+    if(isRemoteReady && supabaseClient) {
+      var result = await supabaseClient.from('private_live_items').insert(item).select().single();
+      if(result.error) {
+        var status = document.getElementById('authStatus');
+        if(status) status.textContent = 'private not saved';
+      } else if(result.data) item = result.data;
+    }
+    privateLiveItems.unshift(item);
+    renderPrivateLiveItems();
+  }
+
+  async function loadPrivateLiveItems() {
+    if(!supabaseClient || !isAdmin) return renderPrivateLiveItems();
+    var result = await supabaseClient.from('private_live_items').select('*').order('created_at', { ascending:false }).limit(100);
+    if(result.data) privateLiveItems = result.data;
+    renderPrivateLiveItems();
+  }
+
+  function renderPrivateLiveItems() {
+    var select = document.getElementById('privateLiveItemSelect');
+    if(!select) return;
+    select.innerHTML = '';
+    privateLiveItems.forEach(item => {
+      var option = document.createElement('option');
+      option.value = item.id;
+      option.textContent = `${item.title || 'private item'} / ${item.type || 'asset'}`;
+      select.appendChild(option);
+    });
+  }
+
+  function addPrivateLiveItemToQueue() {
+    if(!requireAdmin()) return;
+    var id = document.getElementById('privateLiveItemSelect')?.value;
+    var item = privateLiveItems.find(entry => entry.id === id);
+    if(!item) return;
+    liveQueue.push(privateToLiveQueueItem(item));
+    if(liveQueueIndex < 0) liveQueueIndex = 0;
+    renderLiveQueue();
   }
 
   function broadcastCurrentLiveState() {
@@ -2932,64 +3586,19 @@
   function stopLiveRoom() {
     if(!requireAdmin()) return;
     window.clearInterval(liveSyncTimer);
+    window.clearTimeout(liveImageTimer);
     activeLiveDirectState = null;
     setLiveFollower(false);
+    stopLivePlayback();
     liveState = { room_id: 'main', is_live: false, countdown_target: null, updated_at: new Date().toISOString() };
     renderLiveState(liveState);
     saveLiveState(liveState);
-    restoreUnderlyingSection();
+    setAppSection('live');
   }
 
   function applyLiveStateToViewer(state) {
     if(applyingLiveState || !state || !state.is_live) return;
-    var row = findLiveRow(state.asset_key);
-    if(!row && state.file_url) {
-      if(activeLiveDirectState && activeLiveDirectState.asset_key === state.asset_key) {
-        activeLiveDirectState = Object.assign(activeLiveDirectState, state);
-        if(state.type === 'audio' && currentAudio) {
-          var target = liveSyncedPosition(state);
-          if(Math.abs((currentAudio.currentTime || 0) - target) > 1.2) currentAudio.currentTime = target;
-          if(state.playing && currentAudio.paused) currentAudio.play().catch(() => {});
-          if(!state.playing && !currentAudio.paused) currentAudio.pause();
-        } else if(state.type === 'video') {
-          syncLiveVideoElement(state);
-        }
-        renderLiveState(state);
-        return;
-      }
-      return playLiveDirectState(state, false);
-    }
-    if(!row) return;
-    applyingLiveState = true;
-    setLiveFollower(!isAdmin);
-    var type = state.type || row.getAttribute('data-type');
-    if(type === 'audio') {
-      buildQueue();
-      var index = audioQueue.findIndex(item => liveRowKey(item) === liveRowKey(row));
-      if(index !== -1 && queueIndex !== index) playTrackFromQueue(index);
-      window.setTimeout(() => {
-        if(currentAudio && Number.isFinite(Number(state.position))) {
-          var targetPosition = liveSyncedPosition(state);
-          var drift = Math.abs((currentAudio.currentTime || 0) - targetPosition);
-          if(drift > 1.2) currentAudio.currentTime = targetPosition;
-          if(state.playing && currentAudio.paused) currentAudio.play().then(() => { setPlayIcon(false); setPlayingState(true); }).catch(() => {});
-          if(!state.playing && !currentAudio.paused) { currentAudio.pause(); setPlayIcon(true); setPlayingState(false); }
-        }
-        applyingLiveState = false;
-      }, 260);
-      return;
-    }
-    if(row.classList.contains('playing') && type === 'video') {
-      syncLiveVideoElement(state);
-    } else if(row.classList.contains('playing') && type === 'image') {
-      renderLiveState(state);
-    } else {
-      showMediaInNowPlaying(row, type);
-      if(type === 'video') {
-        window.setTimeout(() => syncLiveVideoElement(state), 120);
-      }
-    }
-    applyingLiveState = false;
+    playLiveDirectState(state, false);
   }
 
   function setLiveFollower(enabled) {
@@ -2999,13 +3608,15 @@
 
   function exitLiveFollowerMode() {
     if(!isLiveFollower && !activeLiveDirectState) return;
+    var wasFollowing = isLiveFollower;
     setLiveFollower(false);
     activeLiveDirectState = null;
+    if(wasFollowing) stopLivePlayback();
     document.getElementById('playerBar').classList.remove('live-dock');
   }
 
   function syncLiveVideoElement(state) {
-    var video = document.querySelector('#fsMediaStage video');
+    var video = livePlaybackEl || document.querySelector('#livePreview video');
     if(!video) return;
     video.controls = !isLiveFollower;
     var target = liveSyncedPosition(state);
@@ -3020,79 +3631,55 @@
     setLiveFollower(!asHost && !isAdmin);
     activeMediaType = state.type || 'audio';
     var type = activeMediaType;
-    document.querySelectorAll('.frow.playing').forEach(r => r.classList.remove('playing'));
-    document.getElementById('playerBar').classList.add('active');
-    document.getElementById('playerBar').classList.toggle('media-preview', type !== 'audio');
-    document.getElementById('fsPlayer').classList.add('active');
-    document.getElementById('fsPlayer').classList.toggle('media-mode', type !== 'audio');
-    document.getElementById('fsPlayer').classList.toggle('audio-mode', type === 'audio');
-    document.getElementById('fsPlayer').classList.toggle('image-mode', type === 'image');
-    document.getElementById('fsPlayer').classList.toggle('video-mode', type === 'video');
-    setAppSection(type === 'audio' ? 'now playing' : `${type} viewer`);
-    document.getElementById('pbTitle').textContent = state.title || 'live broadcast';
-    document.getElementById('fsTitle').textContent = state.title || 'live broadcast';
-    document.getElementById('pbSub').textContent = `live room / ${type}`;
-    document.getElementById('fsSub').textContent = `live room / ${type}`;
-    document.getElementById('fsStateBadge').textContent = state.playing ? 'live' : 'armed';
-    document.getElementById('fsTypeBadge').textContent = type;
-    document.getElementById('fsMoodBadge').textContent = 'live';
-    document.getElementById('fsSource').textContent = 'live';
-    document.getElementById('fsQueuePos').textContent = '--';
-    document.getElementById('fsNextUp').textContent = 'live';
+    setAppSection('live');
+    document.getElementById('liveRoom').classList.add('active');
+    document.getElementById('liveRoom').setAttribute('aria-hidden', 'false');
+    document.getElementById('fsPlayer').classList.remove('active');
     var cover = state.cover || (type === 'image' ? state.file_url : '');
-    var pseudoRow = document.createElement('div');
-    pseudoRow.setAttribute('data-title', state.title || 'live broadcast');
-    pseudoRow.setAttribute('data-sub', 'live room');
-    pseudoRow.setAttribute('data-ver', 'live');
-    pseudoRow.setAttribute('data-type', type);
-    pseudoRow.setAttribute('data-notes', state.notes || '');
-    pseudoRow.setAttribute('data-cover', cover || '');
-    pseudoRow.setAttribute('data-img-src', type === 'image' ? state.file_url : '');
-    pseudoRow.setAttribute('data-video-src', type === 'video' ? state.file_url : '');
-    pseudoRow.setAttribute('data-file', type === 'audio' ? state.file_url : '');
-    updateMiniPlayerArtwork(pseudoRow, type);
-    updateMiniPlayerNotes(pseudoRow);
-    renderMeta(pseudoRow);
     readCoverColor(cover || state.file_url, state.mood_color || '#ffffff');
-    setProgressDisplay(0, 'LIVE');
-    if(type === 'audio') {
-      loadWaveformForAudio(state.file_url, state.asset_key || state.file_url || state.title);
-      if(currentAudio) currentAudio.pause();
-      currentAudio = createArchiveAudio(state.file_url);
-      setupWebAudio(currentAudio);
-      currentAudio.addEventListener('loadedmetadata', () => {
-        currentAudio.currentTime = Math.min(currentAudio.duration || liveSyncedPosition(state), liveSyncedPosition(state));
-        updateTime();
-      }, { once:true });
-      currentAudio.addEventListener('timeupdate', updateTime);
-      if(state.playing) currentAudio.play().then(() => { setPlayIcon(false); setPlayingState(true); }).catch(() => {});
-      else { setPlayIcon(true); setPlayingState(false); }
-    } else {
-      clearInterval(window.mockTimer);
-      if(currentAudio) currentAudio.pause();
-      setPlayIcon(true);
-      setPlayingState(false);
-      var stage = document.getElementById('fsMediaStage');
-      stage.innerHTML = '';
-      stage.classList.add('active');
-      document.getElementById('visualizerCanvas').classList.add('hidden');
-      if(type === 'image') {
-        var img = document.createElement('img');
-        img.src = state.file_url;
-        img.alt = state.title || 'live image';
-        stage.appendChild(img);
-      } else if(type === 'video') {
-        var video = document.createElement('video');
-        video.src = state.file_url;
-        video.controls = asHost;
-        video.playsInline = true;
-        video.autoplay = Boolean(state.playing);
-        video.muted = !asHost;
-        stage.appendChild(video);
-        video.addEventListener('loadedmetadata', () => syncLiveVideoElement(state), { once:true });
-      }
+    renderLiveState(state);
+    syncLiveStagePlayback(state, asHost);
+    window.setTimeout(() => { applyingLiveState = false; }, 120);
+  }
+
+  function stopLivePlayback() {
+    window.clearTimeout(liveImageTimer);
+    if(livePlaybackEl) {
+      try { livePlaybackEl.pause(); } catch(error) {}
+      if(livePlaybackEl.tagName === 'AUDIO') livePlaybackEl.removeAttribute('src');
     }
-    window.setTimeout(() => { applyingLiveState = false; resizeCanvas(); }, 220);
+    livePlaybackEl = null;
+  }
+
+  function syncLiveStagePlayback(state, asHost) {
+    stopLivePlayback();
+    var type = state.type || 'audio';
+    var source = state.file_url || '';
+    if(type === 'audio' && source) {
+      livePlaybackEl = createArchiveAudio(source);
+      livePlaybackEl.addEventListener('loadedmetadata', () => {
+        var target = Math.min(livePlaybackEl.duration || liveSyncedPosition(state), liveSyncedPosition(state));
+        if(Number.isFinite(target)) livePlaybackEl.currentTime = target;
+      }, { once:true });
+      livePlaybackEl.addEventListener('ended', () => handleLiveItemEnded());
+      if(state.playing) livePlaybackEl.play().catch(() => {});
+    } else if(type === 'video') {
+      livePlaybackEl = document.querySelector('#livePreview video');
+      if(livePlaybackEl) {
+        livePlaybackEl.controls = Boolean(asHost && isAdmin);
+        livePlaybackEl.muted = !asHost;
+        livePlaybackEl.addEventListener('ended', () => handleLiveItemEnded(), { once:true });
+        var target = liveSyncedPosition(state);
+        livePlaybackEl.addEventListener('loadedmetadata', () => {
+          if(Number.isFinite(target)) livePlaybackEl.currentTime = Math.min(livePlaybackEl.duration || target, target);
+          if(state.playing) livePlaybackEl.play().catch(() => {});
+        }, { once:true });
+        if(state.playing) livePlaybackEl.play().catch(() => {});
+      }
+    } else if(type === 'image' && state.playing && liveQueueAutoplay) {
+      var seconds = Math.max(3, Math.min(120, Number(document.getElementById('liveImageDuration')?.value) || 12));
+      liveImageTimer = window.setTimeout(handleLiveItemEnded, seconds * 1000);
+    }
   }
 
   function maybeBroadcastLiveRow(row, overrides) {
@@ -4364,6 +4951,7 @@
 
   function handleRowClick(e, rowElement) {
     rowElement = canonicalRow(rowElement);
+    if(!applyingLiveState) exitLiveFollowerMode();
     var type = rowElement.getAttribute('data-type');
     if(type === 'text') {
       document.getElementById('txtViewTitle').textContent = rowElement.getAttribute('data-title');
@@ -4948,6 +5536,11 @@
   var miniPlayerTouchStartY = null;
   var miniPlayerSwipeHandled = false;
   function openMiniPlayerFullscreen() {
+    if(isLiveFollower) {
+      openLiveRoom();
+      return;
+    }
+    exitLiveFollowerMode();
     var fs = document.getElementById('fsPlayer');
     if(fs.classList.contains('active')) return;
     fs.classList.add('active');
@@ -5353,6 +5946,15 @@
   }
 
   // Init
+  var liveChatNameEl = document.getElementById('liveChatUsername');
+  if(liveChatNameEl) {
+    liveChatNameEl.value = sessionStorage.getItem('akrasia_chat_name') || '';
+    liveChatNameEl.addEventListener('input', function() {
+      var name = liveChatNameEl.value.trim().replace(/<[^>]*>/g, '').slice(0, 24);
+      if(name) sessionStorage.setItem('akrasia_chat_name', name);
+      else sessionStorage.removeItem('akrasia_chat_name');
+    });
+  }
   var liveChatInputEl = document.getElementById('liveChatInput');
   if(liveChatInputEl) {
     liveChatInputEl.addEventListener('keydown', function(event) {
@@ -5361,6 +5963,8 @@
       sendLiveChat();
     });
   }
+  var statsSearchEl = document.getElementById('statsSearch');
+  if(statsSearchEl) statsSearchEl.addEventListener('input', () => loadPlayStats());
   toggleCoverInput();
   setDefaultAssetDate();
   updateDirectoryDropdown();
