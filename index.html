@@ -29,6 +29,9 @@
     --theme-r: 255;
     --theme-g: 255;
     --theme-b: 255;
+    --live-r: 255;
+    --live-g: 255;
+    --live-b: 255;
   }
 
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -92,11 +95,24 @@
   body.is-admin .auth-status{display:inline-block;}
   .admin-only { display:none; }
   body.is-admin .admin-only { display:block; }
+  .live-viewer-badge{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--dim-2);border:1px solid var(--line-soft);padding:6px 9px;border-radius:999px;background:rgba(255,255,255,0.018);white-space:nowrap;}
+  .live-announcement-bar{position:fixed;left:0;right:0;top:var(--app-header-h);z-index:599;display:flex;align-items:center;justify-content:space-between;gap:16px;border-bottom:2px solid var(--white);background:#000;padding:12px 5vw;font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--white);backdrop-filter:blur(14px);box-shadow:0 18px 60px rgba(0,0,0,0.46);border-radius:0;}
+  .live-announcement-bar button{border:1px solid var(--white);padding:3px 8px;font-size:0.68rem;color:var(--white);cursor:pointer;border-radius:0;background:#000;}
+  .live-announcement-bar button:hover{background:var(--white);color:var(--black);}
+  @media (prefers-reduced-motion:no-preference){.live-announcement-bar{animation:announcementIn 0.24s cubic-bezier(0.16,1,0.3,1) both;}@keyframes announcementIn{from{opacity:0;transform:translateY(-100%);}to{opacity:1;transform:translateY(0);}}}
 
   /* ===== CONTROL PANEL ===== */
   .control-panel { background: var(--panel); border-bottom: 2px solid var(--white); padding: 26px 5vw; display: none; grid-template-columns:minmax(0,1.55fr) minmax(280px,0.65fr); gap: 16px; box-shadow:0 18px 60px rgba(0,0,0,0.7); align-items:start; }
   .control-panel.active { display: grid; animation:panelDrop 0.26s cubic-bezier(0.16, 1, 0.3, 1); }
   @keyframes panelDrop{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+  .panel-tabs{grid-column:1 / -1;display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:2px;border-radius:0;}
+  .panel-tab{font-family:'JetBrains Mono',monospace;font-size:0.68rem;border:none;border-bottom:2px solid transparent;padding:8px 14px;color:var(--dim);cursor:pointer;background:transparent;border-radius:0;}
+  .panel-tab:hover{color:var(--white);background:rgba(255,255,255,0.04);}
+  .panel-tab.active{color:var(--white);border-bottom-color:var(--white);}
+  .panel-tab-pane{grid-column:1 / -1;display:none;border-radius:0;}
+  .panel-tab-pane.active{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,0.65fr);gap:16px;align-items:start;}
+  .panel-tab-pane#tab-stats.active{display:block;}
+  .panel-tab-pane#tab-live-control.active{display:grid;}
   .panel-sect { border:1px solid var(--line-soft); padding:16px; background:rgba(255,255,255,0.018); border-radius:var(--radius); animation:itemIn 0.24s cubic-bezier(0.16,1,0.3,1); }
   .panel-sect.primary-panel{grid-row:span 3;background:linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.012));}
   .panel-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:14px;border-bottom:1px solid var(--line-soft);padding-bottom:12px;}
@@ -141,6 +157,17 @@
   .quick-row{display:flex;flex-wrap:wrap;gap:8px;}
   .mini-btn{border:1px solid var(--line);padding:6px 9px;border-radius:999px;font-family:'JetBrains Mono',monospace;font-size:0.63rem;color:var(--dim-2);cursor:pointer;background:rgba(255,255,255,0.02);transition:all 0.14s;}
   .mini-btn:hover{background:var(--white);color:var(--black);border-color:var(--white);transform:translateY(-1px);}
+  .live-dashboard textarea,.live-control-stack textarea{resize:vertical;min-height:58px;font-family:'JetBrains Mono',monospace;font-size:0.68rem;border-radius:0;background:#000;}
+  .admin-chat-feed,.stats-list{border:1px solid var(--line-soft);background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);border-radius:0;overflow:auto;}
+  .admin-chat-feed{height:390px;padding:8px 0;}
+  .stats-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--white);}
+  .stats-total{font-family:'JetBrains Mono',monospace;font-size:0.68rem;color:var(--dim-2);margin-bottom:10px;}
+  .stats-row{display:grid;grid-template-columns:42px minmax(0,1fr) 100px 130px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-soft);font-family:'JetBrains Mono',monospace;font-size:0.72rem;border-radius:0;}
+  .stats-row:last-child{border-bottom:none;}
+  .stats-rank{color:var(--dim);width:32px;}
+  .stats-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .stats-count{color:var(--white);font-weight:600;}
+  .stats-date{color:var(--dim);white-space:nowrap;}
 
   /* ===== EXPLORER ===== */
   .explorer{padding:4.5vh 5vw 17vh;}
@@ -237,10 +264,35 @@
   .live-side{border-left:1px solid var(--line-soft);background:linear-gradient(180deg,rgba(255,255,255,0.055),rgba(0,0,0,0.82));backdrop-filter:blur(14px);padding:5vh 22px;display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:18px;overflow-y:auto;}
   .live-panel-title{font-weight:800;font-size:1.05rem;margin-bottom:8px;}
   .live-status{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .live-status.compact{margin-bottom:14px;}
   .live-stat{border:1px solid var(--line-soft);padding:10px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--dim);}
   .live-stat strong{display:block;margin-top:5px;font-family:'Inter',sans-serif;font-size:1rem;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .live-control-stack{display:grid;gap:10px;}
   .live-control-stack select{width:100%;font-family:'JetBrains Mono',monospace;font-size:0.66rem;}
+  .live-viewer-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:12px;}
+  .live-viewer-row .live-room-count{margin-bottom:0;}
+  .live-viewer-count{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--dim-2);letter-spacing:0.08em;}
+  .live-countdown{margin-top:18px;border:1px solid var(--line-soft);background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);padding:18px 20px;border-radius:0;max-width:520px;}
+  .live-countdown-label{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--dim);letter-spacing:0.12em;margin-bottom:6px;}
+  .live-countdown-clock{font-family:'JetBrains Mono',monospace;font-size:clamp(2.4rem,6vw,5rem);font-weight:800;line-height:1;color:var(--white);text-shadow:0 0 34px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.24);}
+  .live-chat{border:1px solid var(--line-soft);border-radius:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);padding:13px;display:grid;gap:8px;min-height:0;}
+  .live-chat-head{display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--white);border-bottom:1px solid var(--line-soft);padding-bottom:8px;}
+  .live-chat-count{font-size:0.62rem;color:var(--dim);}
+  .live-chat-messages{height:280px;overflow-y:auto;padding:8px 0;border-radius:0;}
+  .chat-message{display:grid;grid-template-columns:minmax(70px,auto) minmax(0,1fr) auto;gap:8px;align-items:start;padding:9px 0;border-bottom:1px solid var(--line-soft);font-family:'JetBrains Mono',monospace;font-size:0.72rem;border-radius:0;}
+  .chat-message.admin-view{grid-template-columns:minmax(70px,auto) minmax(0,1fr) auto auto auto auto;}
+  .chat-name{color:var(--white);font-weight:600;min-width:80px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .chat-text{color:var(--dim-2);overflow:hidden;word-break:break-word;}
+  .chat-time{color:var(--dim);font-size:0.62rem;white-space:nowrap;}
+  .chat-mod-btn{font-size:0.58rem;padding:2px 6px;border:1px solid var(--line);background:transparent;color:var(--dim);cursor:pointer;border-radius:0;}
+  .chat-mod-btn:hover{border-color:var(--white);color:var(--white);}
+  .chat-mod-btn.danger{color:#cc3333;border-color:#cc3333;}
+  .chat-message.hidden{display:none;}
+  .admin-chat-feed .chat-message.hidden{display:grid;opacity:0.44;}
+  .live-chat-input-row{display:flex;gap:6px;border-top:1px solid var(--line);padding-top:10px;margin-top:8px;border-radius:0;}
+  .live-chat-input-row input{flex:1;min-width:0;border-radius:0;background:#000;font-family:'JetBrains Mono',monospace;font-size:0.66rem;}
+  .live-chat-input-row button{width:58px;border:1px solid var(--line);background:var(--white);color:var(--black);font-family:'JetBrains Mono',monospace;font-size:0.62rem;font-weight:800;cursor:pointer;border-radius:0;}
+  .live-chat-banned{border:1px solid #cc3333;color:#ff6f6f;padding:8px;font-family:'JetBrains Mono',monospace;font-size:0.66rem;border-radius:0;}
   .live-notes{border:1px solid var(--line-soft);border-radius:8px;padding:13px;background:rgba(0,0,0,0.34);font-family:'JetBrains Mono',monospace;font-size:0.64rem;line-height:1.55;color:var(--dim-2);overflow:auto;}
   .live-notes strong{display:block;color:var(--white);font-family:'Inter',sans-serif;font-size:0.8rem;margin-bottom:8px;}
   .live-rail{position:absolute;right:4vw;top:6vh;bottom:7vh;width:1px;background:linear-gradient(transparent,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.85),var(--white),transparent);box-shadow:0 0 24px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.45);}
@@ -270,33 +322,33 @@
   @keyframes liveHeaderRing{0%{opacity:0.72;transform:scale(0.78);}100%{opacity:0;transform:scale(1.42);}}
 
   body.is-live .live-room{background:
-    radial-gradient(circle at 16% 20%,rgba(255,32,32,0.34),transparent 30%),
+    radial-gradient(circle at 16% 20%,rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.34),transparent 30%),
     radial-gradient(circle at 62% 48%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.24),transparent 42%),
     radial-gradient(circle at 90% 78%,rgba(255,255,255,0.12),transparent 34%),
     linear-gradient(120deg,rgba(255,255,255,0.06),transparent 26%,rgba(255,32,32,0.06) 68%,transparent),
     #000;}
-  body.is-live .live-room::before{content:"";position:absolute;inset:-18%;z-index:0;pointer-events:none;background:conic-gradient(from 90deg at 50% 50%,transparent,rgba(255,42,42,0.16),transparent,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.12),transparent);filter:blur(24px);animation:liveRoomOrbit 9s linear infinite;}
+  body.is-live .live-room::before{content:"";position:absolute;inset:-18%;z-index:0;pointer-events:none;background:conic-gradient(from 90deg at 50% 50%,transparent,rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.16),transparent,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.12),transparent);filter:blur(24px);animation:liveRoomOrbit 9s linear infinite;}
   body.is-live .live-room::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,0.045) 0 1px,transparent 1px 22px);mix-blend-mode:screen;opacity:0.24;animation:liveScanFall 5.5s linear infinite;}
   @keyframes liveRoomOrbit{to{transform:rotate(360deg);}}
   @keyframes liveScanFall{to{transform:translateY(44px);}}
   body.is-live .live-stage,body.is-live .live-side{position:relative;z-index:1;}
-  body.is-live .live-stage::after{content:"";position:absolute;inset:8vh 6vw;z-index:0;border:1px solid rgba(255,255,255,0.12);box-shadow:0 0 80px rgba(255,32,32,0.18),inset 0 0 80px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.08);pointer-events:none;animation:liveFrameBreathe 3.2s ease-in-out infinite;}
-  @keyframes liveFrameBreathe{50%{inset:6vh 5vw;border-color:rgba(255,61,61,0.34);box-shadow:0 0 110px rgba(255,32,32,0.24),inset 0 0 120px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.12);}}
-  body.is-live .live-kicker{color:#fff;text-shadow:0 0 16px rgba(255,60,60,0.84);}
-  body.is-live .live-title{background:linear-gradient(90deg,#fff,#ff3d3d,#fff);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 80px rgba(255,45,45,0.28);animation:liveTitleSignal 4.2s ease-in-out infinite;}
-  @keyframes liveTitleSignal{0%,100%{background-position:0% 50%;filter:drop-shadow(0 0 12px rgba(255,255,255,0.12));}50%{background-position:100% 50%;filter:drop-shadow(0 0 28px rgba(255,55,55,0.34));}}
-  body.is-live .live-media-preview{border-color:rgba(255,255,255,0.72);box-shadow:16px 16px 0 rgba(255,32,32,0.12),0 0 0 1px rgba(255,32,32,0.48),0 28px 140px rgba(255,32,32,0.28),0 0 90px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.20);animation:livePreviewFloat 4s ease-in-out infinite;}
+  body.is-live .live-stage::after{content:"";position:absolute;inset:8vh 6vw;z-index:0;border:1px solid rgba(255,255,255,0.12);box-shadow:0 0 80px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.18),inset 0 0 80px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.08);pointer-events:none;animation:liveFrameBreathe 3.2s ease-in-out infinite;}
+  @keyframes liveFrameBreathe{50%{inset:6vh 5vw;border-color:rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.34);box-shadow:0 0 110px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.24),inset 0 0 120px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.12);}}
+  body.is-live .live-kicker{color:#fff;text-shadow:0 0 16px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.84);}
+  body.is-live .live-title{background:linear-gradient(90deg,#fff,rgb(var(--live-r,255),var(--live-g,255),var(--live-b,255)),#fff);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 80px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.28);animation:liveTitleSignal 4.2s ease-in-out infinite;}
+  @keyframes liveTitleSignal{0%,100%{background-position:0% 50%;filter:drop-shadow(0 0 12px rgba(255,255,255,0.12));}50%{background-position:100% 50%;filter:drop-shadow(0 0 28px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.34));}}
+  body.is-live .live-media-preview{border-color:rgba(255,255,255,0.72);box-shadow:16px 16px 0 rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.12),0 0 0 1px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.48),0 28px 140px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.28),0 0 90px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.20);animation:livePreviewFloat 4s ease-in-out infinite;}
   @keyframes livePreviewFloat{50%{transform:translateY(-8px) scale(1.018);}}
-  body.is-live .live-stat{border-color:rgba(255,58,58,0.32);background:rgba(255,45,45,0.055);}
-  body.is-live .live-stat strong{color:#fff;text-shadow:0 0 12px rgba(255,55,55,0.46);}
-  body.is-live .live-side{background:linear-gradient(180deg,rgba(255,35,35,0.10),rgba(0,0,0,0.84) 48%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.08));border-left-color:rgba(255,58,58,0.38);box-shadow:inset 18px 0 80px rgba(255,32,32,0.08);}
-  body.is-live .live-notes{border-color:rgba(255,58,58,0.34);box-shadow:0 18px 70px rgba(255,32,32,0.10),inset 0 1px rgba(255,255,255,0.10);}
-  body.is-live .live-action.primary{background:#ff3838;border-color:#ff3838;color:#000;box-shadow:0 0 30px rgba(255,56,56,0.42);}
-  body.is-live .live-rail{background:linear-gradient(transparent,#ff3838,var(--white),#ff3838,transparent);box-shadow:0 0 32px rgba(255,56,56,0.66);}
-  body.is-live .live-signal-field i::before{background:linear-gradient(90deg,transparent,#ff3838,var(--white),rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.82),transparent);box-shadow:0 0 24px rgba(255,56,56,0.48);}
-  body.is-live .live-room-count{color:#ff7a7a;text-shadow:0 0 18px rgba(255,56,56,0.32);}
+  body.is-live .live-stat{border-color:rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.32);background:rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.055);}
+  body.is-live .live-stat strong{color:#fff;text-shadow:0 0 12px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.46);}
+  body.is-live .live-side{background:linear-gradient(180deg,rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.10),rgba(0,0,0,0.84) 48%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.08));border-left-color:rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.38);box-shadow:inset 18px 0 80px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.08);}
+  body.is-live .live-notes{border-color:rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.34);box-shadow:0 18px 70px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.10),inset 0 1px rgba(255,255,255,0.10);}
+  body.is-live .live-action.primary{background:rgb(var(--live-r,255),var(--live-g,255),var(--live-b,255));border-color:rgb(var(--live-r,255),var(--live-g,255),var(--live-b,255));color:#000;box-shadow:0 0 30px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.42);}
+  body.is-live .live-rail{background:linear-gradient(transparent,rgb(var(--live-r,255),var(--live-g,255),var(--live-b,255)),var(--white),rgb(var(--live-r,255),var(--live-g,255),var(--live-b,255)),transparent);box-shadow:0 0 32px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.66);}
+  body.is-live .live-signal-field i::before{background:linear-gradient(90deg,transparent,rgb(var(--live-r,255),var(--live-g,255),var(--live-b,255)),var(--white),rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.82),transparent);box-shadow:0 0 24px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.48);}
+  body.is-live .live-room-count{color:rgb(var(--live-r,255),var(--live-g,255),var(--live-b,255));text-shadow:0 0 18px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.32);}
   body.is-live .live-meter{opacity:0.70;}
-  body.is-live .live-meter span{background:linear-gradient(180deg,#fff,#ff3838);box-shadow:0 0 20px rgba(255,56,56,0.42);animation-name:liveMeterOn;}
+  body.is-live .live-meter span{background:linear-gradient(180deg,#fff,rgb(var(--live-r,255),var(--live-g,255),var(--live-b,255)));box-shadow:0 0 20px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.42);animation-name:liveMeterOn;}
   @keyframes liveMeterOn{to{height:calc(18% + var(--reactive-pulse) * 60%);opacity:0.45;}}
 
   .col-head{
@@ -762,6 +814,12 @@
     .action-btn{font-size:0.58rem;padding:6px 7px;}
     .control-panel { grid-template-columns: 1fr; gap: 20px; padding:20px 4vw; }
     .panel-overview{grid-template-columns:1fr;gap:12px;padding:10px 0 14px;}.panel-overview h2{font-size:1.2rem;}.panel-overview-actions{width:100%;}.panel-overview-actions button{flex:1;}
+    .panel-tabs{overflow-x:auto;margin-bottom:0;}
+    .panel-tab{flex:0 0 auto;padding:9px 12px;font-size:0.62rem;}
+    .panel-tab-pane.active,.panel-tab-pane#tab-live-control.active{grid-template-columns:1fr;gap:14px;}
+    .stats-row{grid-template-columns:32px minmax(0,1fr) auto;gap:8px;font-size:0.62rem;}
+    .stats-date{grid-column:2 / -1;}
+    .admin-chat-feed{height:300px;}
     .injector-form.dual{grid-template-columns:1fr;}
     .panel-sect.primary-panel{grid-row:auto;}
     .panel-head{flex-direction:column;}
@@ -881,6 +939,15 @@
     .live-stat{padding:8px 7px;font-size:0.50rem;}
     .live-stat strong{font-size:0.72rem;}
     .live-action{min-height:34px;padding:8px 10px;font-size:0.58rem;}
+    .live-viewer-row{gap:8px;margin-bottom:10px;}
+    .live-viewer-count,.live-room-count{font-size:0.54rem;}
+    .live-countdown{padding:14px 12px;max-width:100%;}
+    .live-chat-messages{height:220px;}
+    .live-chat-input-row{display:grid;grid-template-columns:1fr auto;}
+    .live-chat-input-row #liveChatUsername{grid-column:1 / -1;}
+    .chat-message,.chat-message.admin-view{grid-template-columns:1fr auto;gap:5px 8px;}
+    .chat-name,.chat-text{grid-column:1;}
+    .chat-time{grid-column:2;grid-row:1;}
     .fs-player.audio-mode .fs-main{justify-content:center;padding:14px 5vw max(16px,env(safe-area-inset-bottom));}
     .fs-player.audio-mode .fs-meta,.fs-player.audio-mode .fs-meta:has(.fs-cover.active){display:grid;grid-template-columns:1fr;grid-template-areas:"cover" "badges" "title" "sub";justify-items:center;align-content:center;width:100%;margin:0 0 18px;column-gap:0;text-align:center;overflow:visible;}
     .fs-player.audio-mode .fs-cover{grid-area:cover;width:min(54vw,220px);height:auto;aspect-ratio:1;margin:0 0 18px;box-shadow:10px 10px 0 rgba(255,255,255,0.07),0 22px 70px rgba(0,0,0,0.58);}
@@ -996,12 +1063,22 @@
   .pb-progress-container,.fs-progress-container{height:34px!important;padding:0!important;align-items:center!important;}
   .pb-progress-container::before{display:none!important;}
   .pb-progress{height:30px!important;border:0!important;border-radius:0!important;background:transparent!important;overflow:visible!important;box-shadow:none!important;position:relative;}
-  .pb-progress::before{content:"";position:absolute;left:0;right:0;top:4px;bottom:4px;background:rgba(255,255,255,0.34);-webkit-mask-image:var(--waveform-mask);mask-image:var(--waveform-mask);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:100% 100%;mask-size:100% 100%;}
-  .pb-progress-fill{top:4px!important;left:0!important;height:calc(100% - 8px)!important;background:transparent!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;transition:width 0.12s linear!important;}
-  .pb-progress-fill::before{content:"";position:absolute;left:0;top:0;height:100%;width:calc(var(--progress-inverse,1) * 100%);background:var(--white);-webkit-mask-image:var(--waveform-mask);mask-image:var(--waveform-mask);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-position:left center;mask-position:left center;}
-  .pb-progress-fill::after{content:""!important;position:absolute!important;right:-1px!important;top:50%!important;width:2px!important;height:30px!important;background:#f5df4d!important;border:0!important;border-radius:2px!important;opacity:1!important;transform:translateY(-50%)!important;box-shadow:0 0 0 1px rgba(0,0,0,0.34),0 0 11px rgba(245,223,77,0.65)!important;}
-  .pb-progress-container:hover .pb-progress-fill::after,.pb-progress-container.dragging .pb-progress-fill::after,.fs-progress-container:hover .pb-progress-fill::after,.fs-progress-container.dragging .pb-progress-fill::after{opacity:1!important;transform:translateY(-50%)!important;}
+  .pb-progress::before{display:none!important;}
+  .waveform-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;}
+  .pb-progress-fill{top:0!important;left:0!important;width:100%!important;height:100%!important;background:transparent!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;transition:none!important;}
+  .pb-progress-fill::before{display:none!important;}
+  .pb-progress-fill::after{content:""!important;position:absolute!important;left:var(--progress-percent,0%)!important;right:auto!important;top:50%!important;width:2px!important;height:30px!important;background:#f5df4d!important;border:0!important;border-radius:2px!important;opacity:1!important;transform:translate(-1px,-50%)!important;box-shadow:0 0 0 1px rgba(0,0,0,0.34),0 0 11px rgba(245,223,77,0.65)!important;}
+  .pb-progress-container:hover .pb-progress-fill::after,.pb-progress-container.dragging .pb-progress-fill::after,.fs-progress-container:hover .pb-progress-fill::after,.fs-progress-container.dragging .pb-progress-fill::after{opacity:1!important;transform:translate(-1px,-50%)!important;}
   .player-bar.media-preview .pb-progress-container{display:none!important;}
+  body.live-follower .pb-progress-container,body.live-follower .fs-progress-container{pointer-events:none!important;cursor:default!important;}
+  body.live-follower .pb-progress::before{background:linear-gradient(90deg,rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.92),rgba(255,255,255,0.44));}
+  body.live-follower .pb-progress-fill::after{background:rgb(var(--live-r,255),var(--live-g,255),var(--live-b,255))!important;box-shadow:0 0 0 1px rgba(0,0,0,0.34),0 0 16px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.82)!important;}
+  body.live-follower .pb-time,body.live-follower .fs-time{font-size:0!important;}
+  body.live-follower .pb-time::before,body.live-follower .fs-time::before{content:"LIVE";font-size:0.68rem;color:#fff;letter-spacing:0.12em;text-shadow:0 0 12px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.68);}
+  body.is-live .live-room{backdrop-filter:blur(10px) saturate(1.14);}
+  .fs-player::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 16% 18%,rgba(var(--live-r),var(--live-g),var(--live-b),0.16),transparent 34%),repeating-linear-gradient(0deg,rgba(255,255,255,0.028) 0 1px,transparent 1px 24px);opacity:0.55;mix-blend-mode:screen;}
+  .fs-player .fs-body{position:relative;z-index:1;}
+  .fs-player::after{content:"";position:absolute;left:5vw;right:5vw;top:22px;height:1px;z-index:0;background:linear-gradient(90deg,transparent,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.86),var(--white),transparent);box-shadow:0 0 26px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.34);opacity:calc(0.25 + var(--reactive-pulse) * 0.5);pointer-events:none;}
   @media (max-width:980px){
     .player-bar .pb-progress-container{height:28px!important;}
     .player-bar .pb-progress{height:24px!important;}
@@ -1152,6 +1229,7 @@
         <button class="action-trigger timeline-minimize" type="button" onclick="closeTimelineView()">minimize [-]</button>
       </div>
       <div class="header-actions header-actions-live">
+        <span class="live-viewer-badge" id="liveViewerBadgeHeader">0 watching</span>
         <button class="action-trigger admin-only" type="button" onclick="broadcastCurrentLiveState()">sync now</button>
         <button class="action-trigger" type="button" onclick="joinLiveRoom()">join room</button>
         <button class="action-trigger" type="button" onclick="closeLiveRoom()">minimize [-]</button>
@@ -1163,11 +1241,22 @@
     </div>
   </div>
 
+  <div class="live-announcement-bar" id="liveAnnouncementBar" style="display:none;">
+    <span id="liveAnnouncementText"></span>
+    <button type="button" onclick="dismissAnnouncement()" aria-label="dismiss">x</button>
+  </div>
+
   <div class="control-panel" id="controlPanel">
     <div class="panel-overview">
-      <div><h2>archive control</h2><p>Upload, organize, edit, and preview the live archive from one workspace.</p></div>
+      <div><h2>archive control</h2><p>upload, organize, edit, and preview the live archive from one workspace.</p></div>
       <div class="panel-overview-actions"><button type="button" onclick="persistExplorerOrder()">save order</button><button type="button" onclick="togglePanel()">close</button></div>
     </div>
+    <div class="panel-tabs">
+      <button class="panel-tab active" data-tab="upload" onclick="switchPanelTab('upload')" type="button">upload</button>
+      <button class="panel-tab" data-tab="live-control" onclick="switchPanelTab('live-control')" type="button">live control</button>
+      <button class="panel-tab" data-tab="stats" onclick="switchPanelTab('stats')" type="button">stats</button>
+    </div>
+    <div class="panel-tab-pane active upload-pane" id="tab-upload">
     <div class="panel-sect primary-panel">
       <div class="panel-head">
         <div>
@@ -1190,7 +1279,7 @@
         <div class="field-group">
           <div class="field-group-title">02 / organize <span>where + when</span></div>
           <select id="injBatch" class="full-width" required>
-            <!-- Populated dynamically via JS -->
+            <!-- populated dynamically via js -->
           </select>
           <input type="text" id="injSubfolder" class="span-3" placeholder="subfolder path (optional)">
           <input type="date" id="injDate" title="asset date">
@@ -1262,7 +1351,66 @@
         <input type="text" id="newFolder" placeholder="new folder path, like batch 04/demos">
         <button type="button" onclick="handleFolderCreate()">new folder</button>
       </form>
-      <div class="panel-copy" style="margin-top:10px;">Drag a folder above, below, or inside another folder. Use the arrow controls on touch screens.</div>
+      <div class="panel-copy" style="margin-top:10px;">drag a folder above, below, or inside another folder. use the arrow controls on touch screens.</div>
+    </div>
+    </div>
+    <div class="panel-tab-pane" id="tab-live-control">
+      <div class="panel-sect live-dashboard">
+        <div class="panel-head">
+          <div>
+            <div class="panel-kicker">live control</div>
+            <div class="panel-title">room signal</div>
+          </div>
+          <div class="panel-copy">start a session, schedule a countdown, send announcements, and watch chat.</div>
+        </div>
+        <div class="live-status compact">
+          <div class="live-stat">state<strong id="dashLiveStateText">offline</strong></div>
+          <div class="live-stat">type<strong id="dashLiveTypeText">none</strong></div>
+          <div class="live-stat">viewers<strong id="dashViewerCount">0</strong></div>
+          <div class="live-stat">source<strong id="dashLiveSourceText">archive</strong></div>
+        </div>
+        <div class="live-control-stack">
+          <div class="label-mini">broadcast asset</div>
+          <select id="liveAssetSelectDash"></select>
+          <div class="quick-row">
+            <button class="mini-btn" type="button" onclick="goLiveWithSelection('liveAssetSelectDash')">start selected</button>
+            <button class="mini-btn" type="button" onclick="broadcastCurrentLiveState()">sync position</button>
+          </div>
+          <div class="label-mini">live-only file</div>
+          <input type="file" id="liveFileInputDash" accept="audio/*,video/*,image/*">
+          <input type="text" id="liveTitleInputDash" placeholder="live title">
+          <div class="quick-row">
+            <button class="mini-btn" type="button" onclick="goLiveWithFile('liveFileInputDash','liveTitleInputDash')">broadcast file</button>
+            <button class="mini-btn" type="button" onclick="stopLiveRoom()">end session</button>
+          </div>
+          <div class="label-mini">countdown target (optional)</div>
+          <input type="datetime-local" id="liveCountdownInputDash">
+          <div class="quick-row">
+            <button class="mini-btn" type="button" onclick="setLiveCountdown('liveCountdownInputDash')">set countdown</button>
+            <button class="mini-btn" type="button" onclick="clearLiveCountdown()">clear</button>
+          </div>
+          <div class="label-mini">announcement</div>
+          <textarea id="liveAnnounceInputDash" rows="2" placeholder="are you ready?" maxlength="200"></textarea>
+          <div class="quick-row">
+            <button class="mini-btn" type="button" onclick="sendAnnouncement(false,'liveAnnounceInputDash')">send</button>
+            <button class="mini-btn" type="button" onclick="sendAnnouncement(true,'liveAnnounceInputDash')">pin</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel-sect live-admin-chat">
+        <h3>chat moderation</h3>
+        <div class="admin-chat-feed" id="adminChatFeed"></div>
+      </div>
+    </div>
+    <div class="panel-tab-pane" id="tab-stats">
+      <div class="panel-sect stats-panel">
+        <div class="stats-head">
+          <span>play stats</span>
+          <button class="mini-btn" onclick="loadPlayStats()" type="button">refresh</button>
+        </div>
+        <div class="stats-total" id="statsTotalPlays">total plays: --</div>
+        <div class="stats-list" id="statsPlayList"></div>
+      </div>
     </div>
   </div>
 
@@ -1290,9 +1438,16 @@
         <div class="live-hero">
           <div id="livePreview" class="live-media-preview empty">no broadcast</div>
           <div>
-            <div class="live-room-count" id="liveRoomCount">room 01 / main signal</div>
+            <div class="live-viewer-row">
+              <div class="live-room-count" id="liveRoomCount">room 01 / main signal</div>
+              <div class="live-viewer-count" id="liveViewerCount">0 watching</div>
+            </div>
             <div class="live-title" id="liveTitle">live room</div>
-            <div class="live-sub" id="liveSub">Join when Angel starts a session. Music, videos, images, and archive notes can all be pushed live into the room.</div>
+            <div class="live-sub" id="liveSub">join when angel starts a session. music, videos, images, and archive notes can all be pushed live into the room.</div>
+            <div class="live-countdown" id="liveCountdown" style="display:none;">
+              <div class="live-countdown-label">live starts in</div>
+              <div class="live-countdown-clock" id="liveCountdownClock">00:00:00</div>
+            </div>
           </div>
           <div class="live-actions">
             <button class="live-action primary" type="button" onclick="joinLiveRoom()">join live</button>
@@ -1321,8 +1476,40 @@
             <button class="mini-btn" type="button" onclick="goLiveWithSelection()">start selected</button>
             <button class="mini-btn" type="button" onclick="broadcastCurrentLiveState()">sync position</button>
           </div>
+          <div class="label-mini">live-only file</div>
+          <input type="file" id="liveFileInput" accept="audio/*,video/*,image/*">
+          <input type="text" id="liveTitleInput" placeholder="live title">
+          <div class="quick-row">
+            <button class="mini-btn" type="button" onclick="goLiveWithFile()">broadcast file</button>
+            <button class="mini-btn" type="button" onclick="broadcastCurrentLiveState()">push now</button>
+          </div>
+          <div class="label-mini">countdown target (optional)</div>
+          <input type="datetime-local" id="liveCountdownInput">
+          <div class="quick-row">
+            <button class="mini-btn" type="button" onclick="setLiveCountdown()">set countdown</button>
+            <button class="mini-btn" type="button" onclick="clearLiveCountdown()">clear</button>
+          </div>
+          <div class="label-mini">announcement</div>
+          <textarea id="liveAnnounceInput" rows="2" placeholder="are you ready?" maxlength="200"></textarea>
+          <div class="quick-row">
+            <button class="mini-btn" type="button" onclick="sendAnnouncement(false)">send</button>
+            <button class="mini-btn" type="button" onclick="sendAnnouncement(true)">pin</button>
+          </div>
         </div>
-        <div class="live-notes" id="liveNotes"><strong>room notes</strong>When a live session starts, notes and links from the current archive item appear here.</div>
+        <div class="live-chat">
+          <div class="live-chat-head">
+            <span>live chat</span>
+            <span class="live-chat-count" id="liveChatCount">0 messages</span>
+          </div>
+          <div class="live-chat-messages" id="liveChatMessages"></div>
+          <div class="live-chat-input-row">
+            <input type="text" id="liveChatUsername" placeholder="your name" maxlength="24" autocomplete="off">
+            <input type="text" id="liveChatInput" placeholder="say something..." maxlength="280" autocomplete="off">
+            <button type="button" onclick="sendLiveChat()">send</button>
+          </div>
+          <div class="live-chat-banned" id="liveChatBanned" style="display:none;">you've been removed from chat.</div>
+        </div>
+        <div class="live-notes" id="liveNotes"><strong>room notes</strong>when a live session starts, notes and links from the current archive item appear here.</div>
       </aside>
     </section>
 
@@ -1418,7 +1605,7 @@
       <button class="pb-btn" id="pbNext" title="Next"><svg viewBox="0 0 24 24"><path d="M16 5h3v14h-3zM5 5.5v13L15 12z"/></svg></button>
     </div>
     <div class="pb-progress-row">
-      <div class="pb-progress-container" id="pbScrubber"><div class="pb-progress"><div class="pb-progress-fill" id="pbFill"></div></div></div>
+      <div class="pb-progress-container" id="pbScrubber"><div class="pb-progress"><canvas class="waveform-canvas" id="pbWaveform"></canvas><div class="pb-progress-fill" id="pbFill"></div></div></div>
       <div class="pb-time" id="pbTime">00:00 / 00:00</div>
     </div>
   </div>
@@ -1457,7 +1644,7 @@
           <button class="pb-btn" id="fsNext" title="Next"><svg viewBox="0 0 24 24"><path d="M16 5h3v14h-3zM5 5.5v13L15 12z"/></svg></button>
         </div>
         <div class="fs-progress-container" id="fsScrubber">
-          <div class="pb-progress"><div class="pb-progress-fill" id="fsFill"></div></div>
+          <div class="pb-progress"><canvas class="waveform-canvas" id="fsWaveform"></canvas><div class="pb-progress-fill" id="fsFill"></div></div>
         </div>
         <div class="fs-time" id="fsTime">00:00 / 00:00</div>
       </div>
@@ -1475,6 +1662,85 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvcmxubXFndXl2bm5weGVwc3d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MDAwMTQsImV4cCI6MjA5Nzk3NjAxNH0.vDIAXtRzu5CS0wmznYryX5Y-gscEoPzoTOlu4A-YGvg';
   const ADMIN_EMAIL = 'angelyzyy@gmail.com';
   const STORAGE_BUCKET = 'archive-assets';
+
+  /*
+  run once in supabase dashboard:
+
+  alter table archive_live_state add column if not exists countdown_target timestamptz;
+
+  create table if not exists live_chat (
+    id uuid default gen_random_uuid() primary key,
+    room_id text not null default 'main',
+    username text not null,
+    message text not null,
+    user_token text,
+    is_hidden boolean default false,
+    created_at timestamptz default now()
+  );
+
+  create table if not exists live_banned_tokens (
+    user_token text primary key,
+    banned_at timestamptz default now(),
+    reason text,
+    expires_at timestamptz
+  );
+
+  create table if not exists live_announcements (
+    id uuid default gen_random_uuid() primary key,
+    room_id text default 'main',
+    message text not null,
+    is_pinned boolean default false,
+    created_at timestamptz default now()
+  );
+
+  create table if not exists play_counts (
+    asset_key text primary key,
+    play_count integer default 0,
+    last_played timestamptz default now()
+  );
+
+  create or replace function increment_play_count(p_key text)
+  returns void
+  language sql
+  security definer
+  set search_path = public
+  as $$
+    insert into play_counts (asset_key, play_count, last_played)
+    values (p_key, 1, now())
+    on conflict (asset_key) do update
+    set play_count = play_counts.play_count + 1,
+        last_played = now();
+  $$;
+
+  create index if not exists live_chat_room_idx on live_chat(room_id, created_at);
+  alter table live_chat enable row level security;
+  alter table live_banned_tokens enable row level security;
+  alter table live_announcements enable row level security;
+  alter table play_counts enable row level security;
+
+  drop policy if exists "anyone can insert chat" on live_chat;
+  create policy "anyone can insert chat" on live_chat for insert with check (true);
+  drop policy if exists "anyone can read unhidden chat" on live_chat;
+  create policy "anyone can read unhidden chat" on live_chat for select using (is_hidden = false);
+  drop policy if exists "admin can read all chat" on live_chat;
+  create policy "admin can read all chat" on live_chat for select to authenticated using (auth.email() = 'angelyzyy@gmail.com');
+  drop policy if exists "admin can moderate chat" on live_chat;
+  create policy "admin can moderate chat" on live_chat for update to authenticated using (auth.email() = 'angelyzyy@gmail.com') with check (auth.email() = 'angelyzyy@gmail.com');
+
+  drop policy if exists "public can check chat bans" on live_banned_tokens;
+  create policy "public can check chat bans" on live_banned_tokens for select using (true);
+  drop policy if exists "admin can manage chat bans" on live_banned_tokens;
+  create policy "admin can manage chat bans" on live_banned_tokens for all to authenticated using (auth.email() = 'angelyzyy@gmail.com') with check (auth.email() = 'angelyzyy@gmail.com');
+
+  drop policy if exists "public can read announcements" on live_announcements;
+  create policy "public can read announcements" on live_announcements for select using (true);
+  drop policy if exists "admin can insert announcements" on live_announcements;
+  create policy "admin can insert announcements" on live_announcements for insert to authenticated with check (auth.email() = 'angelyzyy@gmail.com');
+
+  drop policy if exists "public can read play counts" on play_counts;
+  create policy "public can read play counts" on play_counts for select using (true);
+  grant execute on function increment_play_count(text) to anon, authenticated;
+  */
 
   var activeFilter = 'all';
   var explorerSortKey = '';
@@ -1501,7 +1767,23 @@
   var liveState = { is_live: false };
   var liveJoined = false;
   var liveSyncTimer = null;
+  var livePresenceChannel = null;
+  var liveViewerCount = 0;
   var applyingLiveState = false;
+  var isLiveFollower = false;
+  var liveTempUrls = [];
+  var activeLiveDirectState = null;
+  var countdownTimer = null;
+  var chatChannel = null;
+  var chatMessages = [];
+  var chatBanned = false;
+  var announcementTimer = null;
+  var announcementChannel = null;
+  var statsTimer = null;
+  var waveformCache = new Map();
+  var activeWaveformKey = '';
+  var activeWaveformPeaks = null;
+  var activeProgressPercent = 0;
 
   var audioCtx = null, analyser = null, sourceNode = null, dataArray = null;
   var audioSourceNodes = new WeakMap();
@@ -1665,11 +1947,50 @@
 
   function togglePanel() {
     if(!isAdmin) return alert('admin login required.');
-    document.getElementById('controlPanel').classList.toggle('active');
+    var panel = document.getElementById('controlPanel');
+    var isOpen = panel.classList.toggle('active');
+    if(isOpen) {
+      if(document.querySelector('.panel-tab[data-tab="stats"].active')) startStatsInterval();
+      renderAdminChatFeed();
+      refreshLiveAssetSelect();
+    } else {
+      stopStatsInterval();
+    }
   }
+
+  function switchPanelTab(name) {
+    document.querySelectorAll('.panel-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === name));
+    document.querySelectorAll('.panel-tab-pane').forEach(pane => pane.classList.toggle('active', pane.id === 'tab-' + name));
+    if(name === 'stats') {
+      loadPlayStats();
+      startStatsInterval();
+    } else {
+      stopStatsInterval();
+    }
+    if(name === 'live-control') {
+      refreshLiveAssetSelect();
+      renderAdminChatFeed();
+      updateLiveDashboard();
+    }
+  }
+
+  function startStatsInterval() {
+    window.clearInterval(statsTimer);
+    statsTimer = window.setInterval(loadPlayStats, 60000);
+  }
+
+  function stopStatsInterval() {
+    window.clearInterval(statsTimer);
+  }
+
   function restoreUnderlyingSection() {
     var timeline = document.getElementById('timelinePanel');
     var live = document.getElementById('liveRoom');
+    var fs = document.getElementById('fsPlayer');
+    if(fs && fs.classList.contains('active')) {
+      setAppSection(activeMediaType === 'audio' ? 'now playing' : `${activeMediaType} viewer`);
+      return;
+    }
     setAppSection(live && live.classList.contains('active') ? 'live' : (timeline && timeline.classList.contains('active') ? 'timeline' : 'archive'));
   }
   function toggleFullscreen() {
@@ -1725,7 +2046,7 @@
     document.getElementById(id).classList.remove('active');
     if(id === 'propsViewport' || id === 'editViewport' || id === 'textViewport' || id === 'imageViewport') restoreUnderlyingSection();
   }
-  window.addEventListener('resize', () => { isCompactVisual = window.matchMedia('(max-width: 980px)').matches; resizeCanvas(); alignImmersiveRail(); syncTimelineCardHeights(); });
+  window.addEventListener('resize', () => { isCompactVisual = window.matchMedia('(max-width: 980px)').matches; resizeCanvas(); alignImmersiveRail(); syncTimelineCardHeights(); drawActiveWaveforms(); });
   document.getElementById('timelineTrack').addEventListener('scroll', alignImmersiveRail);
   function resizeCanvas() {
     var scale = isCompactVisual ? 0.55 : 1;
@@ -1899,6 +2220,10 @@
     setAppSection('live');
     refreshLiveAssetSelect();
     renderLiveState(liveState);
+    setupLivePresence((liveState && liveState.asset_key) || 'main');
+    setupChatRealtime();
+    loadChatHistory();
+    checkIfBanned().then(banned => setChatBanned(banned)).catch(() => {});
     if(!liveJoined) joinLiveRoom(false);
   }
 
@@ -1906,6 +2231,53 @@
     document.getElementById('liveRoom').classList.remove('active');
     document.getElementById('liveRoom').setAttribute('aria-hidden', 'true');
     restoreUnderlyingSection();
+    teardownLivePresence();
+    teardownChatRealtime();
+  }
+
+  function getLiveUserToken() {
+    var token = sessionStorage.getItem('akrasia_live_token');
+    if(!token) {
+      token = 'user_' + Math.random().toString(36).slice(2, 11) + '_' + Date.now();
+      sessionStorage.setItem('akrasia_live_token', token);
+    }
+    return token;
+  }
+
+  function setupLivePresence(sessionKey) {
+    teardownLivePresence();
+    if(!supabaseClient) return;
+    livePresenceChannel = supabaseClient.channel('akrasia-presence-' + (sessionKey || 'main'), {
+      config: { presence: { key: getLiveUserToken() } }
+    });
+    livePresenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        var state = livePresenceChannel.presenceState();
+        liveViewerCount = Object.keys(state).length;
+        updateLiveViewerDisplay();
+      })
+      .subscribe(async status => {
+        if(status === 'SUBSCRIBED') await livePresenceChannel.track({ joined_at: Date.now() });
+      });
+  }
+
+  function teardownLivePresence() {
+    if(livePresenceChannel) {
+      livePresenceChannel.unsubscribe();
+      livePresenceChannel = null;
+    }
+    liveViewerCount = 0;
+    updateLiveViewerDisplay();
+  }
+
+  function updateLiveViewerDisplay() {
+    var text = liveViewerCount + ' watching';
+    var el = document.getElementById('liveViewerCount');
+    var header = document.getElementById('liveViewerBadgeHeader');
+    var dash = document.getElementById('dashViewerCount');
+    if(el) el.textContent = text;
+    if(header) header.textContent = text;
+    if(dash) dash.textContent = String(liveViewerCount);
   }
 
   function liveRowKey(row) {
@@ -1927,26 +2299,33 @@
   }
 
   function refreshLiveAssetSelect() {
-    var select = document.getElementById('liveAssetSelect');
-    if(!select) return;
-    var current = select.value;
-    select.innerHTML = '';
-    baseRows().forEach(row => {
-      var option = document.createElement('option');
-      option.value = liveRowKey(row);
-      option.textContent = `${row.getAttribute('data-title') || 'untitled'} / ${row.getAttribute('data-ver') || 'v1'} / ${row.getAttribute('data-type') || 'asset'}`;
-      select.appendChild(option);
+    ['liveAssetSelect', 'liveAssetSelectDash'].forEach(id => {
+      var select = document.getElementById(id);
+      if(!select) return;
+      var current = select.value;
+      select.innerHTML = '';
+      baseRows().forEach(row => {
+        var option = document.createElement('option');
+        option.value = liveRowKey(row);
+        option.textContent = `${row.getAttribute('data-title') || 'untitled'} / ${row.getAttribute('data-ver') || 'v1'} / ${row.getAttribute('data-type') || 'asset'}`;
+        select.appendChild(option);
+      });
+      var values = Array.from(select.options).map(option => option.value);
+      if(current && values.includes(current)) select.value = current;
+      else if(liveState && liveState.asset_key && values.includes(liveState.asset_key)) select.value = liveState.asset_key;
     });
-    var values = Array.from(select.options).map(option => option.value);
-    if(current && values.includes(current)) select.value = current;
-    else if(liveState && liveState.asset_key && values.includes(liveState.asset_key)) select.value = liveState.asset_key;
   }
 
   function liveStateFromRow(row, overrides) {
     row = canonicalRow(row);
     var type = row.getAttribute('data-type') || 'audio';
-    var playing = type === 'audio' && currentAudio && row.classList.contains('playing') && !currentAudio.paused;
-    var currentTime = type === 'audio' && currentAudio && row.classList.contains('playing') ? currentAudio.currentTime : 0;
+    var videoEl = type === 'video' && row.classList.contains('playing') ? document.querySelector('#fsMediaStage video') : null;
+    var playing = type === 'audio'
+      ? Boolean(currentAudio && row.classList.contains('playing') && !currentAudio.paused)
+      : Boolean(videoEl && !videoEl.paused);
+    var currentTime = type === 'audio' && currentAudio && row.classList.contains('playing')
+      ? currentAudio.currentTime
+      : (videoEl ? videoEl.currentTime : 0);
     var state = {
       room_id: 'main',
       is_live: true,
@@ -1959,11 +2338,38 @@
       mood_color: row.getAttribute('data-mood-color') || '#ffffff',
       notes: row.getAttribute('data-notes') || '',
       cover: row.getAttribute('data-cover') || row.getAttribute('data-img-src') || '',
+      file_url: row.getAttribute('data-file-url') || row.getAttribute('data-file') || row.getAttribute('data-img-src') || row.getAttribute('data-video-src') || '',
       position: currentTime || 0,
       playing,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      countdown_target: null
     };
     return Object.assign(state, overrides || {});
+  }
+
+  function liveStateFromDirect(base, overrides) {
+    var state = Object.assign({}, base || activeLiveDirectState || {});
+    var media = document.querySelector('#fsMediaStage video');
+    if(state.type === 'audio' && currentAudio) {
+      state.position = currentAudio.currentTime || 0;
+      state.playing = !currentAudio.paused;
+    } else if(state.type === 'video' && media) {
+      state.position = media.currentTime || 0;
+      state.playing = !media.paused;
+    }
+    state.room_id = 'main';
+    state.is_live = true;
+    state.updated_at = new Date().toISOString();
+    state.countdown_target = null;
+    return Object.assign(state, overrides || {});
+  }
+
+  function liveSyncedPosition(state) {
+    var base = Number(state && state.position) || 0;
+    if(!state || !state.playing || !state.updated_at) return base;
+    var elapsed = (Date.now() - new Date(state.updated_at).getTime()) / 1000;
+    if(!Number.isFinite(elapsed) || elapsed < 0) elapsed = 0;
+    return base + elapsed;
   }
 
   function renderLiveState(state) {
@@ -1972,34 +2378,137 @@
     var row = findLiveRow(state.asset_key);
     var isLive = Boolean(state.is_live);
     document.body.classList.toggle('is-live', isLive);
+    if(!isLive) setLiveFollower(false);
     var liveBtn = document.getElementById('liveHeaderBtn');
     if(liveBtn) {
       liveBtn.setAttribute('aria-pressed', isLive ? 'true' : 'false');
       liveBtn.title = isLive ? 'live broadcast active' : 'open live room';
     }
+    var liveColor = hexToRgb(state.mood_color || (row && row.getAttribute('data-mood-color')) || '#ffffff');
+    setLiveColor(liveColor);
     var title = isLive ? (state.title || (row && row.getAttribute('data-title')) || 'live signal') : 'live room';
     var type = isLive ? (state.type || (row && row.getAttribute('data-type')) || 'asset') : 'none';
-    var folder = isLive ? (state.folder || (row && row.getAttribute('data-sub')) || 'archive') : 'waiting for Angel to start a session';
+    var folder = isLive ? (state.folder || (row && row.getAttribute('data-sub')) || 'archive') : 'waiting for angel to start a session';
     var version = isLive ? (state.version || (row && row.getAttribute('data-ver')) || '') : '';
     document.getElementById('liveKicker').textContent = isLive ? 'live / angel is broadcasting' : 'offline / waiting for signal';
     document.getElementById('liveTitle').textContent = title;
-    document.getElementById('liveSub').textContent = isLive ? `${folder} / ${version} / ${type}` : 'Join when Angel starts a session. Music, videos, images, and archive notes can all be pushed live into the room.';
+    document.getElementById('liveSub').textContent = isLive ? `${folder} / ${version} / ${type}` : 'join when angel starts a session. music, videos, images, and archive notes can all be pushed live into the room.';
     document.getElementById('liveStateText').textContent = isLive ? (state.playing ? 'on air' : 'armed') : 'offline';
     document.getElementById('liveTypeText').textContent = type;
     document.getElementById('liveSourceText').textContent = isLive ? 'live from angel' : 'archive';
-    document.getElementById('liveTimeText').textContent = isLive ? fmt(Number(state.position) || 0) : '--';
+    document.getElementById('liveTimeText').textContent = isLive ? fmt(liveSyncedPosition(state)) : '--';
     var notes = state.notes || (row && row.getAttribute('data-notes')) || '';
-    document.getElementById('liveNotes').innerHTML = `<strong>room notes</strong>${escapeHtml(notes || 'No notes are attached to the current live item yet.')}`;
+    document.getElementById('liveNotes').innerHTML = `<strong>room notes</strong>${escapeHtml(notes || 'no notes are attached to the current live item yet.')}`;
     setMoodTheme(state.mood_color || (row && row.getAttribute('data-mood-color')) || '#ffffff');
-    setReactiveColor(hexToRgb(state.mood_color || (row && row.getAttribute('data-mood-color')) || '#ffffff'));
+    setReactiveColor(liveColor);
+    sampleLiveColor(state.cover || state.file_url || (row && (row.getAttribute('data-cover') || row.getAttribute('data-img-src'))) || '');
     renderLivePreview(row, type, state.cover);
+    updateLiveDashboard();
+    if(!isLive && state.countdown_target) startCountdown(state.countdown_target);
+    else stopCountdown();
+  }
+
+  function updateLiveDashboard() {
+    var isLive = Boolean(liveState && liveState.is_live);
+    var dashState = document.getElementById('dashLiveStateText');
+    var dashType = document.getElementById('dashLiveTypeText');
+    var dashSource = document.getElementById('dashLiveSourceText');
+    if(dashState) dashState.textContent = isLive ? (liveState.playing ? 'on air' : 'armed') : (liveState && liveState.countdown_target ? 'countdown' : 'offline');
+    if(dashType) dashType.textContent = isLive ? (liveState.type || 'asset') : 'none';
+    if(dashSource) dashSource.textContent = isLive ? (liveState.asset_key ? 'archive' : 'live file') : 'archive';
+    updateLiveViewerDisplay();
+  }
+
+  function setLiveCountdown(inputId) {
+    if(!requireAdmin()) return;
+    var input = document.getElementById(inputId || 'liveCountdownInput');
+    if(!input || !input.value) return;
+    var iso = new Date(input.value).toISOString();
+    var mirror = document.getElementById(inputId === 'liveCountdownInputDash' ? 'liveCountdownInput' : 'liveCountdownInputDash');
+    if(mirror) mirror.value = input.value;
+    saveLiveState(Object.assign({}, liveState, {
+      countdown_target: iso,
+      is_live: false,
+      room_id: 'main',
+      updated_at: new Date().toISOString()
+    }));
+  }
+
+  function clearLiveCountdown() {
+    if(!requireAdmin()) return;
+    ['liveCountdownInput', 'liveCountdownInputDash'].forEach(id => {
+      var input = document.getElementById(id);
+      if(input) input.value = '';
+    });
+    saveLiveState(Object.assign({}, liveState, { countdown_target: null, room_id: 'main', updated_at: new Date().toISOString() }));
+  }
+
+  function startCountdown(target) {
+    window.clearInterval(countdownTimer);
+    var el = document.getElementById('liveCountdown');
+    var clock = document.getElementById('liveCountdownClock');
+    if(!el || !clock || !target) return;
+    el.style.display = '';
+    var tick = function() {
+      var diff = Math.max(0, new Date(target).getTime() - Date.now());
+      if(diff === 0) {
+        window.clearInterval(countdownTimer);
+        clock.textContent = '00:00:00';
+        loadLiveState();
+        return;
+      }
+      var h = Math.floor(diff / 3600000);
+      var m = Math.floor((diff % 3600000) / 60000);
+      var s = Math.floor((diff % 60000) / 1000);
+      clock.textContent = String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    };
+    tick();
+    countdownTimer = window.setInterval(tick, 1000);
+  }
+
+  function stopCountdown() {
+    window.clearInterval(countdownTimer);
+    var el = document.getElementById('liveCountdown');
+    if(el) el.style.display = 'none';
+  }
+
+  function setLiveColor(rgb) {
+    rgb = rgb || { r: 255, g: 255, b: 255 };
+    document.documentElement.style.setProperty('--live-r', Math.round(rgb.r));
+    document.documentElement.style.setProperty('--live-g', Math.round(rgb.g));
+    document.documentElement.style.setProperty('--live-b', Math.round(rgb.b));
+  }
+
+  function sampleLiveColor(src) {
+    if(!src) return;
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      try {
+        var sample = document.createElement('canvas');
+        sample.width = 20;
+        sample.height = 20;
+        var ctx = sample.getContext('2d', { willReadFrequently:true });
+        ctx.drawImage(img, 0, 0, sample.width, sample.height);
+        var data = ctx.getImageData(0, 0, sample.width, sample.height).data;
+        var r = 0, g = 0, b = 0, count = 0;
+        for(var i = 0; i < data.length; i += 20) {
+          if(data[i + 3] < 80) continue;
+          var bright = (data[i] + data[i + 1] + data[i + 2]) / 3;
+          if(bright < 18) continue;
+          r += data[i]; g += data[i + 1]; b += data[i + 2]; count++;
+        }
+        if(count) setLiveColor({ r:r/count, g:g/count, b:b/count });
+      } catch(error) {}
+    };
+    img.src = src;
   }
 
   function renderLivePreview(row, type, cover) {
     var preview = document.getElementById('livePreview');
     preview.className = 'live-media-preview';
     preview.innerHTML = '';
-    var source = cover || (row && (type === 'image' ? row.getAttribute('data-img-src') : row.getAttribute('data-cover'))) || '';
+    var source = liveState.file_url || cover || (row && (type === 'image' ? row.getAttribute('data-img-src') : row.getAttribute('data-cover'))) || '';
     if(type === 'image' && row) source = row.getAttribute('data-img-src') || source;
     if(type === 'video' && row) source = row.getAttribute('data-video-src') || source;
     if(source && (type === 'image' || type === 'audio')) {
@@ -2032,6 +2541,9 @@
       .on('broadcast', { event: 'state' }, payload => {
         if(payload && payload.payload) receiveLiveState(payload.payload);
       })
+      .on('broadcast', { event: 'announcement' }, payload => {
+        if(payload && payload.payload) showAnnouncement(payload.payload);
+      })
       .subscribe();
   }
 
@@ -2039,6 +2551,219 @@
     if(!supabaseClient) return;
     var result = await supabaseClient.from('archive_live_state').select('*').eq('room_id', 'main').maybeSingle();
     if(!result.error && result.data) renderLiveState(result.data);
+  }
+
+  function getLiveChatUsername() {
+    var input = document.getElementById('liveChatUsername');
+    return (input && input.value.trim()) || sessionStorage.getItem('akrasia_chat_name') || 'listener';
+  }
+
+  function setChatBanned(value) {
+    chatBanned = Boolean(value);
+    var note = document.getElementById('liveChatBanned');
+    var input = document.getElementById('liveChatInput');
+    if(note) note.style.display = chatBanned ? '' : 'none';
+    if(input) input.disabled = chatBanned;
+  }
+
+  async function checkIfBanned() {
+    if(!supabaseClient) return false;
+    var token = getLiveUserToken();
+    var result = await supabaseClient.from('live_banned_tokens').select('*').eq('user_token', token).maybeSingle();
+    if(!result.data) return false;
+    if(result.data.expires_at && new Date(result.data.expires_at) < new Date()) {
+      await supabaseClient.from('live_banned_tokens').delete().eq('user_token', token);
+      return false;
+    }
+    return true;
+  }
+
+  async function sendLiveChat() {
+    var input = document.getElementById('liveChatInput');
+    if(!input) return;
+    var message = input.value.replace(/<[^>]*>/g, '').trim().slice(0, 280);
+    if(!message || chatBanned) return;
+    var token = getLiveUserToken();
+    var username = getLiveChatUsername().replace(/<[^>]*>/g, '').slice(0, 24) || 'listener';
+    sessionStorage.setItem('akrasia_chat_name', username);
+    if(supabaseClient) {
+      var banned = await checkIfBanned();
+      if(banned) {
+        setChatBanned(true);
+        return;
+      }
+      var result = await supabaseClient.from('live_chat').insert({ room_id: 'main', username, message, user_token: token }).select('*').maybeSingle();
+      if(result.data) appendChatMessage(result.data);
+    } else {
+      appendChatMessage({ id: 'local-' + Date.now(), username, message, created_at: new Date().toISOString(), user_token: token });
+    }
+    input.value = '';
+  }
+
+  function appendChatMessage(msg) {
+    if(!msg) return;
+    if(msg.id && chatMessages.some(existing => existing.id === msg.id)) return;
+    chatMessages.push(msg);
+    if(chatMessages.length > 180) chatMessages.shift();
+    renderLiveChatMessages();
+    renderAdminChatFeed();
+  }
+
+  function renderLiveChatMessages() {
+    var list = document.getElementById('liveChatMessages');
+    if(!list) return;
+    list.innerHTML = '';
+    chatMessages.filter(msg => !msg.is_hidden).slice(-100).forEach(msg => list.appendChild(buildChatMessageRow(msg, false)));
+    list.scrollTop = list.scrollHeight;
+    var count = chatMessages.filter(msg => !msg.is_hidden).length;
+    var el = document.getElementById('liveChatCount');
+    if(el) el.textContent = count + (count === 1 ? ' message' : ' messages');
+  }
+
+  function buildChatMessageRow(msg, adminView) {
+    var row = document.createElement('div');
+    row.className = 'chat-message' + (msg.is_hidden ? ' hidden' : '') + (adminView ? ' admin-view' : '');
+    row.dataset.token = msg.user_token || '';
+    row.dataset.id = msg.id || '';
+    var time = msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }).toLowerCase() : '';
+    row.innerHTML =
+      '<span class="chat-name">' + escapeHtml(msg.username || 'listener') + '</span>' +
+      '<span class="chat-text">' + escapeHtml(msg.message || '') + '</span>' +
+      '<span class="chat-time">' + time + '</span>' +
+      (adminView && isAdmin ? '<button class="chat-mod-btn" onclick="hideChatMessage(this)" data-id="' + escapeAttr(msg.id || '') + '">hide</button>' +
+        '<button class="chat-mod-btn danger" onclick="banChatUser(this)" data-token="' + escapeAttr(msg.user_token || '') + '">ban</button>' +
+        '<button class="chat-mod-btn" onclick="timeoutChatUser(this)" data-token="' + escapeAttr(msg.user_token || '') + '">10min</button>' : '');
+    return row;
+  }
+
+  function renderAdminChatFeed() {
+    var feed = document.getElementById('adminChatFeed');
+    if(!feed) return;
+    feed.innerHTML = '';
+    chatMessages.slice(-140).forEach(msg => feed.appendChild(buildChatMessageRow(msg, true)));
+    feed.scrollTop = feed.scrollHeight;
+  }
+
+  function setupChatRealtime() {
+    if(!supabaseClient || chatChannel) return;
+    chatChannel = supabaseClient
+      .channel('akrasia-live-chat')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_chat', filter: 'room_id=eq.main' }, payload => {
+        if(payload.new) appendChatMessage(payload.new);
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'live_chat', filter: 'room_id=eq.main' }, payload => {
+        if(!payload.new) return;
+        var index = chatMessages.findIndex(msg => msg.id === payload.new.id);
+        if(index !== -1) chatMessages[index] = payload.new;
+        else appendChatMessage(payload.new);
+        renderLiveChatMessages();
+        renderAdminChatFeed();
+      })
+      .subscribe();
+  }
+
+  function teardownChatRealtime() {
+    if(chatChannel) {
+      chatChannel.unsubscribe();
+      chatChannel = null;
+    }
+  }
+
+  async function loadChatHistory() {
+    if(!supabaseClient) return;
+    var query = supabaseClient.from('live_chat').select('*').eq('room_id', 'main').order('created_at', { ascending: true }).limit(100);
+    if(!isAdmin) query = query.eq('is_hidden', false);
+    var result = await query;
+    if(result.data) {
+      chatMessages = [];
+      result.data.forEach(msg => appendChatMessage(msg));
+    }
+  }
+
+  async function hideChatMessage(btn) {
+    if(!requireAdmin() || !supabaseClient) return;
+    var id = btn.dataset.id;
+    if(!id) return;
+    await supabaseClient.from('live_chat').update({ is_hidden: true }).eq('id', id);
+    chatMessages = chatMessages.map(msg => msg.id === id ? Object.assign({}, msg, { is_hidden: true }) : msg);
+    renderLiveChatMessages();
+    renderAdminChatFeed();
+  }
+
+  async function banChatUser(btn) {
+    if(!requireAdmin() || !supabaseClient) return;
+    var token = btn.dataset.token;
+    if(!token) return;
+    await supabaseClient.from('live_banned_tokens').upsert({ user_token: token, reason: 'ban' }, { onConflict: 'user_token' });
+    await supabaseClient.from('live_chat').update({ is_hidden: true }).eq('user_token', token).eq('room_id', 'main');
+    chatMessages = chatMessages.map(msg => msg.user_token === token ? Object.assign({}, msg, { is_hidden: true }) : msg);
+    renderLiveChatMessages();
+    renderAdminChatFeed();
+  }
+
+  async function timeoutChatUser(btn) {
+    if(!requireAdmin() || !supabaseClient) return;
+    var token = btn.dataset.token;
+    if(!token) return;
+    var expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    await supabaseClient.from('live_banned_tokens').upsert({ user_token: token, reason: 'timeout', expires_at: expires }, { onConflict: 'user_token' });
+  }
+
+  async function sendAnnouncement(pinned, inputId) {
+    if(!requireAdmin()) return;
+    var input = document.getElementById(inputId || 'liveAnnounceInput');
+    var message = (input ? input.value.trim() : '').slice(0, 200);
+    if(!message) return;
+    var payload = { room_id: 'main', message, is_pinned: Boolean(pinned), created_at: new Date().toISOString() };
+    if(supabaseClient) await supabaseClient.from('live_announcements').insert(payload);
+    showAnnouncement(payload);
+    if(liveChannel) liveChannel.send({ type: 'broadcast', event: 'announcement', payload });
+    if(input) input.value = '';
+  }
+
+  function showAnnouncement(data) {
+    var bar = document.getElementById('liveAnnouncementBar');
+    var text = document.getElementById('liveAnnouncementText');
+    if(!bar || !text) return;
+    text.textContent = data.message || '';
+    bar.style.display = '';
+    window.clearTimeout(announcementTimer);
+    if(!data.is_pinned) announcementTimer = window.setTimeout(dismissAnnouncement, 8000);
+  }
+
+  function dismissAnnouncement() {
+    var bar = document.getElementById('liveAnnouncementBar');
+    if(bar) bar.style.display = 'none';
+    window.clearTimeout(announcementTimer);
+  }
+
+  function trackPlayCount(row) {
+    if(!supabaseClient || !row) return;
+    var key = row.getAttribute('data-id') || row.getAttribute('data-name') || row.getAttribute('data-title') || '';
+    if(key) supabaseClient.rpc('increment_play_count', { p_key: key }).catch(() => {});
+  }
+
+  async function loadPlayStats() {
+    if(!supabaseClient) return;
+    var result = await supabaseClient.from('play_counts').select('*').order('play_count', { ascending: false }).limit(50);
+    if(result.error || !result.data) return;
+    var list = document.getElementById('statsPlayList');
+    var totalEl = document.getElementById('statsTotalPlays');
+    if(!list) return;
+    var total = result.data.reduce((sum, row) => sum + (row.play_count || 0), 0);
+    if(totalEl) totalEl.textContent = 'total plays: ' + total;
+    list.innerHTML = '';
+    result.data.forEach((row, i) => {
+      var lastPlayed = row.last_played ? new Date(row.last_played).toLocaleDateString().toLowerCase() : '--';
+      var el = document.createElement('div');
+      el.className = 'stats-row';
+      el.innerHTML =
+        '<span class="stats-rank">#' + (i + 1) + '</span>' +
+        '<span class="stats-name">' + escapeHtml(row.asset_key || '--') + '</span>' +
+        '<span class="stats-count">' + (row.play_count || 0) + ' plays</span>' +
+        '<span class="stats-date">last: ' + lastPlayed + '</span>';
+      list.appendChild(el);
+    });
   }
 
   async function saveLiveState(state) {
@@ -2068,20 +2793,66 @@
     if(!requireAdmin()) return;
     var row = currentBroadcastRow();
     if(!row) return alert('no archive item available to broadcast.');
+    activeLiveDirectState = null;
     saveLiveState(liveStateFromRow(row));
     startLiveSyncLoop();
   }
 
-  function goLiveWithSelection() {
+  function goLiveWithSelection(selectId) {
     if(!requireAdmin()) return;
-    var row = findLiveRow(document.getElementById('liveAssetSelect').value);
+    var select = document.getElementById(selectId || 'liveAssetSelect');
+    var row = findLiveRow(select && select.value);
     if(!row) return alert('choose an archive item first.');
+    activeLiveDirectState = null;
     saveLiveState(liveStateFromRow(row, { playing: false, position: 0 }));
+    startLiveSyncLoop();
+  }
+
+  async function goLiveWithFile(inputId, titleId) {
+    if(!requireAdmin()) return;
+    var input = document.getElementById(inputId || 'liveFileInput');
+    var file = input && input.files && input.files[0];
+    if(!file) return alert('choose a live-only file first.');
+    var type = file.type.indexOf('audio/') === 0 ? 'audio' : (file.type.indexOf('video/') === 0 ? 'video' : 'image');
+    var titleInput = document.getElementById(titleId || 'liveTitleInput');
+    var title = (titleInput ? titleInput.value.trim() : '') || file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ');
+    var fileUrl = '';
+    if(isRemoteReady && supabaseClient) {
+      var safeName = file.name.replace(/[^a-z0-9._-]+/gi, '-');
+      var path = `live/${Date.now()}-${safeName}`;
+      var upload = await supabaseClient.storage.from(STORAGE_BUCKET).upload(path, file, { upsert:false });
+      if(upload.error) return alert(upload.error.message || 'live upload failed.');
+      fileUrl = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+    } else {
+      fileUrl = URL.createObjectURL(file);
+      liveTempUrls.push(fileUrl);
+    }
+    activeLiveDirectState = {
+      room_id:'main',
+      is_live:true,
+      asset_key:`live:${Date.now()}`,
+      title,
+      type,
+      version:'live',
+      folder:'live room',
+      mood:'live',
+      mood_color:'#ffffff',
+      notes:'live-only broadcast source',
+      cover:type === 'image' ? fileUrl : '',
+      file_url:fileUrl,
+      position:0,
+      playing:type !== 'image',
+      updated_at:new Date().toISOString(),
+      countdown_target:null
+    };
+    playLiveDirectState(activeLiveDirectState, true);
+    saveLiveState(liveStateFromDirect(activeLiveDirectState));
     startLiveSyncLoop();
   }
 
   function broadcastCurrentLiveState() {
     if(!requireAdmin()) return;
+    if(activeLiveDirectState) return saveLiveState(liveStateFromDirect(activeLiveDirectState));
     var row = currentBroadcastRow();
     if(!row) return;
     saveLiveState(liveStateFromRow(row));
@@ -2091,22 +2862,42 @@
     window.clearInterval(liveSyncTimer);
     liveSyncTimer = window.setInterval(() => {
       if(!isAdmin || !liveState || !liveState.is_live) return;
+      if(activeLiveDirectState) return saveLiveState(liveStateFromDirect(activeLiveDirectState));
       var row = currentBroadcastRow();
       if(row) saveLiveState(liveStateFromRow(row));
-    }, 3200);
+    }, 1000);
   }
 
   function stopLiveRoom() {
     if(!requireAdmin()) return;
     window.clearInterval(liveSyncTimer);
-    saveLiveState({ room_id: 'main', is_live: false, updated_at: new Date().toISOString() });
+    activeLiveDirectState = null;
+    saveLiveState({ room_id: 'main', is_live: false, countdown_target: null, updated_at: new Date().toISOString() });
+    restoreUnderlyingSection();
   }
 
   function applyLiveStateToViewer(state) {
     if(applyingLiveState || !state || !state.is_live) return;
     var row = findLiveRow(state.asset_key);
+    if(!row && state.file_url) {
+      if(activeLiveDirectState && activeLiveDirectState.asset_key === state.asset_key) {
+        activeLiveDirectState = Object.assign(activeLiveDirectState, state);
+        if(state.type === 'audio' && currentAudio) {
+          var target = liveSyncedPosition(state);
+          if(Math.abs((currentAudio.currentTime || 0) - target) > 1.2) currentAudio.currentTime = target;
+          if(state.playing && currentAudio.paused) currentAudio.play().catch(() => {});
+          if(!state.playing && !currentAudio.paused) currentAudio.pause();
+        } else if(state.type === 'video') {
+          syncLiveVideoElement(state);
+        }
+        renderLiveState(state);
+        return;
+      }
+      return playLiveDirectState(state, false);
+    }
     if(!row) return;
     applyingLiveState = true;
+    setLiveFollower(!isAdmin);
     var type = state.type || row.getAttribute('data-type');
     if(type === 'audio') {
       buildQueue();
@@ -2114,8 +2905,9 @@
       if(index !== -1 && queueIndex !== index) playTrackFromQueue(index);
       window.setTimeout(() => {
         if(currentAudio && Number.isFinite(Number(state.position))) {
-          var drift = Math.abs((currentAudio.currentTime || 0) - Number(state.position));
-          if(drift > 1.8) currentAudio.currentTime = Number(state.position);
+          var targetPosition = liveSyncedPosition(state);
+          var drift = Math.abs((currentAudio.currentTime || 0) - targetPosition);
+          if(drift > 1.2) currentAudio.currentTime = targetPosition;
           if(state.playing && currentAudio.paused) currentAudio.play().then(() => { setPlayIcon(false); setPlayingState(true); }).catch(() => {});
           if(!state.playing && !currentAudio.paused) { currentAudio.pause(); setPlayIcon(true); setPlayingState(false); }
         }
@@ -2123,12 +2915,118 @@
       }, 260);
       return;
     }
-    showMediaInNowPlaying(row, type);
+    if(row.classList.contains('playing') && type === 'video') {
+      syncLiveVideoElement(state);
+    } else if(row.classList.contains('playing') && type === 'image') {
+      renderLiveState(state);
+    } else {
+      showMediaInNowPlaying(row, type);
+      if(type === 'video') {
+        window.setTimeout(() => syncLiveVideoElement(state), 120);
+      }
+    }
     applyingLiveState = false;
+  }
+
+  function setLiveFollower(enabled) {
+    isLiveFollower = Boolean(enabled);
+    document.body.classList.toggle('live-follower', isLiveFollower);
+  }
+
+  function syncLiveVideoElement(state) {
+    var video = document.querySelector('#fsMediaStage video');
+    if(!video) return;
+    video.controls = !isLiveFollower;
+    var target = liveSyncedPosition(state);
+    if(Number.isFinite(target) && Math.abs((video.currentTime || 0) - target) > 1.2) video.currentTime = target;
+    if(state.playing && video.paused) video.play().catch(() => {});
+    if(!state.playing && !video.paused) video.pause();
+  }
+
+  function playLiveDirectState(state, asHost) {
+    applyingLiveState = true;
+    activeLiveDirectState = state;
+    setLiveFollower(!asHost && !isAdmin);
+    activeMediaType = state.type || 'audio';
+    var type = activeMediaType;
+    document.querySelectorAll('.frow.playing').forEach(r => r.classList.remove('playing'));
+    document.getElementById('playerBar').classList.add('active');
+    document.getElementById('playerBar').classList.toggle('media-preview', type !== 'audio');
+    document.getElementById('fsPlayer').classList.add('active');
+    document.getElementById('fsPlayer').classList.toggle('media-mode', type !== 'audio');
+    document.getElementById('fsPlayer').classList.toggle('audio-mode', type === 'audio');
+    document.getElementById('fsPlayer').classList.toggle('image-mode', type === 'image');
+    document.getElementById('fsPlayer').classList.toggle('video-mode', type === 'video');
+    setAppSection(type === 'audio' ? 'now playing' : `${type} viewer`);
+    document.getElementById('pbTitle').textContent = state.title || 'live broadcast';
+    document.getElementById('fsTitle').textContent = state.title || 'live broadcast';
+    document.getElementById('pbSub').textContent = `live room / ${type}`;
+    document.getElementById('fsSub').textContent = `live room / ${type}`;
+    document.getElementById('fsStateBadge').textContent = state.playing ? 'live' : 'armed';
+    document.getElementById('fsTypeBadge').textContent = type;
+    document.getElementById('fsMoodBadge').textContent = 'live';
+    document.getElementById('fsSource').textContent = 'live';
+    document.getElementById('fsQueuePos').textContent = '--';
+    document.getElementById('fsNextUp').textContent = 'live';
+    var cover = state.cover || (type === 'image' ? state.file_url : '');
+    var pseudoRow = document.createElement('div');
+    pseudoRow.setAttribute('data-title', state.title || 'live broadcast');
+    pseudoRow.setAttribute('data-sub', 'live room');
+    pseudoRow.setAttribute('data-ver', 'live');
+    pseudoRow.setAttribute('data-type', type);
+    pseudoRow.setAttribute('data-notes', state.notes || '');
+    pseudoRow.setAttribute('data-cover', cover || '');
+    pseudoRow.setAttribute('data-img-src', type === 'image' ? state.file_url : '');
+    pseudoRow.setAttribute('data-video-src', type === 'video' ? state.file_url : '');
+    pseudoRow.setAttribute('data-file', type === 'audio' ? state.file_url : '');
+    updateMiniPlayerArtwork(pseudoRow, type);
+    updateMiniPlayerNotes(pseudoRow);
+    renderMeta(pseudoRow);
+    readCoverColor(cover || state.file_url, state.mood_color || '#ffffff');
+    setProgressDisplay(0, 'LIVE');
+    if(type === 'audio') {
+      loadWaveformForAudio(state.file_url, state.asset_key || state.file_url || state.title);
+      if(currentAudio) currentAudio.pause();
+      currentAudio = createArchiveAudio(state.file_url);
+      setupWebAudio(currentAudio);
+      currentAudio.addEventListener('loadedmetadata', () => {
+        currentAudio.currentTime = Math.min(currentAudio.duration || liveSyncedPosition(state), liveSyncedPosition(state));
+        updateTime();
+      }, { once:true });
+      currentAudio.addEventListener('timeupdate', updateTime);
+      if(state.playing) currentAudio.play().then(() => { setPlayIcon(false); setPlayingState(true); }).catch(() => {});
+      else { setPlayIcon(true); setPlayingState(false); }
+    } else {
+      clearInterval(window.mockTimer);
+      if(currentAudio) currentAudio.pause();
+      setPlayIcon(true);
+      setPlayingState(false);
+      var stage = document.getElementById('fsMediaStage');
+      stage.innerHTML = '';
+      stage.classList.add('active');
+      document.getElementById('visualizerCanvas').classList.add('hidden');
+      if(type === 'image') {
+        var img = document.createElement('img');
+        img.src = state.file_url;
+        img.alt = state.title || 'live image';
+        stage.appendChild(img);
+      } else if(type === 'video') {
+        var video = document.createElement('video');
+        video.src = state.file_url;
+        video.controls = asHost;
+        video.playsInline = true;
+        video.autoplay = Boolean(state.playing);
+        video.muted = !asHost;
+        stage.appendChild(video);
+        video.addEventListener('loadedmetadata', () => syncLiveVideoElement(state), { once:true });
+      }
+    }
+    window.setTimeout(() => { applyingLiveState = false; resizeCanvas(); }, 220);
   }
 
   function maybeBroadcastLiveRow(row, overrides) {
     if(!isAdmin || applyingLiveState || !liveState || !liveState.is_live || !row) return;
+    activeLiveDirectState = null;
     saveLiveState(liveStateFromRow(row, overrides));
   }
 
@@ -3576,6 +4474,11 @@
     activeMediaType = type;
     activeVisualRow = row;
     clearInterval(window.mockTimer);
+    if(type !== 'audio') {
+      activeWaveformKey = `${type}:${row.getAttribute('data-title') || ''}`;
+      activeWaveformPeaks = fallbackWaveformPeaks(activeWaveformKey);
+      setProgressDisplay(0, type === 'video' ? 'video preview' : 'image preview');
+    }
     if(currentAudio) { currentAudio.pause(); setPlayIcon(true); }
     setPlayingState(false);
     document.querySelectorAll('.frow.playing').forEach(r => r.classList.remove('playing'));
@@ -3591,7 +4494,6 @@
     document.getElementById('pbSub').textContent = comboSub;
     document.getElementById('fsTitle').textContent = row.getAttribute('data-title');
     document.getElementById('fsSub').textContent = comboSub;
-    setProgressDisplay(0, type === 'video' ? 'video preview' : 'image preview');
     document.getElementById('playerBar').classList.add('active', 'media-preview');
     document.getElementById('fsPlayer').classList.add('active');
     animateTrackSwap();
@@ -3839,6 +4741,7 @@
     }
 
     var file = row.getAttribute('data-file');
+    loadWaveformForAudio(file, row.getAttribute('data-id') || row.getAttribute('data-name') || file || row.getAttribute('data-title'));
     if(file) {
       currentAudio = (nextAudioPreload && audioUrlMatches(nextAudioPreload, file)) ? nextAudioPreload : createArchiveAudio(file);
       nextAudioPreload = null;
@@ -3850,9 +4753,9 @@
       currentAudio.addEventListener('ended', () => { if(currentAudio === trackAudio) handleTrackEnd(); });
       currentAudio.addEventListener('canplay', preloadNextTrack, { once: true });
       if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      currentAudio.play().then(() => { setPlayIcon(false); setPlayingState(true); maybeBroadcastLiveRow(row); }).catch(e => { setPlayIcon(true); setPlayingState(false); maybeBroadcastLiveRow(row, { playing: false }); });
+      currentAudio.play().then(() => { setPlayIcon(false); setPlayingState(true); trackPlayCount(row); maybeBroadcastLiveRow(row); }).catch(e => { setPlayIcon(true); setPlayingState(false); maybeBroadcastLiveRow(row, { playing: false }); });
     } else {
-      currentAudio = createArchiveAudio(); setPlayIcon(false); setPlayingState(true); updateTimeMock(); maybeBroadcastLiveRow(row);
+      currentAudio = createArchiveAudio(); setPlayIcon(false); setPlayingState(true); updateTimeMock(); trackPlayCount(row); maybeBroadcastLiveRow(row);
     }
     preloadNextTrack();
     resizeCanvas();
@@ -3890,6 +4793,7 @@
     }
   }
   function toggleCurrentPlayback() {
+    if(isLiveFollower) return;
     if(activeMediaType !== 'audio' || !currentAudio) return;
     if(currentAudio.paused) {
       if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
@@ -3936,6 +4840,10 @@
       if(timelineActive) { closeTimelineView(); return; }
     }
     if(!fsActive) return;
+    if(isLiveFollower && [' ','Space','ArrowRight','ArrowLeft'].includes(e.key) || (isLiveFollower && e.code === 'Space')) {
+      e.preventDefault();
+      return;
+    }
     if(e.key === ' ' || e.code === 'Space') {
       e.preventDefault();
       toggleCurrentPlayback();
@@ -4018,22 +4926,151 @@
 
   function setProgressDisplay(percent, text) {
     var safeNumber = Math.max(0, Math.min(100, Number(percent) || 0));
+    activeProgressPercent = safeNumber;
     var safePercent = safeNumber + '%';
-    var ratio = Math.max(0.001, safeNumber / 100);
-    var inverse = Math.min(1000, 1 / ratio);
     var pbFill = document.getElementById('pbFill');
     var fsFill = document.getElementById('fsFill');
     pbFill.style.width = safePercent;
     fsFill.style.width = safePercent;
-    pbFill.style.setProperty('--progress-inverse', inverse);
-    fsFill.style.setProperty('--progress-inverse', inverse);
+    [pbFill, fsFill].forEach(fill => {
+      fill.style.setProperty('--progress-percent', safePercent);
+      var track = fill.closest('.pb-progress');
+      if(track) track.style.setProperty('--progress-percent', safePercent);
+    });
     document.getElementById('pbTime').textContent = text;
     document.getElementById('fsTime').textContent = text;
+    drawActiveWaveforms();
   }
 
   function resetAudioProgress() {
     clearInterval(window.mockTimer);
     setProgressDisplay(0, '00:00 / 00:00');
+  }
+
+  function setWaveformLoading(key) {
+    activeWaveformKey = key || '';
+    activeWaveformPeaks = fallbackWaveformPeaks(activeWaveformKey || 'empty');
+    drawActiveWaveforms();
+  }
+
+  async function loadWaveformForAudio(url, key) {
+    key = key || url || 'unknown';
+    activeWaveformKey = key;
+    if(waveformCache.has(key)) {
+      activeWaveformPeaks = waveformCache.get(key);
+      drawActiveWaveforms();
+      return;
+    }
+    setWaveformLoading(key);
+    if(!url) return;
+    try {
+      var response = await fetch(url);
+      if(!response.ok) throw new Error('waveform fetch failed');
+      var buffer = await response.arrayBuffer();
+      var context = new (window.AudioContext || window.webkitAudioContext)();
+      var audioBuffer = await context.decodeAudioData(buffer.slice(0));
+      if(context.close) context.close();
+      var peaks = peaksFromAudioBuffer(audioBuffer, 180);
+      waveformCache.set(key, peaks);
+      if(activeWaveformKey === key) {
+        activeWaveformPeaks = peaks;
+        drawActiveWaveforms();
+      }
+    } catch(error) {
+      var fallback = fallbackWaveformPeaks(key);
+      waveformCache.set(key, fallback);
+      if(activeWaveformKey === key) {
+        activeWaveformPeaks = fallback;
+        drawActiveWaveforms();
+      }
+    }
+  }
+
+  function peaksFromAudioBuffer(buffer, count) {
+    var channels = Math.min(2, buffer.numberOfChannels || 1);
+    var length = buffer.length;
+    var block = Math.max(1, Math.floor(length / count));
+    var peaks = [];
+    for(var i = 0; i < count; i++) {
+      var start = i * block;
+      var end = Math.min(length, start + block);
+      var sum = 0;
+      var samples = 0;
+      for(var ch = 0; ch < channels; ch++) {
+        var data = buffer.getChannelData(ch);
+        for(var j = start; j < end; j += 24) {
+          sum += Math.abs(data[j]);
+          samples++;
+        }
+      }
+      peaks.push(Math.max(0.05, Math.min(1, Math.pow(sum / Math.max(1, samples), 0.72) * 2.8)));
+    }
+    return normalizePeaks(peaks);
+  }
+
+  function normalizePeaks(peaks) {
+    var max = Math.max(0.1, ...peaks);
+    return peaks.map(value => Math.max(0.055, Math.min(1, value / max)));
+  }
+
+  function fallbackWaveformPeaks(seed) {
+    var text = String(seed || 'akrasia');
+    var hash = 2166136261;
+    for(var i = 0; i < text.length; i++) {
+      hash ^= text.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    var peaks = [];
+    var value = hash >>> 0;
+    for(var index = 0; index < 180; index++) {
+      value = Math.imul(value ^ (value >>> 15), 2246822507) >>> 0;
+      var noise = (value % 1000) / 1000;
+      var envelope = Math.sin((index / 179) * Math.PI);
+      var wave = 0.24 + Math.abs(Math.sin(index * 0.19 + (hash % 19))) * 0.46 + noise * 0.34;
+      peaks.push(Math.max(0.06, wave * (0.36 + envelope * 0.82)));
+    }
+    return normalizePeaks(peaks);
+  }
+
+  function drawActiveWaveforms() {
+    var peaks = activeWaveformPeaks || fallbackWaveformPeaks(activeWaveformKey || 'empty');
+    drawWaveformCanvas(document.getElementById('pbWaveform'), peaks, activeProgressPercent);
+    drawWaveformCanvas(document.getElementById('fsWaveform'), peaks, activeProgressPercent);
+  }
+
+  function drawWaveformCanvas(canvasEl, peaks, progress) {
+    if(!canvasEl || !peaks || !peaks.length) return;
+    var rect = canvasEl.getBoundingClientRect();
+    var width = Math.max(1, Math.floor(rect.width * window.devicePixelRatio));
+    var height = Math.max(1, Math.floor(rect.height * window.devicePixelRatio));
+    if(canvasEl.width !== width || canvasEl.height !== height) {
+      canvasEl.width = width;
+      canvasEl.height = height;
+    }
+    var ctx = canvasEl.getContext('2d');
+    ctx.clearRect(0, 0, width, height);
+    var playedX = width * Math.max(0, Math.min(100, progress || 0)) / 100;
+    var gap = Math.max(1, Math.floor(width / peaks.length * 0.35));
+    var barW = Math.max(1, Math.floor(width / peaks.length) - gap);
+    var center = height / 2;
+    for(var i = 0; i < peaks.length; i++) {
+      var x = Math.floor(i * width / peaks.length);
+      var h = Math.max(2, peaks[i] * height * 0.82);
+      ctx.fillStyle = x <= playedX ? '#ffffff' : 'rgba(255,255,255,0.34)';
+      roundRect(ctx, x, center - h / 2, barW, h, Math.min(barW, 3));
+      ctx.fill();
+    }
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, w / 2, h / 2));
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
   }
 
   function updateTime() {
@@ -4072,6 +5109,7 @@
     var scrubber = document.getElementById(scrubberId);
     if(!scrubber) return;
     scrubber.addEventListener('pointerdown', function(e) {
+      if(isLiveFollower) return;
       if(!currentAudio || !currentAudio.duration) return;
       e.preventDefault();
       scrubber.classList.add('dragging');
@@ -4241,6 +5279,14 @@
   }
 
   // Init
+  var liveChatInputEl = document.getElementById('liveChatInput');
+  if(liveChatInputEl) {
+    liveChatInputEl.addEventListener('keydown', function(event) {
+      if(event.key !== 'Enter') return;
+      event.preventDefault();
+      sendLiveChat();
+    });
+  }
   toggleCoverInput();
   setDefaultAssetDate();
   updateDirectoryDropdown();
