@@ -1207,6 +1207,40 @@
     .player-bar .pb-progress{height:24px!important;}
     .player-bar .pb-progress-fill::after{height:24px!important;}
   }
+  body:not(.live-follower) .player-bar::after{content:none!important;}
+  body:not(.live-follower) .player-bar .pb-center,
+  body:not(.live-follower) .player-bar .pb-progress-row,
+  body:not(.live-follower) .player-bar .pb-progress-container,
+  body:not(.live-follower) .player-bar .pb-time{display:revert!important;}
+  body[data-section="archive"] .header-actions-viewer{display:none!important;}
+  body[data-section="now-playing"] #fsMinimizeBtn,
+  body[data-section="image-viewer"] #fsMinimizeBtn,
+  body[data-section="video-viewer"] #fsMinimizeBtn{display:inline-flex;}
+  body:not([data-section="now-playing"]):not([data-section="image-viewer"]):not([data-section="video-viewer"]) #fsMinimizeBtn{display:none!important;}
+  .frow:hover,.frow.playing{background:rgba(255,255,255,0.075)!important;color:var(--white)!important;box-shadow:-4px 0 0 var(--mood-color,var(--white)),0 16px 42px rgba(0,0,0,0.38)!important;}
+  .frow:hover .dim-cell,.frow.playing .dim-cell,.frow:hover .row-path,.frow.playing .row-path,.frow:hover .version-cell,.frow.playing .version-cell{color:var(--dim-2)!important;}
+  .frow:hover svg,.frow.playing svg{stroke:var(--white)!important;}
+  .timeline-panel.immersive .immersive-day{grid-template-columns:minmax(0,240px) minmax(0,1fr)!important;gap:clamp(20px,4vw,56px)!important;}
+  .timeline-panel.immersive .immersive-day-label{font-size:clamp(1.45rem,3vw,3.4rem)!important;line-height:0.92!important;overflow-wrap:normal!important;word-break:keep-all!important;hyphens:none;max-width:240px!important;}
+  .timeline-panel.immersive .immersive-files{overflow:visible!important;}
+  .timeline-panel.immersive .immersive-file{grid-template-columns:24px minmax(0,1fr) auto!important;color:var(--dim-2)!important;}
+  .timeline-panel.immersive .immersive-file:hover{background:rgba(255,255,255,0.08)!important;color:var(--white)!important;border-color:rgba(255,255,255,0.36)!important;}
+  .timeline-panel.immersive .immersive-file:hover strong,.timeline-panel.immersive .immersive-file:hover span{color:var(--white)!important;}
+  .stats-row{grid-template-columns:42px minmax(180px,1.5fr) minmax(110px,0.8fr) minmax(120px,0.8fr) minmax(120px,0.8fr) minmax(92px,0.6fr)!important;}
+  .stats-count strong{display:block;font-size:1rem;color:var(--white);}
+  .stats-date small{display:block;color:var(--dim);font-size:0.55rem;margin-top:2px;}
+  .live-announcement-bar{padding:18px 5vw!important;font-size:1rem!important;text-transform:none;box-shadow:0 22px 90px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.22),0 18px 70px rgba(0,0,0,0.62)!important;}
+  .live-major-announcement{background:rgba(0,0,0,0.62)!important;}
+  .live-admin-drawer section{background:rgba(0,0,0,0.58)!important;}
+  .intro-overlay.departing .intro-top{animation:introHeaderZoom 1.05s cubic-bezier(0.16,1,0.3,1) both;}
+  .intro-overlay.departing .intro-stage,.intro-overlay.departing .intro-footer{animation:introWorldFade 0.72s ease both;}
+  @keyframes introHeaderZoom{to{transform:translateY(0) scale(1.035);border-bottom-color:var(--white);box-shadow:0 0 46px rgba(var(--intro-accent),0.22);}}
+  @keyframes introWorldFade{to{opacity:0;filter:blur(10px);transform:scale(1.018);}}
+  @media (max-width:760px){
+    .timeline-panel.immersive .immersive-day{grid-template-columns:1fr!important;}
+    .timeline-panel.immersive .immersive-day-label{position:relative!important;top:auto!important;max-width:none!important;}
+    body.live-follower .player-bar::after{right:10px;top:6px;border-radius:8px;padding:3px 7px;}
+  }
 </style>
 </head>
 <body data-section="archive" class="intro-preload">
@@ -1215,20 +1249,20 @@
 
 <section class="intro-overlay" id="introOverlay" aria-hidden="true" aria-label="akrasia archive introduction">
   <div class="intro-top">
-    <div class="intro-brand">akrasia <span>/ <span class="intro-mode-word" id="introModeWord">archive</span></span></div>
+    <div class="intro-brand">akrasia <span>/ <span class="intro-mode-word" id="introModeWord">functionality</span></span></div>
     <button class="intro-skip" type="button" onclick="finishIntro()">skip</button>
   </div>
   <div class="intro-stage" id="introStage">
     <article class="intro-slide active" data-intro-accent="255,255,255">
       <div>
-        <div class="intro-kicker">01 / before the album</div>
-        <h1 class="intro-title">enter the archive.</h1>
-        <p class="intro-copy">Songs, versions, images, and fragments stay alive here without being forced into one final shape. <strong>Start anywhere.</strong></p>
+        <div class="intro-kicker">01 / functionality</div>
+        <h1 class="intro-title">enter through the header.</h1>
+        <p class="intro-copy">The archive opens like a place, not a splash page. The header resolves into each room: archive, now playing, timeline, live, vault. <strong>The site teaches itself by moving.</strong></p>
       </div>
       <div class="intro-demo">
         <div class="intro-origin">
           <div class="intro-origin-lines"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="intro-origin-center"><span>ENTERING</span><strong>akrasia</strong><em>/ archive</em></div>
+          <div class="intro-origin-center"><span>ZOOMING INTO</span><strong>akrasia</strong><em>/ functionality</em></div>
           <div class="intro-origin-corners"><span>AUDIO / VISUAL</span><span>01 - 100</span><span>VERSIONS PRESERVED</span><span>OPEN INDEX</span></div>
         </div>
       </div>
@@ -1237,7 +1271,7 @@
       <div>
         <div class="intro-kicker">02 / you are always somewhere</div>
         <h2 class="intro-title">akrasia / place</h2>
-        <p class="intro-copy">The header is the map. Its first word never leaves; the second resolves into the room you entered. <strong>Archive. Explorer. Now Playing. Timeline. Vault.</strong> It makes every screen feel like another place inside the same album.</p>
+        <p class="intro-copy">The header is the map. Its first word never leaves; the second resolves into the room you entered. <strong>Archive. Now Playing. Timeline. Live. Vault.</strong> It makes every screen feel like another place inside the same album.</p>
       </div>
       <div class="intro-demo intro-location-demo">
         <div class="intro-location-head">akrasia <span>/ <span class="intro-mode-word" id="introLocationWord">archive</span></span></div>
@@ -1377,7 +1411,7 @@
       </div>
       <div class="header-actions header-actions-viewer">
         <button class="action-trigger fs-info-toggle" id="fsInfoToggle" onclick="toggleNowInfo()">info</button>
-        <button class="action-trigger" onclick="toggleFullscreen()">minimize [-]</button>
+        <button class="action-trigger" id="fsMinimizeBtn" onclick="toggleFullscreen()">minimize [-]</button>
       </div>
     </div>
   </div>
@@ -1588,7 +1622,7 @@
             <input type="text" id="livePrivateFolderInput" placeholder="private folder / collection">
             <div class="quick-row">
               <button class="mini-btn" type="button" onclick="savePrivateLiveItem()">preload</button>
-              <button class="mini-btn" type="button" onclick="addPrivateLiveItemToQueue()">queue private</button>
+              <button class="mini-btn" type="button" onclick="addPrivateLiveItemToQueue('privateLiveItemSelect')">queue private</button>
             </div>
             <select id="privateLiveItemSelect"></select>
           </section>
@@ -1716,12 +1750,18 @@
               </div>
             </section>
             <section>
-              <h3>queue transport</h3>
+              <h3>queue</h3>
               <div class="quick-row">
+                <button class="mini-btn" type="button" onclick="startLiveQueue()">start queue</button>
                 <button class="mini-btn" type="button" onclick="prevLiveQueueItem()">back</button>
                 <button class="mini-btn" type="button" onclick="pauseLiveQueue()">pause</button>
                 <button class="mini-btn" type="button" onclick="resumeLiveQueue()">resume</button>
                 <button class="mini-btn" type="button" onclick="nextLiveQueueItem()">next</button>
+                <button class="mini-btn" type="button" onclick="clearLiveQueue()">clear</button>
+              </div>
+              <div class="quick-row">
+                <input type="text" id="liveFolderQueueInputInline" placeholder="folder path">
+                <button class="mini-btn" type="button" onclick="addFolderToLiveQueue('liveFolderQueueInputInline')">add folder</button>
               </div>
               <div class="live-queue-list compact" id="liveQueueListInline"></div>
             </section>
@@ -1734,6 +1774,40 @@
                 <button class="mini-btn" type="button" onclick="applyInlineLiveOverrides()">apply</button>
                 <label class="mini-toggle"><input type="checkbox" id="liveInlineAutoStart"> countdown auto-start</label>
               </div>
+            </section>
+            <section>
+              <h3>countdown</h3>
+              <input type="datetime-local" id="liveCountdownInputInline">
+              <select id="liveCountdownActionInline">
+                <option value="room">show room</option>
+                <option value="selected">start selected item</option>
+                <option value="queue">start queue</option>
+              </select>
+              <div class="quick-row">
+                <button class="mini-btn" type="button" onclick="setLiveCountdown('liveCountdownInputInline')">set</button>
+                <button class="mini-btn" type="button" onclick="clearLiveCountdown()">clear</button>
+              </div>
+            </section>
+            <section>
+              <h3>announcements</h3>
+              <textarea id="liveAnnounceInputInline" rows="2" placeholder="major room update"></textarea>
+              <div class="quick-row">
+                <button class="mini-btn" type="button" onclick="sendAnnouncement(false,'liveAnnounceInputInline')">send</button>
+                <button class="mini-btn" type="button" onclick="sendAnnouncement(true,'liveAnnounceInputInline')">pin</button>
+                <button class="mini-btn" type="button" onclick="sendAnnouncement('major','liveAnnounceInputInline')">major</button>
+              </div>
+            </section>
+            <section>
+              <h3>private live queue</h3>
+              <input type="file" id="livePrivateFileInputInline" accept="audio/*,video/*,image/*">
+              <input type="file" id="livePrivateCoverInputInline" accept="image/*">
+              <input type="text" id="livePrivateTitleInputInline" placeholder="private title">
+              <textarea id="livePrivateNotesInputInline" rows="2" placeholder="private notes"></textarea>
+              <div class="quick-row">
+                <button class="mini-btn" type="button" onclick="savePrivateLiveItem('Inline')">preload</button>
+                <button class="mini-btn" type="button" onclick="addPrivateLiveItemToQueue('privateLiveItemSelectInline')">queue private</button>
+              </div>
+              <select id="privateLiveItemSelectInline"></select>
             </section>
           </div>
         </div>
@@ -2053,12 +2127,17 @@
   var liveTempUrls = [];
   var activeLiveDirectState = null;
   var livePlaybackEl = null;
+  var livePlaybackSignature = '';
+  var livePreviewSignature = '';
+  var liveColorSignature = '';
+  var liveSampleColorSignature = '';
   var liveQueue = [];
   var liveQueueIndex = -1;
   var liveQueuePlaying = false;
   var liveQueueAutoplay = true;
   var liveFolderAutoplay = true;
   var liveImageTimer = null;
+  var liveImageTimerSignature = '';
   var privateLiveItems = [];
   var liveCountdownAction = 'room';
   var liveCountdownAutoStart = false;
@@ -2098,7 +2177,7 @@
   var archiveFormTimer = null;
 
   function introWasSeen() {
-    try { return localStorage.getItem('akrasia-intro-v3') === 'seen'; } catch(error) { return false; }
+    try { return localStorage.getItem('akrasia-intro-v4') === 'seen'; } catch(error) { return false; }
   }
 
   function openIntro(force) {
@@ -2128,17 +2207,19 @@
   function finishIntro() {
     var overlay = document.getElementById('introOverlay');
     if(!overlay) return;
-    try { localStorage.setItem('akrasia-intro-v3', 'seen'); } catch(error) {}
+    try { localStorage.setItem('akrasia-intro-v4', 'seen'); } catch(error) {}
     window.clearInterval(introLocationTimer);
     overlay.classList.add('departing');
-    document.body.classList.remove('intro-preload', 'intro-active');
-    document.body.classList.add('archive-arriving');
-    assembleArchiveView();
+    window.setTimeout(() => {
+      document.body.classList.remove('intro-preload', 'intro-active');
+      document.body.classList.add('archive-arriving');
+      assembleArchiveView();
+    }, 620);
     window.setTimeout(() => {
       overlay.classList.remove('active', 'departing');
       overlay.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('archive-arriving');
-    }, 900);
+    }, 1220);
   }
 
   function assembleArchiveView() {
@@ -2194,7 +2275,7 @@
     });
     var active = slides[introIndex];
     overlay.style.setProperty('--intro-accent', active.getAttribute('data-intro-accent') || '255,255,255');
-    var introModes = ['prologue', 'map', 'explorer', 'versions', 'now playing', 'image viewer', 'timeline', 'live', 'vault'];
+    var introModes = ['functionality', 'place', 'explorer', 'versions', 'now playing', 'image viewer', 'timeline', 'live', 'vault'];
     var modeWord = document.getElementById('introModeWord');
     var nextMode = introModes[introIndex] || 'archive';
     if(modeWord && modeWord.textContent !== nextMode) {
@@ -2205,7 +2286,7 @@
     }
     window.clearInterval(introLocationTimer);
     if(introIndex === 1) {
-      var locationModes = ['archive', 'explorer', 'now playing', 'timeline', 'visuals'];
+      var locationModes = ['archive', 'explorer', 'now playing', 'timeline', 'live'];
       var locationIndex = 0;
       introLocationTimer = window.setInterval(() => {
         locationIndex = (locationIndex + 1) % locationModes.length;
@@ -2295,8 +2376,24 @@
     }
     setAppSection(live && live.classList.contains('active') ? 'live' : (timeline && timeline.classList.contains('active') ? 'timeline' : 'archive'));
   }
+
+  function leaveLiveViewForArchivePlayback() {
+    liveJoined = false;
+    setLiveFollower(false);
+    activeLiveDirectState = null;
+    var live = document.getElementById('liveRoom');
+    if(live) {
+      live.classList.remove('active');
+      live.setAttribute('aria-hidden', 'true');
+    }
+    toggleLiveAdminDrawer(false);
+    teardownLivePresence();
+    teardownChatRealtime();
+    document.getElementById('playerBar').classList.remove('live-dock');
+  }
+
   function toggleFullscreen() {
-    if(isLiveFollower) {
+    if(isLiveFollower && document.getElementById('liveRoom').classList.contains('active')) {
       openLiveRoom();
       return;
     }
@@ -2619,14 +2716,20 @@
     var inlineTitle = document.getElementById('liveInlineTitle');
     var inlineNotes = document.getElementById('liveInlineNotes');
     var inlineAuto = document.getElementById('liveInlineAutoStart');
+    var dashAuto = document.getElementById('liveCountdownAutoStart');
+    var inlineAction = document.getElementById('liveCountdownActionInline');
+    var dashAction = document.getElementById('liveCountdownAction');
     if(inlineTitle && !inlineTitle.matches(':focus')) inlineTitle.value = isLive ? (liveState.title || '') : '';
     if(inlineNotes && !inlineNotes.matches(':focus')) inlineNotes.value = isLive ? (liveState.notes || '') : '';
     if(inlineAuto) inlineAuto.checked = liveCountdownAutoStart;
+    if(dashAuto) dashAuto.checked = liveCountdownAutoStart;
+    if(inlineAction) inlineAction.value = liveCountdownAction;
+    if(dashAction) dashAction.value = liveCountdownAction;
   }
 
   async function applyInlineLiveOverrides() {
     if(!requireAdmin()) return;
-    liveCountdownAutoStart = Boolean(document.getElementById('liveInlineAutoStart')?.checked);
+    liveCountdownAutoStart = Boolean(document.getElementById('liveInlineAutoStart')?.checked || document.getElementById('liveCountdownAutoStart')?.checked);
     var title = document.getElementById('liveInlineTitle')?.value.trim();
     var notes = document.getElementById('liveInlineNotes')?.value.trim();
     var coverInput = document.getElementById('liveInlineCover');
@@ -2650,6 +2753,7 @@
     });
     if(cover) nextState.cover = cover;
     saveLiveState(nextState);
+    syncLiveAdminControls();
   }
 
   function toggleLiveChatSheet(forceOpen) {
@@ -2676,7 +2780,8 @@
   }
 
   async function liveCustomCoverUrl() {
-    var input = document.getElementById('liveCustomCover');
+    var inputs = ['liveInlineCover', 'liveCustomCover'].map(id => document.getElementById(id)).filter(Boolean);
+    var input = inputs.find(el => el.files && el.files[0]);
     var file = input && input.files && input.files[0];
     if(!file) return '';
     if(isRemoteReady && supabaseClient && isAdmin) {
@@ -2793,9 +2898,13 @@
     liveCountdownAction = state.countdown_action || liveCountdownAction || 'room';
     liveCountdownAutoStart = Boolean(state.countdown_auto_start);
     var countdownActionEl = document.getElementById('liveCountdownAction');
+    var countdownActionInlineEl = document.getElementById('liveCountdownActionInline');
     var countdownAutoEl = document.getElementById('liveCountdownAutoStart');
+    var countdownAutoInlineEl = document.getElementById('liveInlineAutoStart');
     if(countdownActionEl) countdownActionEl.value = liveCountdownAction;
+    if(countdownActionInlineEl) countdownActionInlineEl.value = liveCountdownAction;
     if(countdownAutoEl) countdownAutoEl.checked = liveCountdownAutoStart;
+    if(countdownAutoInlineEl) countdownAutoInlineEl.checked = liveCountdownAutoStart;
     var row = findLiveRow(state.asset_key);
     var isLive = Boolean(state.is_live);
     document.body.classList.toggle('is-live', isLive);
@@ -2833,6 +2942,7 @@
     setReactiveColor(liveColor);
     sampleLiveColor(state.cover || state.file_url || (row && (row.getAttribute('data-cover') || row.getAttribute('data-img-src'))) || '');
     renderLivePreview(row, type, state.cover);
+    syncLiveAdminControls();
     updateLiveDashboard();
     if(!isLive && state.countdown_target) startCountdown(state.countdown_target);
     else stopCountdown();
@@ -2853,8 +2963,9 @@
     if(!requireAdmin()) return;
     var input = document.getElementById(inputId || 'liveCountdownInputDash');
     if(!input || !input.value) return;
-    liveCountdownAction = document.getElementById('liveCountdownAction')?.value || 'room';
-    liveCountdownAutoStart = Boolean(document.getElementById('liveCountdownAutoStart')?.checked);
+    var actionId = inputId === 'liveCountdownInputInline' ? 'liveCountdownActionInline' : 'liveCountdownAction';
+    liveCountdownAction = document.getElementById(actionId)?.value || document.getElementById('liveCountdownAction')?.value || 'room';
+    liveCountdownAutoStart = Boolean(document.getElementById('liveInlineAutoStart')?.checked || document.getElementById('liveCountdownAutoStart')?.checked);
     countdownAutoStarted = false;
     var iso = new Date(input.value).toISOString();
     saveLiveState(Object.assign({}, liveState, {
@@ -2869,7 +2980,7 @@
 
   function clearLiveCountdown() {
     if(!requireAdmin()) return;
-    ['liveCountdownInputDash'].forEach(id => {
+    ['liveCountdownInputDash', 'liveCountdownInputInline'].forEach(id => {
       var input = document.getElementById(id);
       if(input) input.value = '';
     });
@@ -2910,7 +3021,7 @@
     if(!isAdmin || !liveCountdownAutoStart || countdownAutoStarted) return;
     countdownAutoStarted = true;
     if(liveCountdownAction === 'queue') startLiveQueue();
-    else if(liveCountdownAction === 'selected') goLiveWithSelection('liveAssetSelectDash');
+    else if(liveCountdownAction === 'selected') goLiveWithSelection(document.getElementById('liveAssetSelect')?.value ? 'liveAssetSelect' : 'liveAssetSelectDash');
     else openLiveRoom();
   }
 
@@ -2930,6 +3041,8 @@
 
   function sampleLiveColor(src) {
     if(!src) return;
+    if(src === liveSampleColorSignature) return;
+    liveSampleColorSignature = src;
     var img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = function() {
@@ -2956,20 +3069,26 @@
   function renderLivePreview(row, type, cover) {
     var preview = document.getElementById('livePreview');
     if(!preview) return;
-    preview.className = 'live-media-preview';
-    preview.innerHTML = '';
     var state = liveState || {};
     var source = '';
     if(type === 'image') source = state.file_url || (row && row.getAttribute('data-img-src')) || state.cover || cover || '';
     else if(type === 'video') source = state.file_url || (row && row.getAttribute('data-video-src')) || '';
     else source = state.cover || state.live_cover || cover || (row && (row.getAttribute('data-cover') || row.getAttribute('data-img-src'))) || '';
+    var signature = [Boolean(state.is_live), type || 'none', source || '', state.title || '', state.asset_key || ''].join('|');
+    if(signature === livePreviewSignature) return;
+    livePreviewSignature = signature;
     if(source && (type === 'image' || type === 'audio')) {
       var img = document.createElement('img');
-      img.src = source;
       img.alt = state.title || 'live artwork';
       img.onerror = function() { renderLiveFallback(preview, 'artwork unavailable'); };
-      preview.appendChild(img);
-      if(type === 'audio') addLiveAudioPulse(preview);
+      img.onload = function() {
+        preview.className = 'live-media-preview';
+        preview.innerHTML = '';
+        preview.appendChild(img);
+        if(type === 'audio') addLiveAudioPulse(preview);
+      };
+      img.src = source;
+      if(!preview.children.length) preview.className = 'live-media-preview loading';
       return;
     }
     if(source && type === 'video') {
@@ -2980,10 +3099,14 @@
       video.autoplay = Boolean(state.playing);
       video.controls = false;
       video.onerror = function() { renderLiveFallback(preview, 'video unavailable'); };
+      preview.className = 'live-media-preview';
+      preview.innerHTML = '';
       preview.appendChild(video);
       video.play().catch(() => {});
       return;
     }
+    preview.className = 'live-media-preview';
+    preview.innerHTML = '';
     if(type === 'audio') addLiveAudioPulse(preview);
     preview.classList.add('empty');
     renderLiveFallback(preview, type === 'text' ? 'text broadcast' : 'no artwork');
@@ -3024,7 +3147,7 @@
   }
 
   function getLiveChatUsername() {
-    var locked = sessionStorage.getItem('akrasia_chat_name');
+    var locked = localStorage.getItem('akrasia_chat_name') || sessionStorage.getItem('akrasia_chat_name');
     if(locked) return locked;
     var input = document.getElementById('liveChatUsername');
     return (input && input.value.trim()) || 'listener';
@@ -3033,6 +3156,7 @@
   function lockLiveChatName(name) {
     var clean = String(name || 'listener').replace(/<[^>]*>/g, '').trim().slice(0, 24) || 'listener';
     sessionStorage.setItem('akrasia_chat_name', clean);
+    try { localStorage.setItem('akrasia_chat_name', clean); } catch(error) {}
     var input = document.getElementById('liveChatUsername');
     var row = input && input.closest('.live-chat-input-row');
     if(input) {
@@ -3350,10 +3474,10 @@
       el.innerHTML =
         '<span class="stats-rank">#' + (i + 1) + '</span>' +
         '<span class="stats-name">' + escapeHtml(item.title || '--') + '<small>' + escapeHtml(item.folder || 'archive') + '</small></span>' +
-        '<span class="stats-folder">' + escapeHtml(item.version || '--') + ' / ' + escapeHtml(item.type || 'asset') + '</span>' +
-        '<span class="stats-count">' + (row.play_count || 0) + ' plays</span>' +
-        '<span class="stats-date">' + lastPlayed + '</span>' +
-        '<span class="stats-date">' + (item.row ? 'open item' : 'missing') + '</span>';
+        '<span class="stats-folder">' + escapeHtml(item.version || '--') + '<small>' + escapeHtml(item.type || 'asset') + '</small></span>' +
+        '<span class="stats-count"><strong>' + (row.play_count || 0) + '</strong>plays</span>' +
+        '<span class="stats-date">' + lastPlayed + '<small>last played</small></span>' +
+        '<span class="stats-date">' + (item.row ? 'open item' : 'missing') + '<small>' + escapeHtml((row.asset_key || '').slice(0, 18) || 'no key') + '</small></span>';
       if(item.row) el.onclick = () => {
         var type = item.row.getAttribute('data-type');
         if(type === 'audio') { buildQueue(); playTrackFromQueue(audioQueue.findIndex(q => liveRowKey(q) === liveRowKey(item.row))); }
@@ -3556,9 +3680,9 @@
     renderLiveQueue();
   }
 
-  function addFolderToLiveQueue() {
+  function addFolderToLiveQueue(inputId) {
     if(!requireAdmin()) return;
-    var value = normalizeFolderPath(document.getElementById('liveFolderQueueInput')?.value || '');
+    var value = normalizeFolderPath(document.getElementById(inputId || 'liveFolderQueueInput')?.value || '');
     if(!value) return;
     baseRows().filter(row => normalizeFolderPath(row.getAttribute('data-sub')) === value && ['audio','image','video'].includes(row.getAttribute('data-type'))).forEach(row => liveQueue.push(rowToLiveQueueItem(row)));
     if(liveQueueIndex < 0 && liveQueue.length) liveQueueIndex = 0;
@@ -3571,12 +3695,15 @@
     var item = liveQueue.splice(index, 1)[0];
     liveQueue.splice(target, 0, item);
     if(liveQueueIndex === index) liveQueueIndex = target;
+    else if(liveQueueIndex === target) liveQueueIndex = index;
     renderLiveQueue();
   }
 
   function removeLiveQueueItem(index) {
     liveQueue.splice(index, 1);
+    if(index < liveQueueIndex) liveQueueIndex--;
     if(liveQueueIndex >= liveQueue.length) liveQueueIndex = liveQueue.length - 1;
+    if(!liveQueue.length) liveQueuePlaying = false;
     renderLiveQueue();
   }
 
@@ -3643,17 +3770,18 @@
     nextLiveQueueItem();
   }
 
-  async function savePrivateLiveItem() {
+  async function savePrivateLiveItem(suffix) {
     if(!requireAdmin()) return;
-    var fileInput = document.getElementById('livePrivateFileInput');
+    var suffixText = suffix || '';
+    var fileInput = document.getElementById('livePrivateFileInput' + suffixText) || document.getElementById('livePrivateFileInput');
     var file = fileInput && fileInput.files && fileInput.files[0];
     if(!file) return alert('choose a private live file first.');
-    var coverInput = document.getElementById('livePrivateCoverInput');
+    var coverInput = document.getElementById('livePrivateCoverInput' + suffixText) || document.getElementById('livePrivateCoverInput');
     var coverFile = coverInput && coverInput.files && coverInput.files[0];
     var type = file.type.indexOf('audio/') === 0 ? 'audio' : (file.type.indexOf('video/') === 0 ? 'video' : 'image');
-    var title = document.getElementById('livePrivateTitleInput')?.value.trim() || file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ');
-    var notes = document.getElementById('livePrivateNotesInput')?.value.trim() || '';
-    var folder = normalizeFolderPath(document.getElementById('livePrivateFolderInput')?.value || 'private live') || 'private live';
+    var title = (document.getElementById('livePrivateTitleInput' + suffixText)?.value.trim() || document.getElementById('livePrivateTitleInput')?.value.trim()) || file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ');
+    var notes = (document.getElementById('livePrivateNotesInput' + suffixText)?.value.trim() || document.getElementById('livePrivateNotesInput')?.value.trim()) || '';
+    var folder = normalizeFolderPath(document.getElementById('livePrivateFolderInput' + suffixText)?.value || document.getElementById('livePrivateFolderInput')?.value || 'private live') || 'private live';
     var fileUrl = URL.createObjectURL(file);
     var coverUrl = coverFile ? URL.createObjectURL(coverFile) : '';
     var storagePath = '', coverPath = '';
@@ -3691,20 +3819,24 @@
   }
 
   function renderPrivateLiveItems() {
-    var select = document.getElementById('privateLiveItemSelect');
-    if(!select) return;
-    select.innerHTML = '';
-    privateLiveItems.forEach(item => {
-      var option = document.createElement('option');
-      option.value = item.id;
-      option.textContent = `${item.title || 'private item'} / ${item.type || 'asset'}`;
-      select.appendChild(option);
+    ['privateLiveItemSelect', 'privateLiveItemSelectInline'].forEach(id => {
+      var select = document.getElementById(id);
+      if(!select) return;
+      var current = select.value;
+      select.innerHTML = '';
+      privateLiveItems.forEach(item => {
+        var option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = `${item.title || 'private item'} / ${item.type || 'asset'}`;
+        select.appendChild(option);
+      });
+      if(current && Array.from(select.options).some(option => option.value === current)) select.value = current;
     });
   }
 
-  function addPrivateLiveItemToQueue() {
+  function addPrivateLiveItemToQueue(selectId) {
     if(!requireAdmin()) return;
-    var id = document.getElementById('privateLiveItemSelect')?.value;
+    var id = document.getElementById(selectId || 'privateLiveItemSelectInline')?.value || document.getElementById('privateLiveItemSelect')?.value;
     var item = privateLiveItems.find(entry => entry.id === id);
     if(!item) return;
     liveQueue.push(privateToLiveQueueItem(item));
@@ -3772,6 +3904,32 @@
     if(!state.playing && !video.paused) video.pause();
   }
 
+  function livePlaybackKey(state) {
+    if(!state || !state.is_live) return '';
+    return [
+      state.type || 'audio',
+      state.file_url || '',
+      state.asset_key || '',
+      state.cover || state.live_cover || ''
+    ].join('|');
+  }
+
+  function syncLivePlaybackElement(state, asHost) {
+    var media = livePlaybackEl || document.querySelector('#livePreview video');
+    if(!media) return false;
+    if((state.type || 'audio') === 'video') {
+      media.controls = Boolean(asHost && isAdmin);
+      media.muted = !asHost;
+    }
+    var target = liveSyncedPosition(state);
+    if(Number.isFinite(target) && Math.abs((media.currentTime || 0) - target) > 1.2) {
+      try { media.currentTime = Math.min(media.duration || target, target); } catch(error) {}
+    }
+    if(state.playing && media.paused) media.play().catch(() => {});
+    if(!state.playing && !media.paused) media.pause();
+    return true;
+  }
+
   function playLiveDirectState(state, asHost) {
     applyingLiveState = true;
     activeLiveDirectState = state;
@@ -3783,7 +3941,11 @@
     document.getElementById('liveRoom').setAttribute('aria-hidden', 'false');
     document.getElementById('fsPlayer').classList.remove('active');
     var cover = state.cover || (type === 'image' ? state.file_url : '');
-    readCoverColor(cover || state.file_url, state.mood_color || '#ffffff');
+    var colorSignature = [cover || state.file_url || '', state.mood_color || '#ffffff'].join('|');
+    if(colorSignature !== liveColorSignature) {
+      liveColorSignature = colorSignature;
+      readCoverColor(cover || state.file_url, state.mood_color || '#ffffff');
+    }
     renderLiveState(state);
     syncLiveStagePlayback(state, asHost);
     window.setTimeout(() => { applyingLiveState = false; }, 120);
@@ -3791,19 +3953,25 @@
 
   function stopLivePlayback() {
     window.clearTimeout(liveImageTimer);
+    liveImageTimerSignature = '';
     if(livePlaybackEl) {
       try { livePlaybackEl.pause(); } catch(error) {}
       if(livePlaybackEl.tagName === 'AUDIO') livePlaybackEl.removeAttribute('src');
     }
     livePlaybackEl = null;
+    livePlaybackSignature = '';
   }
 
   function syncLiveStagePlayback(state, asHost) {
+    var signature = livePlaybackKey(state);
+    if(signature && signature === livePlaybackSignature && syncLivePlaybackElement(state, asHost)) return;
+    if((state.type || 'audio') === 'image' && signature && signature === liveImageTimerSignature) return;
     stopLivePlayback();
     var type = state.type || 'audio';
     var source = state.file_url || '';
     if(type === 'audio' && source) {
       livePlaybackEl = createArchiveAudio(source);
+      livePlaybackSignature = signature;
       livePlaybackEl.addEventListener('loadedmetadata', () => {
         var target = Math.min(livePlaybackEl.duration || liveSyncedPosition(state), liveSyncedPosition(state));
         if(Number.isFinite(target)) livePlaybackEl.currentTime = target;
@@ -3813,6 +3981,7 @@
     } else if(type === 'video') {
       livePlaybackEl = document.querySelector('#livePreview video');
       if(livePlaybackEl) {
+        livePlaybackSignature = signature;
         livePlaybackEl.controls = Boolean(asHost && isAdmin);
         livePlaybackEl.muted = !asHost;
         livePlaybackEl.addEventListener('ended', () => handleLiveItemEnded(), { once:true });
@@ -3824,13 +3993,16 @@
         if(state.playing) livePlaybackEl.play().catch(() => {});
       }
     } else if(type === 'image' && state.playing && liveQueueAutoplay) {
+      if(signature && signature === liveImageTimerSignature) return;
+      liveImageTimerSignature = signature;
       var seconds = Math.max(3, Math.min(120, Number(document.getElementById('liveImageDuration')?.value) || 12));
       liveImageTimer = window.setTimeout(handleLiveItemEnded, seconds * 1000);
     }
   }
 
   function maybeBroadcastLiveRow(row, overrides) {
-    if(!isAdmin || applyingLiveState || !liveState || !liveState.is_live || !row) return;
+    var liveVisible = document.getElementById('liveRoom')?.classList.contains('active');
+    if(!isAdmin || applyingLiveState || !liveVisible || !liveState || !liveState.is_live || !row) return;
     activeLiveDirectState = null;
     saveLiveState(liveStateFromRow(row, overrides));
   }
@@ -5277,7 +5449,7 @@
   }
 
   function showMediaInNowPlaying(row, type) {
-    if(!applyingLiveState) exitLiveFollowerMode();
+    if(!applyingLiveState) leaveLiveViewForArchivePlayback();
     activeMediaType = type;
     activeVisualRow = row;
     clearInterval(window.mockTimer);
@@ -5508,14 +5680,14 @@
 
   function playTrackFromQueue(index) {
     if(index < 0 || index >= audioQueue.length) return;
-    if(!applyingLiveState) exitLiveFollowerMode();
+    if(!applyingLiveState) leaveLiveViewForArchivePlayback();
     activeMediaType = 'audio';
     activeVisualRow = null;
     document.getElementById('fsPlayer').classList.remove('media-mode', 'image-mode', 'video-mode');
     document.getElementById('fsPlayer').classList.add('audio-mode');
     closeNowInfo();
     if(document.getElementById('fsPlayer').classList.contains('active')) setAppSection('now playing');
-    else restoreUnderlyingSection();
+    else setAppSection('archive');
     queueIndex = index; var row = audioQueue[queueIndex];
     animateTrackSwap();
     document.querySelectorAll('.frow.playing').forEach(r => r.classList.remove('playing'));
@@ -5553,6 +5725,7 @@
       currentAudio = (nextAudioPreload && audioUrlMatches(nextAudioPreload, file)) ? nextAudioPreload : createArchiveAudio(file);
       nextAudioPreload = null;
       currentAudio.loop = isLooping;
+      syncCurrentAudioState();
       setupWebAudio(currentAudio);
       var trackAudio = currentAudio;
       currentAudio.addEventListener('loadedmetadata', () => { if(currentAudio === trackAudio) updateTime(); }, { once: true });
@@ -5602,14 +5775,18 @@
     }
   }
   function toggleCurrentPlayback() {
-    if(isLiveFollower) return;
+    if(isLiveFollower && document.getElementById('liveRoom').classList.contains('active')) return;
     if(activeMediaType !== 'audio' || !currentAudio) return;
     if(currentAudio.paused) {
       if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      setPlayIcon(false);
+      setPlayingState(true);
       currentAudio.play()
         .then(() => { syncCurrentAudioState(); maybeBroadcastLiveRow(audioQueue[queueIndex]); })
         .catch(() => { syncCurrentAudioState(); maybeBroadcastLiveRow(audioQueue[queueIndex], { playing: false }); });
     } else {
+      setPlayIcon(true);
+      setPlayingState(false);
       currentAudio.pause();
       syncCurrentAudioState();
       maybeBroadcastLiveRow(audioQueue[queueIndex], { playing: false });
@@ -6101,7 +6278,7 @@
   // Init
   var liveChatNameEl = document.getElementById('liveChatUsername');
   if(liveChatNameEl) {
-    var savedLiveChatName = sessionStorage.getItem('akrasia_chat_name') || '';
+    var savedLiveChatName = localStorage.getItem('akrasia_chat_name') || sessionStorage.getItem('akrasia_chat_name') || '';
     if(savedLiveChatName) lockLiveChatName(savedLiveChatName);
   }
   var liveChatInputEl = document.getElementById('liveChatInput');
