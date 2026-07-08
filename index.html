@@ -72,6 +72,8 @@
   .header-actions-timeline,.header-actions-viewer{display:none;}
   body[data-section="timeline"] .header-actions-archive{display:none;}
   body[data-section="timeline"] .header-actions-timeline{display:flex;}
+  body[data-section="live"] .header-actions-archive{display:none;}
+  body[data-section="live"] .header-actions-live{display:flex;}
   body[data-section="now-playing"] .header-actions-archive,
   body[data-section="image-viewer"] .header-actions-archive,
   body[data-section="video-viewer"] .header-actions-archive{display:none;}
@@ -79,6 +81,7 @@
   body[data-section="image-viewer"] .header-actions-viewer,
   body[data-section="video-viewer"] .header-actions-viewer{display:flex;}
   .header-actions-timeline .active{background:var(--white);border-color:var(--white);color:var(--black);}
+  .header-actions-live{display:none;}
   .mode-word{display:inline-block;min-width:7ch;color:var(--dim);}
   .mode-word.is-switching{animation:sectionResolveIn 0.42s cubic-bezier(0.16,1,0.3,1) both;}
   .action-trigger { cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; border:1px solid var(--line); padding:6px 9px; color:var(--dim-2); transition:all 0.16s; border-radius:999px; }
@@ -213,6 +216,88 @@
   .immersive-rail-mark{position:absolute;right:0;transform:translateY(-50%);display:flex;gap:8px;align-items:center;font-size:0.56rem;white-space:nowrap;background:rgba(0,0,0,0.55);padding:3px 0 3px 6px;}
   .immersive-rail-mark::after{content:"";width:13px;height:13px;border:2px solid var(--white);border-radius:999px;background:var(--black);box-shadow:0 0 18px rgba(255,255,255,0.26);}
   .immersive-empty{border:1px solid var(--line-soft);padding:34px 38px;font-family:'JetBrains Mono',monospace;color:var(--dim-2);}
+
+  /* ===== LIVE ROOM ===== */
+  .live-room{position:fixed;inset:var(--app-header-h) 0 0;z-index:430;display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,360px);opacity:0;visibility:hidden;pointer-events:none;background:radial-gradient(circle at 18% 18%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.24),transparent 34%),radial-gradient(circle at 86% 78%,rgba(255,255,255,0.10),transparent 36%),linear-gradient(180deg,rgba(255,255,255,0.045),transparent 32%),#000;transition:opacity 0.24s ease,visibility 0.24s;overflow:hidden;}
+  .live-room.active{opacity:1;visibility:visible;pointer-events:auto;}
+  .live-stage{position:relative;min-width:0;display:grid;grid-template-rows:auto minmax(0,1fr) auto;padding:6vh 5vw 7vh;overflow:hidden;}
+  .live-stage::before{content:"";position:absolute;left:5vw;right:5vw;top:0;height:1px;background:linear-gradient(90deg,transparent,var(--white),transparent);box-shadow:0 0 34px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.55);opacity:calc(0.34 + var(--reactive-pulse) * 0.46);}
+  .live-kicker{position:relative;z-index:2;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--dim-2);letter-spacing:0.12em;display:flex;align-items:center;gap:9px;}
+  .live-kicker::before{content:"";width:8px;height:8px;border-radius:50%;background:#ff3d3d;box-shadow:0 0 20px rgba(255,61,61,0.8);animation:livePulse 1.4s ease-in-out infinite;}
+  @keyframes livePulse{50%{opacity:0.38;transform:scale(0.78);}}
+  .live-hero{position:relative;z-index:2;align-self:center;display:grid;gap:22px;max-width:min(900px,100%);}
+  .live-title{font-size:clamp(3rem,9vw,9rem);font-weight:800;line-height:0.82;letter-spacing:0;text-shadow:0 0 70px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.24);}
+  .live-sub{font-family:'JetBrains Mono',monospace;font-size:clamp(0.72rem,1vw,0.92rem);line-height:1.6;color:var(--dim-2);max-width:64ch;}
+  .live-media-preview{width:min(320px,52vw);aspect-ratio:1;border:1px solid rgba(255,255,255,0.42);background:rgba(255,255,255,0.035);box-shadow:18px 18px 0 rgba(255,255,255,0.06),0 24px 120px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.18);object-fit:cover;}
+  .live-media-preview.empty{display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--dim);}
+  .live-actions{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .live-action{border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-family:'JetBrains Mono',monospace;font-size:0.64rem;color:var(--dim-2);background:rgba(0,0,0,0.34);cursor:pointer;transition:all 0.15s;}
+  .live-action:hover,.live-action.primary{background:var(--white);border-color:var(--white);color:var(--black);box-shadow:0 0 26px rgba(255,255,255,0.12);}
+  .live-action.danger:hover{background:#ff3d3d;border-color:#ff3d3d;color:#000;}
+  .live-side{border-left:1px solid var(--line-soft);background:linear-gradient(180deg,rgba(255,255,255,0.055),rgba(0,0,0,0.82));backdrop-filter:blur(14px);padding:5vh 22px;display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:18px;overflow-y:auto;}
+  .live-panel-title{font-weight:800;font-size:1.05rem;margin-bottom:8px;}
+  .live-status{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .live-stat{border:1px solid var(--line-soft);padding:10px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--dim);}
+  .live-stat strong{display:block;margin-top:5px;font-family:'Inter',sans-serif;font-size:1rem;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .live-control-stack{display:grid;gap:10px;}
+  .live-control-stack select{width:100%;font-family:'JetBrains Mono',monospace;font-size:0.66rem;}
+  .live-notes{border:1px solid var(--line-soft);border-radius:8px;padding:13px;background:rgba(0,0,0,0.34);font-family:'JetBrains Mono',monospace;font-size:0.64rem;line-height:1.55;color:var(--dim-2);overflow:auto;}
+  .live-notes strong{display:block;color:var(--white);font-family:'Inter',sans-serif;font-size:0.8rem;margin-bottom:8px;}
+  .live-rail{position:absolute;right:4vw;top:6vh;bottom:7vh;width:1px;background:linear-gradient(transparent,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.85),var(--white),transparent);box-shadow:0 0 24px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.45);}
+  .live-rail::before,.live-rail::after{content:"";position:absolute;left:50%;width:13px;height:13px;border:2px solid var(--white);border-radius:50%;background:#000;transform:translateX(-50%);box-shadow:0 0 20px rgba(255,255,255,0.32);}
+  .live-rail::before{top:16%;}.live-rail::after{bottom:14%;}
+  .live-signal-field{position:absolute;inset:0;z-index:0;display:grid;grid-template-rows:repeat(6,1fr);opacity:0.42;pointer-events:none;}
+  .live-signal-field i{position:relative;border-bottom:1px solid rgba(255,255,255,0.055);overflow:hidden;}
+  .live-signal-field i::before{content:"";position:absolute;top:50%;left:var(--signal-left,8%);width:var(--signal-width,44%);height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.52),transparent);box-shadow:0 0 18px rgba(255,255,255,0.18);transform:translateY(-50%);animation:liveSignalDrift 5s ease-in-out infinite;}
+  .live-signal-field i:nth-child(2){--signal-left:42%;--signal-width:36%;}.live-signal-field i:nth-child(2)::before{animation-delay:.45s;}
+  .live-signal-field i:nth-child(3){--signal-left:18%;--signal-width:62%;}.live-signal-field i:nth-child(3)::before{animation-delay:.9s;}
+  .live-signal-field i:nth-child(4){--signal-left:58%;--signal-width:28%;}.live-signal-field i:nth-child(4)::before{animation-delay:1.35s;}
+  .live-signal-field i:nth-child(5){--signal-left:6%;--signal-width:52%;}.live-signal-field i:nth-child(5)::before{animation-delay:1.8s;}
+  .live-signal-field i:nth-child(6){--signal-left:34%;--signal-width:48%;}.live-signal-field i:nth-child(6)::before{animation-delay:2.25s;}
+  @keyframes liveSignalDrift{50%{transform:translate(16%, -50%);opacity:0.34;}}
+  .live-room-count{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--dim);letter-spacing:0.16em;margin-bottom:12px;}
+  .live-meter{position:absolute;left:5vw;right:calc(4vw + 30px);bottom:5vh;z-index:1;height:56px;display:flex;align-items:end;gap:8px;opacity:0.24;pointer-events:none;}
+  .live-meter span{flex:1;min-width:3px;height:20%;background:var(--white);box-shadow:0 0 18px rgba(255,255,255,0.18);transform-origin:bottom;animation:liveMeterIdle 2.8s ease-in-out infinite alternate;}
+  .live-meter span:nth-child(2n){animation-duration:1.7s}.live-meter span:nth-child(3n){animation-duration:2.2s}.live-meter span:nth-child(5n){animation-duration:1.2s}
+  @keyframes liveMeterIdle{to{height:46%;opacity:0.5;}}
+
+  .live-header-btn{position:relative;overflow:visible;}
+  .live-header-btn::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;background:rgba(255,255,255,0.42);box-shadow:0 0 0 rgba(255,255,255,0);}
+  body.is-live .live-header-btn{border-color:rgba(255,55,55,0.92);color:#fff;background:rgba(255,35,35,0.14);box-shadow:0 0 22px rgba(255,35,35,0.42), inset 0 0 18px rgba(255,0,0,0.08);text-shadow:0 0 12px rgba(255,90,90,0.88);}
+  body.is-live .live-header-btn::before{background:#ff2f2f;box-shadow:0 0 12px #ff2f2f,0 0 26px rgba(255,47,47,0.86);animation:liveHeaderBeacon 1.05s ease-in-out infinite;}
+  body.is-live .live-header-btn::after{content:"";position:absolute;inset:-8px;border:1px solid rgba(255,35,35,0.22);border-radius:999px;opacity:0;animation:liveHeaderRing 1.8s ease-out infinite;pointer-events:none;}
+  @keyframes liveHeaderBeacon{50%{transform:scale(0.62);opacity:0.44;}}
+  @keyframes liveHeaderRing{0%{opacity:0.72;transform:scale(0.78);}100%{opacity:0;transform:scale(1.42);}}
+
+  body.is-live .live-room{background:
+    radial-gradient(circle at 16% 20%,rgba(255,32,32,0.34),transparent 30%),
+    radial-gradient(circle at 62% 48%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.24),transparent 42%),
+    radial-gradient(circle at 90% 78%,rgba(255,255,255,0.12),transparent 34%),
+    linear-gradient(120deg,rgba(255,255,255,0.06),transparent 26%,rgba(255,32,32,0.06) 68%,transparent),
+    #000;}
+  body.is-live .live-room::before{content:"";position:absolute;inset:-18%;z-index:0;pointer-events:none;background:conic-gradient(from 90deg at 50% 50%,transparent,rgba(255,42,42,0.16),transparent,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.12),transparent);filter:blur(24px);animation:liveRoomOrbit 9s linear infinite;}
+  body.is-live .live-room::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,0.045) 0 1px,transparent 1px 22px);mix-blend-mode:screen;opacity:0.24;animation:liveScanFall 5.5s linear infinite;}
+  @keyframes liveRoomOrbit{to{transform:rotate(360deg);}}
+  @keyframes liveScanFall{to{transform:translateY(44px);}}
+  body.is-live .live-stage,body.is-live .live-side{position:relative;z-index:1;}
+  body.is-live .live-stage::after{content:"";position:absolute;inset:8vh 6vw;z-index:0;border:1px solid rgba(255,255,255,0.12);box-shadow:0 0 80px rgba(255,32,32,0.18),inset 0 0 80px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.08);pointer-events:none;animation:liveFrameBreathe 3.2s ease-in-out infinite;}
+  @keyframes liveFrameBreathe{50%{inset:6vh 5vw;border-color:rgba(255,61,61,0.34);box-shadow:0 0 110px rgba(255,32,32,0.24),inset 0 0 120px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.12);}}
+  body.is-live .live-kicker{color:#fff;text-shadow:0 0 16px rgba(255,60,60,0.84);}
+  body.is-live .live-title{background:linear-gradient(90deg,#fff,#ff3d3d,#fff);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 80px rgba(255,45,45,0.28);animation:liveTitleSignal 4.2s ease-in-out infinite;}
+  @keyframes liveTitleSignal{0%,100%{background-position:0% 50%;filter:drop-shadow(0 0 12px rgba(255,255,255,0.12));}50%{background-position:100% 50%;filter:drop-shadow(0 0 28px rgba(255,55,55,0.34));}}
+  body.is-live .live-media-preview{border-color:rgba(255,255,255,0.72);box-shadow:16px 16px 0 rgba(255,32,32,0.12),0 0 0 1px rgba(255,32,32,0.48),0 28px 140px rgba(255,32,32,0.28),0 0 90px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.20);animation:livePreviewFloat 4s ease-in-out infinite;}
+  @keyframes livePreviewFloat{50%{transform:translateY(-8px) scale(1.018);}}
+  body.is-live .live-stat{border-color:rgba(255,58,58,0.32);background:rgba(255,45,45,0.055);}
+  body.is-live .live-stat strong{color:#fff;text-shadow:0 0 12px rgba(255,55,55,0.46);}
+  body.is-live .live-side{background:linear-gradient(180deg,rgba(255,35,35,0.10),rgba(0,0,0,0.84) 48%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.08));border-left-color:rgba(255,58,58,0.38);box-shadow:inset 18px 0 80px rgba(255,32,32,0.08);}
+  body.is-live .live-notes{border-color:rgba(255,58,58,0.34);box-shadow:0 18px 70px rgba(255,32,32,0.10),inset 0 1px rgba(255,255,255,0.10);}
+  body.is-live .live-action.primary{background:#ff3838;border-color:#ff3838;color:#000;box-shadow:0 0 30px rgba(255,56,56,0.42);}
+  body.is-live .live-rail{background:linear-gradient(transparent,#ff3838,var(--white),#ff3838,transparent);box-shadow:0 0 32px rgba(255,56,56,0.66);}
+  body.is-live .live-signal-field i::before{background:linear-gradient(90deg,transparent,#ff3838,var(--white),rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.82),transparent);box-shadow:0 0 24px rgba(255,56,56,0.48);}
+  body.is-live .live-room-count{color:#ff7a7a;text-shadow:0 0 18px rgba(255,56,56,0.32);}
+  body.is-live .live-meter{opacity:0.70;}
+  body.is-live .live-meter span{background:linear-gradient(180deg,#fff,#ff3838);box-shadow:0 0 20px rgba(255,56,56,0.42);animation-name:liveMeterOn;}
+  @keyframes liveMeterOn{to{height:calc(18% + var(--reactive-pulse) * 60%);opacity:0.45;}}
 
   .col-head{
     display:grid; grid-template-columns:30px minmax(180px,1fr) 170px 72px 90px 60px 60px 140px;
@@ -785,6 +870,17 @@
     .immersive-rail::before{right:8px;}
     .immersive-rail-mark{right:0;font-size:0.42rem;gap:5px;padding:2px 0 2px 4px;background:rgba(0,0,0,0.62);}
     .immersive-rail-mark::after{width:10px;height:10px;}
+    .live-room{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;overflow-y:auto;}
+    .live-stage{min-height:62vh;padding:34px 4vw 28px;}
+    .live-title{font-size:clamp(2.55rem,16vw,5.6rem);}
+    .live-sub{font-size:0.66rem;max-width:42ch;}
+    .live-media-preview{width:min(220px,54vw);box-shadow:10px 10px 0 rgba(255,255,255,0.06),0 18px 70px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.20);}
+    .live-rail{right:18px;top:28px;bottom:28px;}
+    .live-side{border-left:0;border-top:1px solid var(--line-soft);padding:18px 4vw max(24px,env(safe-area-inset-bottom));backdrop-filter:none;}
+    .live-status{grid-template-columns:repeat(4,minmax(0,1fr));}
+    .live-stat{padding:8px 7px;font-size:0.50rem;}
+    .live-stat strong{font-size:0.72rem;}
+    .live-action{min-height:34px;padding:8px 10px;font-size:0.58rem;}
     .fs-player.audio-mode .fs-main{justify-content:center;padding:14px 5vw max(16px,env(safe-area-inset-bottom));}
     .fs-player.audio-mode .fs-meta,.fs-player.audio-mode .fs-meta:has(.fs-cover.active){display:grid;grid-template-columns:1fr;grid-template-areas:"cover" "badges" "title" "sub";justify-items:center;align-content:center;width:100%;margin:0 0 18px;column-gap:0;text-align:center;overflow:visible;}
     .fs-player.audio-mode .fs-cover{grid-area:cover;width:min(54vw,220px);height:auto;aspect-ratio:1;margin:0 0 18px;box-shadow:10px 10px 0 rgba(255,255,255,0.07),0 22px 70px rgba(0,0,0,0.58);}
@@ -893,6 +989,23 @@
   }
   @media (prefers-reduced-motion: reduce){
     .intro-slide,.intro-index-row,.intro-bars i,.intro-day,.intro-progress::after,.archive-form-enter,.player-bar.active{animation:none!important;transition:none!important;}
+  }
+
+  /* Final progress treatment: waveform scrubber with played/remaining split. */
+  :root{--waveform-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 42' preserveAspectRatio='none'%3E%3Crect x='0' y='17' width='3' height='8' rx='1.5'/%3E%3Crect x='5' y='13' width='3' height='16' rx='1.5'/%3E%3Crect x='10' y='9' width='3' height='24' rx='1.5'/%3E%3Crect x='15' y='5' width='3' height='32' rx='1.5'/%3E%3Crect x='20' y='8' width='3' height='26' rx='1.5'/%3E%3Crect x='25' y='3' width='3' height='36' rx='1.5'/%3E%3Crect x='30' y='6' width='3' height='30' rx='1.5'/%3E%3Crect x='35' y='2' width='3' height='38' rx='1.5'/%3E%3Crect x='40' y='4' width='3' height='34' rx='1.5'/%3E%3Crect x='45' y='3' width='3' height='36' rx='1.5'/%3E%3Crect x='50' y='5' width='3' height='32' rx='1.5'/%3E%3Crect x='55' y='1' width='3' height='40' rx='1.5'/%3E%3Crect x='60' y='4' width='3' height='34' rx='1.5'/%3E%3Crect x='65' y='3' width='3' height='36' rx='1.5'/%3E%3Crect x='70' y='2' width='3' height='38' rx='1.5'/%3E%3Crect x='75' y='5' width='3' height='32' rx='1.5'/%3E%3Crect x='80' y='4' width='3' height='34' rx='1.5'/%3E%3Crect x='85' y='3' width='3' height='36' rx='1.5'/%3E%3Crect x='90' y='4' width='3' height='34' rx='1.5'/%3E%3Crect x='95' y='6' width='3' height='30' rx='1.5'/%3E%3Crect x='100' y='5' width='3' height='32' rx='1.5'/%3E%3Crect x='105' y='4' width='3' height='34' rx='1.5'/%3E%3Crect x='110' y='5' width='3' height='32' rx='1.5'/%3E%3Crect x='115' y='7' width='3' height='28' rx='1.5'/%3E%3Crect x='120' y='8' width='3' height='26' rx='1.5'/%3E%3Crect x='125' y='6' width='3' height='30' rx='1.5'/%3E%3Crect x='130' y='7' width='3' height='28' rx='1.5'/%3E%3Crect x='135' y='9' width='3' height='24' rx='1.5'/%3E%3Crect x='140' y='10' width='3' height='22' rx='1.5'/%3E%3Crect x='145' y='8' width='3' height='26' rx='1.5'/%3E%3Crect x='150' y='9' width='3' height='24' rx='1.5'/%3E%3Crect x='155' y='11' width='3' height='20' rx='1.5'/%3E%3Crect x='160' y='13' width='3' height='16' rx='1.5'/%3E%3Crect x='165' y='12' width='3' height='18' rx='1.5'/%3E%3Crect x='170' y='10' width='3' height='22' rx='1.5'/%3E%3Crect x='175' y='11' width='3' height='20' rx='1.5'/%3E%3Crect x='180' y='14' width='3' height='14' rx='1.5'/%3E%3Crect x='185' y='13' width='3' height='16' rx='1.5'/%3E%3Crect x='190' y='12' width='3' height='18' rx='1.5'/%3E%3Crect x='195' y='15' width='3' height='12' rx='1.5'/%3E%3Crect x='200' y='14' width='3' height='14' rx='1.5'/%3E%3Crect x='205' y='16' width='3' height='10' rx='1.5'/%3E%3Crect x='210' y='15' width='3' height='12' rx='1.5'/%3E%3Crect x='215' y='17' width='3' height='8' rx='1.5'/%3E%3Crect x='220' y='16' width='3' height='10' rx='1.5'/%3E%3Crect x='225' y='18' width='3' height='6' rx='1.5'/%3E%3Crect x='230' y='17' width='3' height='8' rx='1.5'/%3E%3Crect x='235' y='19' width='3' height='4' rx='1.5'/%3E%3C/svg%3E");}
+  .pb-progress-container,.fs-progress-container{height:34px!important;padding:0!important;align-items:center!important;}
+  .pb-progress-container::before{display:none!important;}
+  .pb-progress{height:30px!important;border:0!important;border-radius:0!important;background:transparent!important;overflow:visible!important;box-shadow:none!important;position:relative;}
+  .pb-progress::before{content:"";position:absolute;left:0;right:0;top:4px;bottom:4px;background:rgba(255,255,255,0.34);-webkit-mask-image:var(--waveform-mask);mask-image:var(--waveform-mask);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:100% 100%;mask-size:100% 100%;}
+  .pb-progress-fill{top:4px!important;left:0!important;height:calc(100% - 8px)!important;background:transparent!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important;transition:width 0.12s linear!important;}
+  .pb-progress-fill::before{content:"";position:absolute;left:0;top:0;height:100%;width:calc(var(--progress-inverse,1) * 100%);background:var(--white);-webkit-mask-image:var(--waveform-mask);mask-image:var(--waveform-mask);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-position:left center;mask-position:left center;}
+  .pb-progress-fill::after{content:""!important;position:absolute!important;right:-1px!important;top:50%!important;width:2px!important;height:30px!important;background:#f5df4d!important;border:0!important;border-radius:2px!important;opacity:1!important;transform:translateY(-50%)!important;box-shadow:0 0 0 1px rgba(0,0,0,0.34),0 0 11px rgba(245,223,77,0.65)!important;}
+  .pb-progress-container:hover .pb-progress-fill::after,.pb-progress-container.dragging .pb-progress-fill::after,.fs-progress-container:hover .pb-progress-fill::after,.fs-progress-container.dragging .pb-progress-fill::after{opacity:1!important;transform:translateY(-50%)!important;}
+  .player-bar.media-preview .pb-progress-container{display:none!important;}
+  @media (max-width:980px){
+    .player-bar .pb-progress-container{height:28px!important;}
+    .player-bar .pb-progress{height:24px!important;}
+    .player-bar .pb-progress-fill::after{height:24px!important;}
   }
 </style>
 </head>
@@ -1022,6 +1135,7 @@
     <div class="wordmark" id="appModeLabel">akrasia <span>/ <span class="mode-word" id="appSectionLabel">archive</span></span></div>
     <div class="utility-btns">
       <div class="header-actions header-actions-archive">
+        <button class="action-trigger live-header-btn" id="liveHeaderBtn" type="button" onclick="openLiveRoom()">live</button>
         <button class="action-trigger" type="button" onclick="toggleTimelineView()">timeline</button>
         <button class="intro-replay" type="button" onclick="openIntro(true)" title="replay introduction" aria-label="replay introduction">?</button>
         <div class="action-trigger admin-only" onclick="togglePanel()">system panel</div>
@@ -1036,6 +1150,11 @@
         <button class="action-trigger" type="button" onclick="toggleTimelineSort()" id="timelineSortBtn">newest</button>
         <button class="action-trigger" type="button" onclick="toggleTimelineMode()" id="timelineModeBtn">immersive</button>
         <button class="action-trigger timeline-minimize" type="button" onclick="closeTimelineView()">minimize [-]</button>
+      </div>
+      <div class="header-actions header-actions-live">
+        <button class="action-trigger admin-only" type="button" onclick="broadcastCurrentLiveState()">sync now</button>
+        <button class="action-trigger" type="button" onclick="joinLiveRoom()">join room</button>
+        <button class="action-trigger" type="button" onclick="closeLiveRoom()">minimize [-]</button>
       </div>
       <div class="header-actions header-actions-viewer">
         <button class="action-trigger fs-info-toggle" id="fsInfoToggle" onclick="toggleNowInfo()">info</button>
@@ -1163,6 +1282,49 @@
     <div class="timeline-panel" id="timelinePanel">
       <div class="timeline-track" id="timelineTrack"></div>
     </div>
+
+    <section class="live-room" id="liveRoom" aria-hidden="true">
+      <div class="live-stage">
+        <div class="live-signal-field" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="live-kicker" id="liveKicker">offline / waiting for signal</div>
+        <div class="live-hero">
+          <div id="livePreview" class="live-media-preview empty">no broadcast</div>
+          <div>
+            <div class="live-room-count" id="liveRoomCount">room 01 / main signal</div>
+            <div class="live-title" id="liveTitle">live room</div>
+            <div class="live-sub" id="liveSub">Join when Angel starts a session. Music, videos, images, and archive notes can all be pushed live into the room.</div>
+          </div>
+          <div class="live-actions">
+            <button class="live-action primary" type="button" onclick="joinLiveRoom()">join live</button>
+            <button class="live-action" type="button" onclick="openLiveAsset()">open current</button>
+            <button class="live-action admin-only" type="button" onclick="goLiveWithCurrent()">go live with current</button>
+            <button class="live-action danger admin-only" type="button" onclick="stopLiveRoom()">end session</button>
+          </div>
+        </div>
+        <div class="live-meter" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="live-rail" aria-hidden="true"></div>
+      </div>
+      <aside class="live-side">
+        <div>
+          <div class="live-panel-title">broadcast status</div>
+          <div class="live-status">
+            <div class="live-stat">state<strong id="liveStateText">offline</strong></div>
+            <div class="live-stat">type<strong id="liveTypeText">none</strong></div>
+            <div class="live-stat">source<strong id="liveSourceText">archive</strong></div>
+            <div class="live-stat">time<strong id="liveTimeText">--</strong></div>
+          </div>
+        </div>
+        <div class="live-control-stack admin-only">
+          <div class="label-mini">broadcast asset</div>
+          <select id="liveAssetSelect"></select>
+          <div class="quick-row">
+            <button class="mini-btn" type="button" onclick="goLiveWithSelection()">start selected</button>
+            <button class="mini-btn" type="button" onclick="broadcastCurrentLiveState()">sync position</button>
+          </div>
+        </div>
+        <div class="live-notes" id="liveNotes"><strong>room notes</strong>When a live session starts, notes and links from the current archive item appear here.</div>
+      </aside>
+    </section>
 
     <div class="col-head">
       <div></div>
@@ -1335,6 +1497,11 @@
   var adminTapCount = 0;
   var draggedExplorerItem = null;
   var editingRow = null;
+  var liveChannel = null;
+  var liveState = { is_live: false };
+  var liveJoined = false;
+  var liveSyncTimer = null;
+  var applyingLiveState = false;
 
   var audioCtx = null, analyser = null, sourceNode = null, dataArray = null;
   var audioSourceNodes = new WeakMap();
@@ -1502,7 +1669,8 @@
   }
   function restoreUnderlyingSection() {
     var timeline = document.getElementById('timelinePanel');
-    setAppSection(timeline && timeline.classList.contains('active') ? 'timeline' : 'archive');
+    var live = document.getElementById('liveRoom');
+    setAppSection(live && live.classList.contains('active') ? 'live' : (timeline && timeline.classList.contains('active') ? 'timeline' : 'archive'));
   }
   function toggleFullscreen() {
     var fs = document.getElementById('fsPlayer');
@@ -1658,6 +1826,8 @@
       updateAuthState(sessionData.data.session);
       supabaseClient.auth.onAuthStateChange((event, session) => updateAuthState(session));
       await loadRemoteArchive();
+      setupLiveRealtime();
+      await loadLiveState();
     } catch(error) {
       isAdmin = false;
       isRemoteReady = false;
@@ -1718,6 +1888,248 @@
       return false;
     }
     return true;
+  }
+
+  function openLiveRoom() {
+    closeNowInfo();
+    document.getElementById('fsPlayer').classList.remove('active');
+    document.getElementById('timelinePanel').classList.remove('active');
+    document.getElementById('liveRoom').classList.add('active');
+    document.getElementById('liveRoom').setAttribute('aria-hidden', 'false');
+    setAppSection('live');
+    refreshLiveAssetSelect();
+    renderLiveState(liveState);
+    if(!liveJoined) joinLiveRoom(false);
+  }
+
+  function closeLiveRoom() {
+    document.getElementById('liveRoom').classList.remove('active');
+    document.getElementById('liveRoom').setAttribute('aria-hidden', 'true');
+    restoreUnderlyingSection();
+  }
+
+  function liveRowKey(row) {
+    if(!row) return '';
+    return row.getAttribute('data-id') || row.getAttribute('data-name') || row.getAttribute('data-title') || '';
+  }
+
+  function findLiveRow(key) {
+    if(!key) return null;
+    return baseRows().find(row => row.getAttribute('data-id') === key || row.getAttribute('data-name') === key || row.getAttribute('data-title') === key) || null;
+  }
+
+  function currentBroadcastRow() {
+    var playing = document.querySelector('[data-batch-target] .frow.playing');
+    if(playing) return canonicalRow(playing);
+    var selected = document.getElementById('liveAssetSelect');
+    if(selected && selected.value) return findLiveRow(selected.value);
+    return baseRows()[0] || null;
+  }
+
+  function refreshLiveAssetSelect() {
+    var select = document.getElementById('liveAssetSelect');
+    if(!select) return;
+    var current = select.value;
+    select.innerHTML = '';
+    baseRows().forEach(row => {
+      var option = document.createElement('option');
+      option.value = liveRowKey(row);
+      option.textContent = `${row.getAttribute('data-title') || 'untitled'} / ${row.getAttribute('data-ver') || 'v1'} / ${row.getAttribute('data-type') || 'asset'}`;
+      select.appendChild(option);
+    });
+    var values = Array.from(select.options).map(option => option.value);
+    if(current && values.includes(current)) select.value = current;
+    else if(liveState && liveState.asset_key && values.includes(liveState.asset_key)) select.value = liveState.asset_key;
+  }
+
+  function liveStateFromRow(row, overrides) {
+    row = canonicalRow(row);
+    var type = row.getAttribute('data-type') || 'audio';
+    var playing = type === 'audio' && currentAudio && row.classList.contains('playing') && !currentAudio.paused;
+    var currentTime = type === 'audio' && currentAudio && row.classList.contains('playing') ? currentAudio.currentTime : 0;
+    var state = {
+      room_id: 'main',
+      is_live: true,
+      asset_key: liveRowKey(row),
+      title: row.getAttribute('data-title') || 'untitled',
+      type,
+      version: row.getAttribute('data-ver') || 'v1',
+      folder: row.getAttribute('data-sub') || 'archive',
+      mood: row.getAttribute('data-mood') || 'raw',
+      mood_color: row.getAttribute('data-mood-color') || '#ffffff',
+      notes: row.getAttribute('data-notes') || '',
+      cover: row.getAttribute('data-cover') || row.getAttribute('data-img-src') || '',
+      position: currentTime || 0,
+      playing,
+      updated_at: new Date().toISOString()
+    };
+    return Object.assign(state, overrides || {});
+  }
+
+  function renderLiveState(state) {
+    state = state || { is_live: false };
+    liveState = state;
+    var row = findLiveRow(state.asset_key);
+    var isLive = Boolean(state.is_live);
+    document.body.classList.toggle('is-live', isLive);
+    var liveBtn = document.getElementById('liveHeaderBtn');
+    if(liveBtn) {
+      liveBtn.setAttribute('aria-pressed', isLive ? 'true' : 'false');
+      liveBtn.title = isLive ? 'live broadcast active' : 'open live room';
+    }
+    var title = isLive ? (state.title || (row && row.getAttribute('data-title')) || 'live signal') : 'live room';
+    var type = isLive ? (state.type || (row && row.getAttribute('data-type')) || 'asset') : 'none';
+    var folder = isLive ? (state.folder || (row && row.getAttribute('data-sub')) || 'archive') : 'waiting for Angel to start a session';
+    var version = isLive ? (state.version || (row && row.getAttribute('data-ver')) || '') : '';
+    document.getElementById('liveKicker').textContent = isLive ? 'live / angel is broadcasting' : 'offline / waiting for signal';
+    document.getElementById('liveTitle').textContent = title;
+    document.getElementById('liveSub').textContent = isLive ? `${folder} / ${version} / ${type}` : 'Join when Angel starts a session. Music, videos, images, and archive notes can all be pushed live into the room.';
+    document.getElementById('liveStateText').textContent = isLive ? (state.playing ? 'on air' : 'armed') : 'offline';
+    document.getElementById('liveTypeText').textContent = type;
+    document.getElementById('liveSourceText').textContent = isLive ? 'live from angel' : 'archive';
+    document.getElementById('liveTimeText').textContent = isLive ? fmt(Number(state.position) || 0) : '--';
+    var notes = state.notes || (row && row.getAttribute('data-notes')) || '';
+    document.getElementById('liveNotes').innerHTML = `<strong>room notes</strong>${escapeHtml(notes || 'No notes are attached to the current live item yet.')}`;
+    setMoodTheme(state.mood_color || (row && row.getAttribute('data-mood-color')) || '#ffffff');
+    setReactiveColor(hexToRgb(state.mood_color || (row && row.getAttribute('data-mood-color')) || '#ffffff'));
+    renderLivePreview(row, type, state.cover);
+  }
+
+  function renderLivePreview(row, type, cover) {
+    var preview = document.getElementById('livePreview');
+    preview.className = 'live-media-preview';
+    preview.innerHTML = '';
+    var source = cover || (row && (type === 'image' ? row.getAttribute('data-img-src') : row.getAttribute('data-cover'))) || '';
+    if(type === 'image' && row) source = row.getAttribute('data-img-src') || source;
+    if(type === 'video' && row) source = row.getAttribute('data-video-src') || source;
+    if(source && (type === 'image' || type === 'audio')) {
+      var img = document.createElement('img');
+      img.src = source;
+      img.alt = '';
+      img.className = 'live-media-preview';
+      preview.replaceWith(img);
+      img.id = 'livePreview';
+      return;
+    }
+    if(source && type === 'video') {
+      var video = document.createElement('video');
+      video.src = source;
+      video.muted = true;
+      video.playsInline = true;
+      video.className = 'live-media-preview';
+      preview.replaceWith(video);
+      video.id = 'livePreview';
+      video.play().catch(() => {});
+      return;
+    }
+    preview.classList.add('empty');
+    preview.textContent = type === 'text' ? 'text broadcast' : 'no artwork';
+  }
+
+  function setupLiveRealtime() {
+    if(!supabaseClient || liveChannel) return;
+    liveChannel = supabaseClient.channel('akrasia-live-room')
+      .on('broadcast', { event: 'state' }, payload => {
+        if(payload && payload.payload) receiveLiveState(payload.payload);
+      })
+      .subscribe();
+  }
+
+  async function loadLiveState() {
+    if(!supabaseClient) return;
+    var result = await supabaseClient.from('archive_live_state').select('*').eq('room_id', 'main').maybeSingle();
+    if(!result.error && result.data) renderLiveState(result.data);
+  }
+
+  async function saveLiveState(state) {
+    liveState = state;
+    renderLiveState(state);
+    if(liveChannel) liveChannel.send({ type: 'broadcast', event: 'state', payload: state });
+    if(!supabaseClient || !isAdmin) return;
+    await supabaseClient.from('archive_live_state').upsert(state, { onConflict: 'room_id' });
+  }
+
+  function receiveLiveState(state) {
+    renderLiveState(state);
+    if(liveJoined && state && state.is_live) applyLiveStateToViewer(state);
+  }
+
+  function joinLiveRoom(openRoom) {
+    liveJoined = true;
+    if(openRoom !== false) openLiveRoom();
+    if(liveState && liveState.is_live) applyLiveStateToViewer(liveState);
+  }
+
+  function openLiveAsset() {
+    if(liveState && liveState.is_live) applyLiveStateToViewer(liveState);
+  }
+
+  function goLiveWithCurrent() {
+    if(!requireAdmin()) return;
+    var row = currentBroadcastRow();
+    if(!row) return alert('no archive item available to broadcast.');
+    saveLiveState(liveStateFromRow(row));
+    startLiveSyncLoop();
+  }
+
+  function goLiveWithSelection() {
+    if(!requireAdmin()) return;
+    var row = findLiveRow(document.getElementById('liveAssetSelect').value);
+    if(!row) return alert('choose an archive item first.');
+    saveLiveState(liveStateFromRow(row, { playing: false, position: 0 }));
+    startLiveSyncLoop();
+  }
+
+  function broadcastCurrentLiveState() {
+    if(!requireAdmin()) return;
+    var row = currentBroadcastRow();
+    if(!row) return;
+    saveLiveState(liveStateFromRow(row));
+  }
+
+  function startLiveSyncLoop() {
+    window.clearInterval(liveSyncTimer);
+    liveSyncTimer = window.setInterval(() => {
+      if(!isAdmin || !liveState || !liveState.is_live) return;
+      var row = currentBroadcastRow();
+      if(row) saveLiveState(liveStateFromRow(row));
+    }, 3200);
+  }
+
+  function stopLiveRoom() {
+    if(!requireAdmin()) return;
+    window.clearInterval(liveSyncTimer);
+    saveLiveState({ room_id: 'main', is_live: false, updated_at: new Date().toISOString() });
+  }
+
+  function applyLiveStateToViewer(state) {
+    if(applyingLiveState || !state || !state.is_live) return;
+    var row = findLiveRow(state.asset_key);
+    if(!row) return;
+    applyingLiveState = true;
+    var type = state.type || row.getAttribute('data-type');
+    if(type === 'audio') {
+      buildQueue();
+      var index = audioQueue.findIndex(item => liveRowKey(item) === liveRowKey(row));
+      if(index !== -1 && queueIndex !== index) playTrackFromQueue(index);
+      window.setTimeout(() => {
+        if(currentAudio && Number.isFinite(Number(state.position))) {
+          var drift = Math.abs((currentAudio.currentTime || 0) - Number(state.position));
+          if(drift > 1.8) currentAudio.currentTime = Number(state.position);
+          if(state.playing && currentAudio.paused) currentAudio.play().then(() => { setPlayIcon(false); setPlayingState(true); }).catch(() => {});
+          if(!state.playing && !currentAudio.paused) { currentAudio.pause(); setPlayIcon(true); setPlayingState(false); }
+        }
+        applyingLiveState = false;
+      }, 260);
+      return;
+    }
+    showMediaInNowPlaying(row, type);
+    applyingLiveState = false;
+  }
+
+  function maybeBroadcastLiveRow(row, overrides) {
+    if(!isAdmin || applyingLiveState || !liveState || !liveState.is_live || !row) return;
+    saveLiveState(liveStateFromRow(row, overrides));
   }
 
   function toggleFolder(header) {
@@ -2003,6 +2415,7 @@
     var panel = document.getElementById('timelinePanel');
     if(!panel) return;
     var isActive = panel.classList.toggle('active');
+    if(isActive) document.getElementById('liveRoom').classList.remove('active');
     setAppSection(isActive ? 'timeline' : 'archive');
     buildTimeline({ animate: isActive && !timelineHasAnimated });
   }
@@ -2937,6 +3350,7 @@
     document.getElementById('statVisual').textContent = visual;
     document.getElementById('statAccess').textContent = isAdmin ? 'admin' : 'open';
     document.getElementById('emptyState').classList.toggle('active', rows.length === 0);
+    refreshLiveAssetSelect();
     buildTimeline();
   }
 
@@ -3185,6 +3599,7 @@
     renderFullscreenMedia(row, type);
     renderMeta(row);
     resizeCanvas();
+    maybeBroadcastLiveRow(row, { playing: type === 'video', position: 0 });
   }
 
   function renderFullscreenMedia(row, type) {
@@ -3435,9 +3850,9 @@
       currentAudio.addEventListener('ended', () => { if(currentAudio === trackAudio) handleTrackEnd(); });
       currentAudio.addEventListener('canplay', preloadNextTrack, { once: true });
       if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      currentAudio.play().then(() => { setPlayIcon(false); setPlayingState(true); }).catch(e => { setPlayIcon(true); setPlayingState(false); });
+      currentAudio.play().then(() => { setPlayIcon(false); setPlayingState(true); maybeBroadcastLiveRow(row); }).catch(e => { setPlayIcon(true); setPlayingState(false); maybeBroadcastLiveRow(row, { playing: false }); });
     } else {
-      currentAudio = createArchiveAudio(); setPlayIcon(false); setPlayingState(true); updateTimeMock();
+      currentAudio = createArchiveAudio(); setPlayIcon(false); setPlayingState(true); updateTimeMock(); maybeBroadcastLiveRow(row);
     }
     preloadNextTrack();
     resizeCanvas();
@@ -3479,12 +3894,13 @@
     if(currentAudio.paused) {
       if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
       currentAudio.play()
-        .then(() => { setPlayIcon(false); setPlayingState(true); })
-        .catch(() => { setPlayIcon(true); setPlayingState(false); });
+        .then(() => { setPlayIcon(false); setPlayingState(true); maybeBroadcastLiveRow(audioQueue[queueIndex]); })
+        .catch(() => { setPlayIcon(true); setPlayingState(false); maybeBroadcastLiveRow(audioQueue[queueIndex], { playing: false }); });
     } else {
       currentAudio.pause();
       setPlayIcon(true);
       setPlayingState(false);
+      maybeBroadcastLiveRow(audioQueue[queueIndex], { playing: false });
     }
   }
 
@@ -3601,9 +4017,16 @@
   function fmt(time) { if(isNaN(time)) return "00:00"; var m = Math.floor(time/60), s = Math.floor(time%60); return (m<10?'0':'')+m+':'+(s<10?'0':'')+s; }
 
   function setProgressDisplay(percent, text) {
-    var safePercent = Math.max(0, Math.min(100, Number(percent) || 0)) + '%';
-    document.getElementById('pbFill').style.width = safePercent;
-    document.getElementById('fsFill').style.width = safePercent;
+    var safeNumber = Math.max(0, Math.min(100, Number(percent) || 0));
+    var safePercent = safeNumber + '%';
+    var ratio = Math.max(0.001, safeNumber / 100);
+    var inverse = Math.min(1000, 1 / ratio);
+    var pbFill = document.getElementById('pbFill');
+    var fsFill = document.getElementById('fsFill');
+    pbFill.style.width = safePercent;
+    fsFill.style.width = safePercent;
+    pbFill.style.setProperty('--progress-inverse', inverse);
+    fsFill.style.setProperty('--progress-inverse', inverse);
     document.getElementById('pbTime').textContent = text;
     document.getElementById('fsTime').textContent = text;
   }
