@@ -509,8 +509,6 @@
   .intro-skip,.intro-nav{border:1px solid var(--line);padding:7px 10px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:0.64rem;color:var(--dim-2);cursor:pointer;transition:background 0.15s,color 0.15s,border-color 0.15s;}
   .intro-skip:hover,.intro-nav:hover{background:var(--white);color:var(--black);border-color:var(--white);}.intro-nav.primary{background:var(--white);color:var(--black);border-color:var(--white);font-weight:800;min-width:92px;}.intro-nav:disabled{opacity:0.25;pointer-events:none;}
   .intro-stage{position:relative;z-index:1;min-height:0;overflow:hidden;}
-  .intro-slide{position:absolute;inset:0;display:grid;grid-template-columns:minmax(250px,0.72fr) minmax(0,1.28fr);gap:6vw;align-items:center;padding:6vh 7vw;opacity:0;visibility:hidden;transform:translateX(5%);transition:opacity 0.38s ease,transform 0.46s cubic-bezier(0.16,1,0.3,1),visibility 0.38s;}
-  .intro-slide.active{opacity:1;visibility:visible;transform:translateX(0);}.intro-slide.before{transform:translateX(-5%);}
   .intro-kicker{font-family:'JetBrains Mono',monospace;font-size:0.64rem;color:rgb(var(--intro-accent));margin-bottom:12px;letter-spacing:0.08em;}
   .intro-title{font-size:clamp(2.4rem,6vw,6.4rem);font-weight:800;line-height:0.9;letter-spacing:0;max-width:10ch;margin-bottom:20px;}
   .intro-copy{font-family:'JetBrains Mono',monospace;font-size:clamp(0.72rem,1.1vw,0.92rem);line-height:1.65;color:var(--dim-2);max-width:48ch;}.intro-copy strong{color:var(--white);}
@@ -552,7 +550,6 @@
   .intro-origin-center em{display:block;font-family:'JetBrains Mono',monospace;font-size:0.62rem;font-style:normal;color:rgb(var(--intro-accent));}
   .intro-origin-corners{position:absolute;inset:20px;z-index:3;font-family:'JetBrains Mono',monospace;font-size:0.50rem;color:var(--dim);pointer-events:none;}.intro-origin-corners span{position:absolute;}.intro-origin-corners span:nth-child(1){left:0;top:0}.intro-origin-corners span:nth-child(2){right:0;top:0}.intro-origin-corners span:nth-child(3){left:0;bottom:0}.intro-origin-corners span:nth-child(4){right:0;bottom:0}
   .intro-location-demo{display:grid;grid-template-rows:64px minmax(0,1fr);background:#020202;}.intro-location-head{display:flex;align-items:center;padding:0 24px;border-bottom:2px solid var(--white);font-size:clamp(1rem,2vw,1.5rem);font-weight:800;}.intro-location-head > span{color:var(--dim);font-weight:500;margin-left:7px;}.intro-location-world{position:relative;display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line-soft);}.intro-location-pane{position:relative;background:#050505;padding:22px;overflow:hidden;}.intro-location-pane strong{font-size:clamp(1.4rem,3vw,3rem);}.intro-location-pane span{position:absolute;left:22px;bottom:20px;font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--dim);}.intro-location-pane::before{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent,rgba(var(--intro-accent),0.10),transparent);transform:translateX(-100%);animation:introPaneSweep 4s ease-in-out infinite;}.intro-location-pane:nth-child(2)::before{animation-delay:0.7s}.intro-location-pane:nth-child(3)::before{animation-delay:1.4s}.intro-location-pane:nth-child(4)::before{animation-delay:2.1s}@keyframes introPaneSweep{50%,100%{transform:translateX(100%)}}
-  .intro-vault{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);gap:18px;}.intro-vault-readout{display:flex;justify-content:space-between;align-items:end;border-bottom:1px solid var(--line);padding-bottom:14px;}.intro-vault-readout strong{font-size:clamp(2.8rem,7vw,6rem);line-height:0.8;}.intro-vault-readout span{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--dim-2);}.intro-catalog{display:grid;grid-template-columns:repeat(10,1fr);grid-template-rows:repeat(10,1fr);gap:4px;min-height:0;}.intro-catalog i{display:block;border:1px solid rgba(255,255,255,0.12);background:rgba(var(--intro-accent),0.08);animation:introCatalog 3s ease-in-out infinite;}.intro-catalog i:nth-child(3n){animation-delay:0.35s}.intro-catalog i:nth-child(5n){animation-delay:0.7s}.intro-catalog i:nth-child(7n){animation-delay:1.05s}@keyframes introCatalog{0%,70%,100%{background:rgba(var(--intro-accent),0.06);border-color:rgba(255,255,255,0.12)}80%{background:rgb(var(--intro-accent));border-color:rgb(var(--intro-accent));box-shadow:0 0 14px rgba(var(--intro-accent),0.38)}}
   .intro-version-stage{position:relative;height:100%;display:grid;place-items:center;perspective:900px;}.intro-version-sheet{position:absolute;width:min(78%,520px);height:72%;border:1px solid var(--line);background:#070707;padding:24px;box-shadow:0 24px 60px rgba(0,0,0,0.55);transform-origin:center;animation:introVersionCycle 5s ease-in-out infinite;}.intro-version-sheet:nth-child(1){transform:translate(-9%,-8%) rotate(-5deg);opacity:0.32}.intro-version-sheet:nth-child(2){transform:translate(-4%,-4%) rotate(-2deg);opacity:0.58;animation-delay:0.35s}.intro-version-sheet:nth-child(3){transform:translate(0,0);animation-delay:0.7s}.intro-version-sheet strong{font-size:clamp(2rem,5vw,4.8rem);line-height:0.9;}.intro-version-sheet span{display:block;margin-top:10px;font-family:'JetBrains Mono',monospace;color:rgb(var(--intro-accent));font-size:0.68rem;}.intro-version-lines{position:absolute;left:24px;right:24px;bottom:24px;display:grid;gap:8px;}.intro-version-lines i{height:3px;background:var(--line-soft);}.intro-version-lines i:nth-child(2){width:72%}.intro-version-lines i:nth-child(3){width:42%}@keyframes introVersionCycle{50%{transform:translate(2%,-2%) rotate(1deg);border-color:rgb(var(--intro-accent));box-shadow:0 25px 80px rgba(var(--intro-accent),0.16)}}
   .intro-visual-wall{height:100%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:8px;}.intro-visual-tile{position:relative;overflow:hidden;border:1px solid var(--line);background:linear-gradient(135deg,rgba(var(--intro-accent),0.65),#090909 70%);animation:introVisualTile 5s ease-in-out infinite;}.intro-visual-tile:nth-child(2){background:linear-gradient(35deg,#fff,#111 58%);animation-delay:0.4s}.intro-visual-tile:nth-child(3){background:linear-gradient(145deg,#111,rgba(var(--intro-accent),0.72));animation-delay:0.8s}.intro-visual-tile:nth-child(4){background:radial-gradient(circle at 60% 35%,rgb(var(--intro-accent)),#050505 48%);animation-delay:1.2s}.intro-visual-tile:nth-child(5){background:linear-gradient(90deg,#050505 48%,rgb(var(--intro-accent)) 49% 52%,#050505 53%);animation-delay:1.6s}.intro-visual-tile:nth-child(6){background:linear-gradient(165deg,rgba(var(--intro-accent),0.18),#fff);animation-delay:2s}.intro-visual-tile span{position:absolute;left:10px;bottom:9px;font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.72);mix-blend-mode:difference;}@keyframes introVisualTile{0%,68%,100%{transform:scale(1);filter:saturate(0.72)}78%{transform:scale(1.025);filter:saturate(1.25);border-color:rgb(var(--intro-accent))}}
   .intro-footer-left,.intro-footer-right{display:flex;align-items:center;gap:8px;}.intro-dots{display:flex;gap:6px;}.intro-dot{width:22px;height:3px;background:var(--line-soft);transition:background 0.2s,width 0.2s;}.intro-dot.active{width:38px;background:rgb(var(--intro-accent));}
@@ -887,7 +884,6 @@
     .intro-overlay{grid-template-rows:58px minmax(0,1fr) 66px;}
     .intro-overlay::before{background:radial-gradient(circle at 22% 18%,rgba(var(--intro-accent),0.18),transparent 38%),#000;}
     .intro-top,.intro-footer{padding:0 4vw;}
-    .intro-slide{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:22px;padding:4vh 4vw;align-items:start;overflow-y:auto;}
     .intro-title{font-size:clamp(2.1rem,11vw,4rem);margin-bottom:12px;max-width:12ch;}
     .intro-copy{font-size:0.68rem;line-height:1.5;max-width:56ch;}
     .intro-demo{height:min(48vh,430px);box-shadow:none;}
@@ -1136,8 +1132,6 @@
     .intro-brand{font-size:0.9rem;letter-spacing:0.02em;white-space:nowrap;}
     .intro-skip{padding:7px 10px;border-radius:999px;font-size:0.58rem;}
     .intro-stage{overflow:hidden;}
-    .intro-slide{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:12px;padding:16px;overflow:hidden;align-items:stretch;}
-    .intro-slide>div:first-child{position:relative;z-index:3;min-width:0;}
     .intro-kicker{font-size:0.54rem;margin-bottom:7px;letter-spacing:0.06em;}
     .intro-title{font-size:clamp(1.75rem,9.5vw,2.65rem);line-height:0.91;max-width:11ch;margin-bottom:9px;}
     .intro-copy{font-size:0.61rem;line-height:1.42;max-width:none;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;}
@@ -1171,14 +1165,13 @@
   }
   @media (max-width: 600px) and (max-height: 720px) and (orientation: portrait){
     .intro-overlay{grid-template-rows:calc(48px + env(safe-area-inset-top)) minmax(0,1fr) calc(56px + env(safe-area-inset-bottom));}
-    .intro-slide{padding:11px 14px;gap:8px;}
     .intro-title{font-size:1.72rem;margin-bottom:6px;}.intro-copy{font-size:0.56rem;line-height:1.34;-webkit-line-clamp:3;}.intro-kicker{margin-bottom:5px;}
     .intro-demo-head{height:34px;}.intro-demo-body{height:calc(100% - 34px);}
     .intro-nav{min-height:32px;}.intro-album-mark strong{font-size:3.3rem;}
     .intro-entry{padding:12px;}.intro-entry-count strong{font-size:4.2rem;}.intro-entry-count span{margin-top:10px;}
   }
   @media (prefers-reduced-motion: reduce){
-    .intro-slide,.intro-index-row,.intro-bars i,.intro-day,.intro-progress::after,.archive-form-enter,.player-bar.active,body.archive-arriving .wrap{animation:none!important;transition:none!important;}
+    .intro-index-row,.intro-bars i,.intro-day,.intro-progress::after,.archive-form-enter,.player-bar.active,body.archive-arriving .wrap{animation:none!important;transition:none!important;}
   }
 
   /* Final progress treatment: waveform scrubber with played/remaining split. */
@@ -1232,14 +1225,83 @@
   .live-announcement-bar{padding:18px 5vw!important;font-size:1rem!important;text-transform:none;box-shadow:0 22px 90px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.22),0 18px 70px rgba(0,0,0,0.62)!important;}
   .live-major-announcement{background:rgba(0,0,0,0.62)!important;}
   .live-admin-drawer section{background:rgba(0,0,0,0.58)!important;}
+  body.is-admin .live-admin-drawer.admin-only.open{
+    position:fixed!important;
+    inset:calc(var(--app-header-h) + 14px) 16px 16px 16px!important;
+    width:auto!important;
+    max-width:none!important;
+    z-index:950!important;
+    display:block!important;
+    padding:18px!important;
+    overflow:auto!important;
+    border-radius:10px!important;
+    background:linear-gradient(145deg,rgba(12,12,12,0.98),rgba(0,0,0,0.94) 42%,rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.10))!important;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.24),0 40px 180px rgba(0,0,0,0.86),0 0 90px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.20)!important;
+  }
+  body.is-admin .live-admin-drawer.admin-only.open .live-admin-drawer-head{
+    top:0!important;
+    padding:0 0 14px!important;
+    margin-bottom:14px!important;
+    background:rgba(0,0,0,0.92)!important;
+  }
+  body.is-admin .live-admin-drawer.admin-only.open .live-admin-drawer-head strong{font-size:0.9rem;color:var(--white);}
+  body.is-admin .live-admin-drawer.admin-only.open .live-admin-drawer-grid{grid-template-columns:1.1fr 1fr 1fr;align-items:start;gap:12px!important;}
+  body.is-admin .live-admin-drawer.admin-only.open section{padding:12px!important;border-radius:8px!important;background:rgba(0,0,0,0.72)!important;}
+  body.is-admin .live-admin-drawer.admin-only.open select,
+  body.is-admin .live-admin-drawer.admin-only.open input,
+  body.is-admin .live-admin-drawer.admin-only.open textarea{width:100%;min-width:0;background:#000!important;border-color:rgba(255,255,255,0.28)!important;}
+  body.is-admin .live-admin-drawer.admin-only.open .live-queue-list{max-height:300px!important;}
+  body.is-admin .live-admin-drawer.admin-only.open .quick-row{display:flex;flex-wrap:wrap;align-items:center;gap:7px;}
+
+  .intro-overlay{display:block!important;background:#000!important;}
+  .intro-overlay::before{background:radial-gradient(circle at 50% 38%,rgba(var(--intro-accent),0.18),transparent 34%),linear-gradient(rgba(255,255,255,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.022) 1px,transparent 1px)!important;background-size:auto,72px 72px,72px 72px!important;}
+  .intro-shell{position:relative;z-index:2;min-height:100%;display:grid;grid-template-rows:var(--app-header-h) minmax(0,1fr) auto;}
+  .intro-top{height:var(--app-header-h)!important;padding:0 5vw!important;border-bottom:2px solid var(--white)!important;background:rgba(0,0,0,0.94)!important;box-shadow:0 16px 70px rgba(var(--intro-accent),0.16);}
+  .intro-stage{position:relative;display:grid!important;grid-template-columns:minmax(0,0.78fr) minmax(0,1.22fr);gap:5vw;align-items:center;padding:7vh 6vw 5vh;overflow:hidden!important;}
+  .intro-copy-block{position:relative;z-index:4;}
+  .intro-kicker{font-size:0.68rem!important;letter-spacing:0.16em!important;text-transform:uppercase!important;color:rgb(var(--intro-accent))!important;}
+  .intro-title{max-width:9ch!important;font-size:clamp(3.2rem,9vw,9.4rem)!important;line-height:0.8!important;margin:14px 0 22px!important;}
+  .intro-copy{max-width:48ch!important;font-size:0.82rem!important;line-height:1.72!important;}
+  .intro-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px;}
+  .intro-skip,.intro-nav{border-radius:999px!important;}
+  .intro-world{position:relative;min-height:min(66vh,620px);border:1px solid rgba(255,255,255,0.22);background:radial-gradient(circle at 50% 50%,rgba(var(--intro-accent),0.16),transparent 38%),#020202;overflow:hidden;box-shadow:0 34px 140px rgba(var(--intro-accent),0.16);}
+  .intro-world::before{content:"";position:absolute;inset:10%;border:1px solid rgba(255,255,255,0.16);box-shadow:inset 0 0 90px rgba(var(--intro-accent),0.08),0 0 80px rgba(var(--intro-accent),0.12);animation:introFrameBreathe 4.8s ease-in-out infinite;}
+  .intro-path{position:absolute;left:8%;right:8%;top:50%;height:2px;background:linear-gradient(90deg,transparent,rgb(var(--intro-accent)),var(--white),rgb(var(--intro-accent)),transparent);box-shadow:0 0 26px rgba(var(--intro-accent),0.52);}
+  .intro-node{position:absolute;width:116px;height:116px;border:1px solid rgba(255,255,255,0.32);border-radius:999px;display:grid;place-items:center;background:rgba(0,0,0,0.78);font-family:'JetBrains Mono',monospace;font-size:0.64rem;color:var(--dim-2);text-align:center;box-shadow:0 0 40px rgba(var(--intro-accent),0.10);transition:transform 0.42s,color 0.42s,border-color 0.42s,box-shadow 0.42s;}
+  .intro-node:nth-child(2){left:9%;top:22%;}.intro-node:nth-child(3){left:34%;bottom:18%;}.intro-node:nth-child(4){right:31%;top:20%;}.intro-node:nth-child(5){right:9%;bottom:18%;}
+  .intro-node.active{color:var(--white);border-color:rgb(var(--intro-accent));box-shadow:0 0 54px rgba(var(--intro-accent),0.36);transform:scale(1.15);}
+  .intro-header-zoom{position:absolute;left:9%;right:9%;top:9%;height:var(--app-header-h);display:flex;align-items:center;padding:0 24px;border-bottom:2px solid var(--white);background:#000;font-size:clamp(1rem,2vw,1.45rem);font-weight:800;box-shadow:0 16px 70px rgba(var(--intro-accent),0.14);transform-origin:top center;}
+  .intro-header-zoom span{color:var(--dim);font-weight:500;margin-left:7px;}
+  .intro-signal-card{position:absolute;left:12%;right:12%;bottom:12%;padding:22px;border:1px solid rgba(255,255,255,0.20);background:rgba(0,0,0,0.72);font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--dim-2);line-height:1.65;}
+  .intro-signal-card strong{display:block;color:var(--white);font-family:'Inter',sans-serif;font-size:clamp(1.8rem,4vw,4rem);line-height:0.9;margin-bottom:10px;}
+  .intro-phase{display:none;}
+  .intro-phase.active{display:block;animation:introPhaseIn 0.54s cubic-bezier(0.16,1,0.3,1) both;}
+  .intro-footer{height:72px!important;padding:0 5vw!important;background:#000!important;border-top:1px solid var(--line)!important;}
+  .intro-dots{display:flex;gap:6px;}
+  .intro-dot{width:32px!important;height:3px!important;border:0;background:var(--line-soft);}
+  .intro-dot.active{background:rgb(var(--intro-accent));width:54px!important;}
+  .intro-overlay.departing .intro-header-zoom{animation:introZoomToRealHeader 0.92s cubic-bezier(0.16,1,0.3,1) both;}
+  .intro-overlay.departing .intro-world,.intro-overlay.departing .intro-copy-block,.intro-overlay.departing .intro-footer{animation:introWorldFade 0.72s ease both;}
+  @keyframes introFrameBreathe{50%{inset:14%;border-color:rgba(var(--intro-accent),0.48);}}
+  @keyframes introPhaseIn{from{opacity:0;transform:translateY(18px);filter:blur(10px);}to{opacity:1;transform:translateY(0);filter:blur(0);}}
+  @keyframes introZoomToRealHeader{to{left:0;right:0;top:0;transform:scale(1);padding-left:5vw;padding-right:5vw;}}
   .intro-overlay.departing .intro-top{animation:introHeaderZoom 1.05s cubic-bezier(0.16,1,0.3,1) both;}
   .intro-overlay.departing .intro-stage,.intro-overlay.departing .intro-footer{animation:introWorldFade 0.72s ease both;}
   @keyframes introHeaderZoom{to{transform:translateY(0) scale(1.035);border-bottom-color:var(--white);box-shadow:0 0 46px rgba(var(--intro-accent),0.22);}}
   @keyframes introWorldFade{to{opacity:0;filter:blur(10px);transform:scale(1.018);}}
   @media (max-width:760px){
+    body.is-admin .live-admin-drawer.admin-only.open{inset:calc(var(--app-header-h) + 8px) 8px 8px 8px!important;padding:12px!important;}
+    body.is-admin .live-admin-drawer.admin-only.open .live-admin-drawer-grid{grid-template-columns:1fr!important;}
     .timeline-panel.immersive .immersive-day{grid-template-columns:1fr!important;}
     .timeline-panel.immersive .immersive-day-label{position:relative!important;top:auto!important;max-width:none!important;}
     body.live-follower .player-bar::after{right:10px;top:6px;border-radius:8px;padding:3px 7px;}
+    .intro-stage{grid-template-columns:1fr!important;grid-template-rows:auto minmax(0,1fr);gap:18px;padding:18px!important;}
+    .intro-title{font-size:clamp(2.2rem,16vw,4rem)!important;}
+    .intro-copy{font-size:0.68rem!important;line-height:1.5!important;}
+    .intro-world{min-height:48vh;}
+    .intro-node{width:82px;height:82px;font-size:0.52rem;}
+    .intro-signal-card{left:8%;right:8%;bottom:8%;padding:14px;font-size:0.58rem;}
+    .intro-header-zoom{left:6%;right:6%;top:7%;padding:0 14px;font-size:0.9rem;}
   }
 </style>
 </head>
@@ -1248,136 +1310,55 @@
 <svg class="grain" width="100%" height="100%"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0"/></filter><rect width="100%" height="100%" filter="url(#noiseFilter)"/></svg>
 
 <section class="intro-overlay" id="introOverlay" aria-hidden="true" aria-label="akrasia archive introduction">
-  <div class="intro-top">
-    <div class="intro-brand">akrasia <span>/ <span class="intro-mode-word" id="introModeWord">functionality</span></span></div>
-    <button class="intro-skip" type="button" onclick="finishIntro()">skip</button>
-  </div>
-  <div class="intro-stage" id="introStage">
-    <article class="intro-slide active" data-intro-accent="255,255,255">
-      <div>
-        <div class="intro-kicker">01 / functionality</div>
-        <h1 class="intro-title">enter through the header.</h1>
-        <p class="intro-copy">The archive opens like a place, not a splash page. The header resolves into each room: archive, now playing, timeline, live, vault. <strong>The site teaches itself by moving.</strong></p>
-      </div>
-      <div class="intro-demo">
-        <div class="intro-origin">
-          <div class="intro-origin-lines"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="intro-origin-center"><span>ZOOMING INTO</span><strong>akrasia</strong><em>/ functionality</em></div>
-          <div class="intro-origin-corners"><span>AUDIO / VISUAL</span><span>01 - 100</span><span>VERSIONS PRESERVED</span><span>OPEN INDEX</span></div>
+  <div class="intro-shell">
+    <div class="intro-top">
+      <div class="intro-brand">akrasia <span>/ <span class="intro-mode-word" id="introModeWord">signal</span></span></div>
+      <button class="intro-skip" type="button" onclick="finishIntro()">skip</button>
+    </div>
+    <div class="intro-stage" id="introStage">
+      <div class="intro-copy-block">
+        <div class="intro-phase active" data-intro-accent="255,255,255" data-mode="signal">
+          <div class="intro-kicker">01 / signal path</div>
+          <h1 class="intro-title">akrasia opens like a room.</h1>
+          <p class="intro-copy">The archive is introduced through the real thing that holds it together: the header, the rooms, the live signal, and the files moving underneath.</p>
+        </div>
+        <div class="intro-phase" data-intro-accent="180,210,255" data-mode="archive">
+          <div class="intro-kicker">02 / archive</div>
+          <h2 class="intro-title">files become memory.</h2>
+          <p class="intro-copy">Songs, versions, covers, notes, and dates pass through the same index. The archive is not a dashboard; it is the body of the project.</p>
+        </div>
+        <div class="intro-phase" data-intro-accent="255,90,90" data-mode="live">
+          <div class="intro-kicker">03 / live</div>
+          <h2 class="intro-title">the archive can go on air.</h2>
+          <p class="intro-copy">Live is shown as a broadcast layer: queue, countdown, announcements, chat, private items, and the current signal all in one room.</p>
+        </div>
+        <div class="intro-phase" data-intro-accent="255,255,255" data-mode="functionality">
+          <div class="intro-kicker">04 / functionality</div>
+          <h2 class="intro-title">zoom into the header.</h2>
+          <p class="intro-copy">The last motion resolves into the real top bar: <strong>akrasia / functionality</strong> becomes <strong>akrasia / archive</strong>, and the actual page takes over.</p>
+        </div>
+        <div class="intro-actions">
+          <button class="intro-nav" id="introBack" type="button" onclick="changeIntroSlide(-1)">back</button>
+          <button class="intro-nav primary" id="introNext" type="button" onclick="changeIntroSlide(1)">next</button>
         </div>
       </div>
-    </article>
-    <article class="intro-slide" data-intro-accent="202,180,255">
-      <div>
-        <div class="intro-kicker">02 / you are always somewhere</div>
-        <h2 class="intro-title">akrasia / place</h2>
-        <p class="intro-copy">The header is the map. Its first word never leaves; the second resolves into the room you entered. <strong>Archive. Now Playing. Timeline. Live. Vault.</strong> It makes every screen feel like another place inside the same album.</p>
-      </div>
-      <div class="intro-demo intro-location-demo">
-        <div class="intro-location-head">akrasia <span>/ <span class="intro-mode-word" id="introLocationWord">archive</span></span></div>
-        <div class="intro-location-world"><div class="intro-location-pane"><strong>archive</strong><span>all indexed work</span></div><div class="intro-location-pane"><strong>now playing</strong><span>sound and notes</span></div><div class="intro-location-pane"><strong>timeline</strong><span>the history</span></div><div class="intro-location-pane"><strong>visuals</strong><span>covers and images</span></div></div>
-      </div>
-    </article>
-    <article class="intro-slide" data-intro-accent="143,183,255">
-      <div>
-        <div class="intro-kicker">03 / explore</div>
-        <h2 class="intro-title">every file has a place.</h2>
-        <p class="intro-copy">Open folders and subfolders, compare <strong>versions and Eastern timestamps</strong>, isolate moods, sort every desktop column, and open audio or visuals directly from the index.</p>
-      </div>
-      <div class="intro-demo">
-        <div class="intro-demo-head"><strong>archive index</strong><span>audio 2 / visual 1</span></div>
-        <div class="intro-demo-body">
-          <div class="intro-folder">[-] before akrasia items</div>
-          <div class="intro-index-row"><i class="intro-file-icon"></i><span>come back</span><span>4:41 PM EDT</span><span class="intro-version">v2</span></div>
-          <div class="intro-index-row"><i class="intro-file-icon"></i><span>song cover</span><span>4:39 PM EDT</span><span class="intro-version">v1</span></div>
-          <div class="intro-index-row"><i class="intro-file-icon"></i><span>a train let me down</span><span>9:08 AM EST</span><span class="intro-version">v4</span></div>
-          <div class="intro-index-row"><i class="intro-file-icon"></i><span>alternate cover</span><span>8:52 AM EST</span><span class="intro-version">v2</span></div>
+      <div class="intro-world" aria-hidden="true">
+        <div class="intro-header-zoom">akrasia <span>/ <span id="introHeaderWord">signal</span></span></div>
+        <div class="intro-path"></div>
+        <div class="intro-node active" data-node="signal">signal</div>
+        <div class="intro-node" data-node="archive">archive</div>
+        <div class="intro-node" data-node="live">live</div>
+        <div class="intro-node" data-node="functionality">functionality</div>
+        <div class="intro-signal-card">
+          <strong id="introSignalTitle">signal path</strong>
+          <span id="introSignalText">header to archive to live to the actual page.</span>
         </div>
       </div>
-    </article>
-    <article class="intro-slide" data-intro-accent="255,164,108">
-      <div>
-        <div class="intro-kicker">04 / versions</div>
-        <h2 class="intro-title">one song refuses one shape.</h2>
-        <p class="intro-copy">Follow a track through demos, rewrites, alternate vocals, new mixes, and abandoned endings. Versions remain separate, dated, playable, and connected instead of overwriting each other.</p>
-      </div>
-      <div class="intro-demo">
-        <div class="intro-demo-head"><strong>come back / version history</strong><span>v1 - v5</span></div>
-        <div class="intro-demo-body"><div class="intro-version-stage"><div class="intro-version-sheet"><strong>come back</strong><span>v1 / first structure</span><div class="intro-version-lines"><i></i><i></i><i></i></div></div><div class="intro-version-sheet"><strong>come back</strong><span>v3 / alternate vocal</span><div class="intro-version-lines"><i></i><i></i><i></i></div></div><div class="intro-version-sheet"><strong>come back</strong><span>v5 / current form</span><div class="intro-version-lines"><i></i><i></i><i></i></div></div></div></div>
-      </div>
-    </article>
-    <article class="intro-slide" data-intro-accent="255,92,118">
-      <div>
-        <div class="intro-kicker">05 / now playing</div>
-        <h2 class="intro-title">listen inside the record.</h2>
-        <p class="intro-copy">Fullscreen playback combines artwork, a tempo-responsive color field, draggable progress, queue controls, gapless handoff, and a fading pause state. Open <strong>Info</strong> for notes, metadata, and DSP links without leaving the song.</p>
-      </div>
-      <div class="intro-demo intro-player-demo">
-        <div class="intro-demo-head"><strong>akrasia / now playing</strong><span>1 / 4</span></div>
-        <div class="intro-demo-body">
-          <div class="intro-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-          <div class="intro-notes"><strong>notes</strong>Recorded outside at midnight. Final chorus uses the second vocal take.<br><br><strong>links</strong>spotify / apple music / youtube</div>
-          <div class="intro-now"><div class="intro-cover"></div><div class="intro-track">now playing</div><div class="intro-track-sub">1:13 / 3:42 / gapless queue</div><div class="intro-progress"></div></div>
-        </div>
-      </div>
-    </article>
-    <article class="intro-slide" data-intro-accent="112,221,255">
-      <div>
-        <div class="intro-kicker">06 / visual archive</div>
-        <h2 class="intro-title">the sound leaves images behind.</h2>
-        <p class="intro-copy">Covers, alternate artwork, photographs, and visual fragments live beside the music without becoming decoration. Open the gallery fullscreen and move through the visual language of each period.</p>
-      </div>
-      <div class="intro-demo">
-        <div class="intro-demo-head"><strong>akrasia / image viewer</strong><span>visual sequence</span></div>
-        <div class="intro-demo-body"><div class="intro-visual-wall"><div class="intro-visual-tile"><span>cover / v1</span></div><div class="intro-visual-tile"><span>contact sheet</span></div><div class="intro-visual-tile"><span>alternate</span></div><div class="intro-visual-tile"><span>still frame</span></div><div class="intro-visual-tile"><span>wordmark study</span></div><div class="intro-visual-tile"><span>cover / final</span></div></div></div>
-      </div>
-    </article>
-    <article class="intro-slide" data-intro-accent="174,255,164">
-      <div>
-        <div class="intro-kicker">07 / timeline</div>
-        <h2 class="intro-title">move through the history.</h2>
-        <p class="intro-copy">Timeline turns dates into an experience. Use spacious cards for focused days or switch to <strong>Immersive</strong> for the complete file stream and its live date rail. Every item opens in place.</p>
-      </div>
-      <div class="intro-demo">
-        <div class="intro-demo-head"><strong>akrasia / timeline</strong><span>cards / immersive</span></div>
-        <div class="intro-demo-body">
-          <div class="intro-timeline-list"><div class="intro-day"><strong>05.23.26</strong><span>1 indexed / cover study</span></div><div class="intro-day"><strong>05.03.26</strong><span>3 indexed / come back</span></div><div class="intro-day"><strong>02.14.26</strong><span>2 indexed / early demos</span></div></div>
-          <div class="intro-rail"><i></i><i></i><i></i></div>
-        </div>
-      </div>
-    </article>
-    <article class="intro-slide" data-intro-accent="255,74,74">
-      <div>
-        <div class="intro-kicker">08 / live room</div>
-        <h2 class="intro-title">when the archive goes live.</h2>
-        <p class="intro-copy">A broadcast room for first listens, visual drops, countdowns, queues, announcements, and chat. Viewers follow the signal in one place while the archive stays untouched underneath.</p>
-      </div>
-      <div class="intro-demo">
-        <div class="intro-demo-head"><strong>akrasia / live</strong><span>on air / room 01</span></div>
-        <div class="intro-demo-body">
-          <div class="intro-player-demo">
-            <div class="intro-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-            <div class="intro-now"><div class="intro-cover"></div><div class="intro-track">live signal</div><div class="intro-track-sub">queue 03 / countdown / chat</div><div class="intro-progress"></div></div>
-          </div>
-          <div class="intro-notes"><strong>major announcement</strong><br>new version starting next.<br><br><strong>chat</strong><br>angel: stay locked in<br>room: 48 watching</div>
-        </div>
-      </div>
-    </article>
-    <article class="intro-slide" data-intro-accent="255,211,112">
-      <div>
-        <div class="intro-kicker">09 / the unreleased vault</div>
-        <h2 class="intro-title">one hundred ways into akrasia.</h2>
-        <p class="intro-copy">A demo can become a version, a version can become a release, and a cover can preserve the exact mood around it. This archive holds the scale of the album without hiding the smallest detail. <strong>Enter anywhere. Follow what changes.</strong></p>
-      </div>
-      <div class="intro-demo">
-        <div class="intro-demo-head"><strong>akrasia / vault</strong><span>100 signals</span></div>
-        <div class="intro-demo-body"><div class="intro-vault"><div class="intro-vault-readout"><strong>100</strong><span>songs / versions / images / memories</span></div><div class="intro-catalog" id="introCatalog"></div></div></div>
-      </div>
-    </article>
-  </div>
-  <div class="intro-footer">
-    <div class="intro-footer-left"><span class="intro-step-label" id="introStepLabel">01 / 09</span><div class="intro-dots" id="introDots"></div></div>
-    <div class="intro-footer-right"><button class="intro-nav" id="introBack" type="button" onclick="changeIntroSlide(-1)">back</button><button class="intro-nav primary" id="introNext" type="button" onclick="changeIntroSlide(1)">next</button></div>
+    </div>
+    <div class="intro-footer">
+      <div class="intro-footer-left"><span class="intro-step-label" id="introStepLabel">01 / 04</span><div class="intro-dots" id="introDots"></div></div>
+      <div class="intro-footer-right"></div>
+    </div>
   </div>
 </section>
 
@@ -2177,7 +2158,7 @@
   var archiveFormTimer = null;
 
   function introWasSeen() {
-    try { return localStorage.getItem('akrasia-intro-v4') === 'seen'; } catch(error) { return false; }
+    try { return localStorage.getItem('akrasia-intro-v5') === 'seen'; } catch(error) { return false; }
   }
 
   function openIntro(force) {
@@ -2207,7 +2188,7 @@
   function finishIntro() {
     var overlay = document.getElementById('introOverlay');
     if(!overlay) return;
-    try { localStorage.setItem('akrasia-intro-v4', 'seen'); } catch(error) {}
+    try { localStorage.setItem('akrasia-intro-v5', 'seen'); } catch(error) {}
     window.clearInterval(introLocationTimer);
     overlay.classList.add('departing');
     window.setTimeout(() => {
@@ -2244,7 +2225,7 @@
   function buildIntroDots() {
     var dots = document.getElementById('introDots');
     if(!dots || dots.children.length) return;
-    document.querySelectorAll('.intro-slide').forEach((slide, index) => {
+    document.querySelectorAll('.intro-phase').forEach((phase, index) => {
       var dot = document.createElement('button');
       dot.className = 'intro-dot';
       dot.type = 'button';
@@ -2252,30 +2233,25 @@
       dot.onclick = () => { introIndex = index; renderIntroSlide(); };
       dots.appendChild(dot);
     });
-    var catalog = document.getElementById('introCatalog');
-    if(catalog && !catalog.children.length) {
-      for(var index = 0; index < 100; index++) catalog.appendChild(document.createElement('i'));
-    }
   }
 
   function changeIntroSlide(direction) {
-    var slides = document.querySelectorAll('.intro-slide');
-    if(direction > 0 && introIndex >= slides.length - 1) return finishIntro();
-    introIndex = Math.max(0, Math.min(slides.length - 1, introIndex + direction));
+    var phases = document.querySelectorAll('.intro-phase');
+    if(direction > 0 && introIndex >= phases.length - 1) return finishIntro();
+    introIndex = Math.max(0, Math.min(phases.length - 1, introIndex + direction));
     renderIntroSlide();
   }
 
   function renderIntroSlide() {
     var overlay = document.getElementById('introOverlay');
-    var slides = Array.from(document.querySelectorAll('.intro-slide'));
-    if(!overlay || !slides.length) return;
-    slides.forEach((slide, index) => {
-      slide.classList.toggle('active', index === introIndex);
-      slide.classList.toggle('before', index < introIndex);
+    var phases = Array.from(document.querySelectorAll('.intro-phase'));
+    if(!overlay || !phases.length) return;
+    phases.forEach((phase, index) => {
+      phase.classList.toggle('active', index === introIndex);
     });
-    var active = slides[introIndex];
+    var active = phases[introIndex];
     overlay.style.setProperty('--intro-accent', active.getAttribute('data-intro-accent') || '255,255,255');
-    var introModes = ['functionality', 'place', 'explorer', 'versions', 'now playing', 'image viewer', 'timeline', 'live', 'vault'];
+    var introModes = ['signal', 'archive', 'live', 'functionality'];
     var modeWord = document.getElementById('introModeWord');
     var nextMode = introModes[introIndex] || 'archive';
     if(modeWord && modeWord.textContent !== nextMode) {
@@ -2284,23 +2260,24 @@
       void modeWord.offsetWidth;
       modeWord.classList.add('is-switching');
     }
+    var headerWord = document.getElementById('introHeaderWord');
+    if(headerWord) headerWord.textContent = nextMode;
+    var nodes = document.querySelectorAll('.intro-node');
+    nodes.forEach(node => node.classList.toggle('active', node.getAttribute('data-node') === nextMode));
+    var title = document.getElementById('introSignalTitle');
+    var text = document.getElementById('introSignalText');
+    var copy = [
+      ['signal path', 'the first motion shows how every room connects through the header.'],
+      ['archive index', 'files, versions, visuals, dates, and notes move as one living archive.'],
+      ['live room', 'broadcast, queue, countdown, chat, and announcements turn the archive into an event.'],
+      ['akrasia / functionality', 'the intro zooms into the permanent header and hands off to the real page.']
+    ][introIndex] || ['archive', 'enter the archive.'];
+    if(title) title.textContent = copy[0];
+    if(text) text.textContent = copy[1];
     window.clearInterval(introLocationTimer);
-    if(introIndex === 1) {
-      var locationModes = ['archive', 'explorer', 'now playing', 'timeline', 'live'];
-      var locationIndex = 0;
-      introLocationTimer = window.setInterval(() => {
-        locationIndex = (locationIndex + 1) % locationModes.length;
-        var locationWord = document.getElementById('introLocationWord');
-        if(!locationWord) return;
-        locationWord.textContent = locationModes[locationIndex];
-        locationWord.classList.remove('is-switching');
-        void locationWord.offsetWidth;
-        locationWord.classList.add('is-switching');
-      }, 1050);
-    }
-    document.getElementById('introStepLabel').textContent = `${String(introIndex + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
+    document.getElementById('introStepLabel').textContent = `${String(introIndex + 1).padStart(2, '0')} / ${String(phases.length).padStart(2, '0')}`;
     document.getElementById('introBack').disabled = introIndex === 0;
-    document.getElementById('introNext').textContent = introIndex === slides.length - 1 ? 'enter archive' : 'next';
+    document.getElementById('introNext').textContent = introIndex === phases.length - 1 ? 'enter archive' : 'next';
     document.querySelectorAll('.intro-dot').forEach((dot, index) => dot.classList.toggle('active', index === introIndex));
   }
 
