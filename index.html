@@ -107,6 +107,14 @@
   .live-major-card button{margin-top:24px;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:0.64rem;color:var(--dim-2);}
   @media (prefers-reduced-motion:no-preference){.live-announcement-bar{animation:announcementIn 0.24s cubic-bezier(0.16,1,0.3,1) both;}@keyframes announcementIn{from{opacity:0;transform:translateY(-100%);}to{opacity:1;transform:translateY(0);}}}
   @media (prefers-reduced-motion:no-preference){.live-major-card{animation:majorAnnouncementIn 0.52s cubic-bezier(0.16,1,0.3,1) both;}@keyframes majorAnnouncementIn{from{opacity:0;transform:scale(0.96) translateY(18px);filter:blur(8px);}to{opacity:1;transform:scale(1) translateY(0);filter:blur(0);}}}
+  @media (max-width: 980px){
+    .live-dashboard-grid{grid-template-columns:1fr;}
+    .live-admin-drawer{position:fixed;inset:calc(var(--app-header-h) + 10px) 10px calc(max(10px,env(safe-area-inset-bottom)) + 58px);width:auto;max-height:none;border-radius:14px;}
+    .live-admin-drawer-grid{gap:10px;}
+    .live-dash-section{border-radius:10px;}
+    .stats-row{grid-template-columns:32px minmax(0,1fr) auto;gap:7px;}
+    .stats-folder,.stats-count,.stats-date{grid-column:2 / -1;}
+  }
 
   /* ===== CONTROL PANEL ===== */
   .control-panel { background: rgba(3,3,3,0.88); border-bottom: 2px solid var(--white); padding: 26px 5vw; display: none; grid-template-columns:minmax(0,1.55fr) minmax(280px,0.65fr); gap: 16px; box-shadow:0 18px 60px rgba(0,0,0,0.7); align-items:start; backdrop-filter:blur(18px) saturate(1.12); max-height:calc(100vh - var(--app-header-h)); overflow-y:auto; overscroll-behavior:contain; }
@@ -189,9 +197,35 @@
   .stats-name small{display:block;color:var(--dim);font-size:0.56rem;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .stats-count{color:var(--white);font-weight:600;}
   .stats-date{color:var(--dim);white-space:nowrap;}
-  body.intro-active .wrap{opacity:0;pointer-events:none;}
+  body.intro-preload .wrap,body.intro-active .wrap{opacity:0;pointer-events:none;}
   body.archive-arriving .wrap{animation:archiveArrive 0.42s cubic-bezier(0.16,1,0.3,1) both;}
   @keyframes archiveArrive{from{opacity:0;filter:blur(10px);transform:scale(1.015);}to{opacity:1;filter:blur(0);transform:scale(1);}}
+  .live-dashboard-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;}
+  .live-dash-section{border:1px solid var(--line-soft);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.055),rgba(0,0,0,0.34));padding:12px;display:grid;gap:10px;min-width:0;backdrop-filter:blur(14px) saturate(1.12);}
+  .live-dash-section h3,.live-admin-drawer h3{margin:0 0 2px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.10em;color:var(--dim-2);}
+  .live-dash-section .quick-row input,.live-dash-section .quick-row select{flex:1 1 150px;min-width:0;}
+  .compact-stack{gap:8px;}
+  .live-admin-toggle{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-family:'JetBrains Mono',monospace;font-size:0.66rem;color:var(--white);background:rgba(255,255,255,0.06);cursor:pointer;}
+  .live-side{position:relative;}
+  body.is-admin .live-admin-drawer.admin-only{display:none;}
+  body.is-admin .live-admin-drawer.admin-only.open{display:block;}
+  .live-admin-drawer{position:absolute;right:18px;top:18px;bottom:18px;left:auto;width:min(520px,calc(100vw - 36px));z-index:8;border:1px solid rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.45);border-radius:16px;background:linear-gradient(155deg,rgba(255,255,255,0.13),rgba(0,0,0,0.88) 42%,rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.08));box-shadow:0 30px 120px rgba(0,0,0,0.76),0 0 60px rgba(var(--live-r,255),var(--live-g,255),var(--live-b,255),0.18);backdrop-filter:blur(22px) saturate(1.18);padding:14px;overflow:auto;}
+  .live-admin-drawer-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--line-soft);background:linear-gradient(180deg,rgba(0,0,0,0.92),rgba(0,0,0,0.72));font-family:'JetBrains Mono',monospace;}
+  .live-admin-drawer-head button{border:1px solid var(--line);border-radius:999px;padding:5px 8px;color:var(--dim-2);cursor:pointer;}
+  .live-admin-drawer-grid{display:grid;gap:12px;}
+  .live-admin-drawer section{display:grid;gap:8px;border:1px solid var(--line-soft);border-radius:12px;background:rgba(0,0,0,0.42);padding:10px;min-width:0;}
+  .live-queue-list.compact{max-height:190px;}
+  .live-queue-empty{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--dim);padding:8px;}
+  .live-chat-input-row.name-locked{grid-template-columns:minmax(0,1fr) 54px;}
+  .live-chat-input-row.name-locked #liveChatUsername{display:none;}
+  .live-chat-name-lock{grid-column:1 / -1;font-family:'JetBrains Mono',monospace;font-size:0.56rem;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .timeline-panel.immersive .immersive-file,.timeline-panel.immersive .immersive-file *{color:var(--white);}
+  .timeline-panel.immersive .immersive-file:hover{background:rgba(255,255,255,0.075)!important;color:var(--white)!important;}
+  .timeline-panel.immersive .immersive-file:hover *{color:var(--white)!important;}
+  .timeline-panel.immersive .immersive-day-label{white-space:nowrap;word-break:keep-all;}
+  .timeline-panel.immersive .immersive-files{overflow:visible;}
+  .stats-row{grid-template-columns:42px minmax(170px,1.2fr) 90px 88px 120px minmax(90px,0.7fr);}
+  .stats-folder{color:var(--dim-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
   /* ===== EXPLORER ===== */
   .explorer{padding:4.5vh 5vw 17vh;}
@@ -1175,7 +1209,7 @@
   }
 </style>
 </head>
-<body data-section="archive">
+<body data-section="archive" class="intro-preload">
 
 <svg class="grain" width="100%" height="100%"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0"/></filter><rect width="100%" height="100%" filter="url(#noiseFilter)"/></svg>
 
@@ -1336,10 +1370,10 @@
       </div>
       <div class="header-actions header-actions-live">
         <span class="live-viewer-badge" id="liveViewerBadgeHeader">0 watching</span>
-        <button class="action-trigger admin-only" type="button" onclick="broadcastCurrentLiveState()">sync now</button>
+        <button class="action-trigger admin-only" type="button" onclick="toggleLiveAdminDrawer()">control room</button>
         <button class="action-trigger admin-only" type="button" onclick="stopLiveRoom()">end live</button>
-        <button class="action-trigger" type="button" onclick="joinLiveRoom()">join room</button>
-        <button class="action-trigger" type="button" onclick="closeLiveRoom()">minimize [-]</button>
+        <button class="action-trigger" type="button" onclick="joinLiveRoom()">follow</button>
+        <button class="action-trigger" type="button" onclick="closeLiveRoom()">leave</button>
       </div>
       <div class="header-actions header-actions-viewer">
         <button class="action-trigger fs-info-toggle" id="fsInfoToggle" onclick="toggleNowInfo()">info</button>
@@ -1474,85 +1508,96 @@
         <div class="panel-head">
           <div>
             <div class="panel-kicker">live control</div>
-            <div class="panel-title">room signal</div>
+            <div class="panel-title">control room</div>
           </div>
-          <div class="panel-copy">start a session, schedule a countdown, send announcements, and watch chat.</div>
+          <div class="panel-copy">current broadcast, queue, countdown, announcements, moderation, and stats without the wall of knobs.</div>
         </div>
+        <div class="live-dashboard-grid">
+          <section class="live-dash-section">
+            <h3>current broadcast</h3>
         <div class="live-status compact">
           <div class="live-stat">state<strong id="dashLiveStateText">offline</strong></div>
           <div class="live-stat">type<strong id="dashLiveTypeText">none</strong></div>
           <div class="live-stat">viewers<strong id="dashViewerCount">0</strong></div>
           <div class="live-stat">source<strong id="dashLiveSourceText">archive</strong></div>
         </div>
-        <div class="live-control-stack">
-          <div class="label-mini">custom live title / notes</div>
-          <input type="text" id="liveCustomTitle" placeholder="optional broadcast title">
-          <textarea id="liveCustomNotes" rows="3" placeholder="optional live notes"></textarea>
-          <div class="label-mini">cover / accent</div>
-          <input type="file" id="liveCustomCover" accept="image/*">
-          <input type="color" id="liveCustomMoodColor" value="#ffffff" title="live accent color">
-          <div class="label-mini">broadcast asset</div>
-          <select id="liveAssetSelectDash"></select>
-          <div class="quick-row">
-            <button class="mini-btn" type="button" onclick="goLiveWithSelection('liveAssetSelectDash')">start selected</button>
-            <button class="mini-btn" type="button" onclick="addSelectedArchiveToLiveQueue('liveAssetSelectDash')">queue selected</button>
-            <button class="mini-btn" type="button" onclick="broadcastCurrentLiveState()">sync position</button>
-          </div>
-          <div class="label-mini">private live item</div>
-          <input type="file" id="livePrivateFileInput" accept="audio/*,video/*,image/*">
-          <input type="file" id="livePrivateCoverInput" accept="image/*">
-          <input type="text" id="livePrivateTitleInput" placeholder="private item title">
-          <textarea id="livePrivateNotesInput" rows="2" placeholder="private item notes"></textarea>
-          <input type="text" id="livePrivateFolderInput" placeholder="private folder / collection">
-          <div class="quick-row">
-            <button class="mini-btn" type="button" onclick="savePrivateLiveItem()">preload private</button>
-            <button class="mini-btn" type="button" onclick="addPrivateLiveItemToQueue()">queue private</button>
-          </div>
-          <select id="privateLiveItemSelect"></select>
-          <div class="label-mini">live-only file now</div>
-          <input type="file" id="liveFileInputDash" accept="audio/*,video/*,image/*">
-          <input type="text" id="liveTitleInputDash" placeholder="live title">
-          <div class="quick-row">
+            <div class="live-control-stack compact-stack">
+              <select id="liveAssetSelectDash"></select>
+              <div class="quick-row">
+                <button class="mini-btn" type="button" onclick="goLiveWithSelection('liveAssetSelectDash')">start selected</button>
+                <button class="mini-btn" type="button" onclick="addSelectedArchiveToLiveQueue('liveAssetSelectDash')">queue selected</button>
+                <button class="mini-btn" type="button" onclick="stopLiveRoom()">stop broadcast</button>
+              </div>
+              <input type="text" id="liveCustomTitle" placeholder="quick title override">
+              <textarea id="liveCustomNotes" rows="2" placeholder="quick live notes"></textarea>
+              <input type="file" id="liveCustomCover" accept="image/*">
+              <input type="color" id="liveCustomMoodColor" value="#ffffff" title="live accent color">
+            </div>
+          </section>
+          <section class="live-dash-section">
+            <h3>queue</h3>
+            <div class="quick-row">
+              <button class="mini-btn" type="button" onclick="startLiveQueue()">start</button>
+              <button class="mini-btn" type="button" onclick="pauseLiveQueue()">pause</button>
+              <button class="mini-btn" type="button" onclick="resumeLiveQueue()">resume</button>
+              <button class="mini-btn" type="button" onclick="prevLiveQueueItem()">back</button>
+              <button class="mini-btn" type="button" onclick="nextLiveQueueItem()">next</button>
+              <button class="mini-btn" type="button" onclick="clearLiveQueue()">clear</button>
+            </div>
+            <div class="quick-row">
+              <input type="text" id="liveFolderQueueInput" placeholder="folder path">
+              <button class="mini-btn" type="button" onclick="addFolderToLiveQueue()">add folder</button>
+            </div>
+            <div class="quick-row">
+              <label class="mini-toggle"><input type="checkbox" id="liveAutoplayToggle" checked> autoplay</label>
+              <label class="mini-toggle"><input type="checkbox" id="liveFolderAutoplayToggle" checked> folder autoplay</label>
+              <input type="number" id="liveImageDuration" min="3" max="120" value="12" placeholder="image seconds">
+            </div>
+            <div class="live-queue-list" id="liveQueueList"></div>
+          </section>
+          <section class="live-dash-section">
+            <h3>countdown</h3>
+            <input type="datetime-local" id="liveCountdownInputDash">
+            <select id="liveCountdownAction">
+              <option value="room">after countdown: show live room</option>
+              <option value="selected">after countdown: start selected item</option>
+              <option value="queue">after countdown: start queue</option>
+            </select>
+            <label class="mini-toggle"><input type="checkbox" id="liveCountdownAutoStart"> auto-start at zero</label>
+            <div class="quick-row">
+              <button class="mini-btn" type="button" onclick="setLiveCountdown('liveCountdownInputDash')">set countdown</button>
+              <button class="mini-btn" type="button" onclick="clearLiveCountdown()">clear</button>
+            </div>
+          </section>
+          <section class="live-dash-section">
+            <h3>announcements</h3>
+            <textarea id="liveAnnounceInputDash" rows="2" placeholder="major room update" maxlength="200"></textarea>
+            <div class="quick-row">
+              <button class="mini-btn" type="button" onclick="sendAnnouncement(false,'liveAnnounceInputDash')">send</button>
+              <button class="mini-btn" type="button" onclick="sendAnnouncement(true,'liveAnnounceInputDash')">pin</button>
+              <button class="mini-btn" type="button" onclick="sendAnnouncement('major','liveAnnounceInputDash')">major</button>
+              <button class="mini-btn" type="button" onclick="dismissAnnouncement()">clear</button>
+            </div>
+          </section>
+          <section class="live-dash-section private-live-section">
+            <h3>private live items</h3>
+            <input type="file" id="livePrivateFileInput" accept="audio/*,video/*,image/*">
+            <input type="file" id="livePrivateCoverInput" accept="image/*">
+            <input type="text" id="livePrivateTitleInput" placeholder="private item title">
+            <textarea id="livePrivateNotesInput" rows="2" placeholder="private item notes"></textarea>
+            <input type="text" id="livePrivateFolderInput" placeholder="private folder / collection">
+            <div class="quick-row">
+              <button class="mini-btn" type="button" onclick="savePrivateLiveItem()">preload</button>
+              <button class="mini-btn" type="button" onclick="addPrivateLiveItemToQueue()">queue private</button>
+            </div>
+            <select id="privateLiveItemSelect"></select>
+          </section>
+          <section class="live-dash-section">
+            <h3>live-only now</h3>
+            <input type="file" id="liveFileInputDash" accept="audio/*,video/*,image/*">
+            <input type="text" id="liveTitleInputDash" placeholder="live title">
             <button class="mini-btn" type="button" onclick="goLiveWithFile('liveFileInputDash','liveTitleInputDash')">broadcast file</button>
-            <button class="mini-btn" type="button" onclick="stopLiveRoom()">end session</button>
-          </div>
-          <div class="label-mini">live queue</div>
-          <div class="quick-row">
-            <button class="mini-btn" type="button" onclick="startLiveQueue()">start queue</button>
-            <button class="mini-btn" type="button" onclick="pauseLiveQueue()">pause queue</button>
-            <button class="mini-btn" type="button" onclick="resumeLiveQueue()">resume</button>
-            <button class="mini-btn" type="button" onclick="nextLiveQueueItem()">next</button>
-            <button class="mini-btn" type="button" onclick="prevLiveQueueItem()">previous</button>
-            <button class="mini-btn" type="button" onclick="clearLiveQueue()">clear</button>
-          </div>
-          <input type="text" id="liveFolderQueueInput" placeholder="folder path to add to live queue">
-          <div class="quick-row">
-            <button class="mini-btn" type="button" onclick="addFolderToLiveQueue()">add folder</button>
-            <label class="mini-toggle"><input type="checkbox" id="liveAutoplayToggle" checked> autoplay</label>
-            <label class="mini-toggle"><input type="checkbox" id="liveFolderAutoplayToggle" checked> folder autoplay</label>
-          </div>
-          <input type="number" id="liveImageDuration" min="3" max="120" value="12" placeholder="image seconds">
-          <div class="live-queue-list" id="liveQueueList"></div>
-          <div class="label-mini">countdown target (optional)</div>
-          <input type="datetime-local" id="liveCountdownInputDash">
-          <select id="liveCountdownAction">
-            <option value="room">after countdown: show live room</option>
-            <option value="selected">after countdown: start selected item</option>
-            <option value="queue">after countdown: start queue</option>
-          </select>
-          <label class="mini-toggle"><input type="checkbox" id="liveCountdownAutoStart"> auto-start at zero</label>
-          <div class="quick-row">
-            <button class="mini-btn" type="button" onclick="setLiveCountdown('liveCountdownInputDash')">set countdown</button>
-            <button class="mini-btn" type="button" onclick="clearLiveCountdown()">clear</button>
-          </div>
-          <div class="label-mini">announcement</div>
-          <textarea id="liveAnnounceInputDash" rows="2" placeholder="are you ready?" maxlength="200"></textarea>
-          <div class="quick-row">
-            <button class="mini-btn" type="button" onclick="sendAnnouncement(false,'liveAnnounceInputDash')">send</button>
-            <button class="mini-btn" type="button" onclick="sendAnnouncement(true,'liveAnnounceInputDash')">pin</button>
-            <button class="mini-btn" type="button" onclick="sendAnnouncement('major','liveAnnounceInputDash')">major</button>
-            <button class="mini-btn" type="button" onclick="dismissAnnouncement()">clear</button>
-          </div>
+          </section>
         </div>
       </div>
       <div class="panel-sect live-admin-chat">
@@ -1650,6 +1695,48 @@
         <button type="button" onclick="setLiveMobileTab('details')">details</button>
       </div>
       <aside class="live-side" id="liveSide">
+        <button class="live-admin-toggle admin-only" type="button" onclick="toggleLiveAdminDrawer()">control room</button>
+        <div class="live-admin-drawer admin-only" id="liveAdminDrawer" aria-hidden="true">
+          <div class="live-admin-drawer-head">
+            <strong>control room</strong>
+            <button type="button" onclick="toggleLiveAdminDrawer(false)">close</button>
+          </div>
+          <div class="live-admin-drawer-grid">
+            <section>
+              <h3>current</h3>
+              <div class="live-status compact">
+                <div class="live-stat">state<strong id="liveDrawerState">offline</strong></div>
+                <div class="live-stat">queue<strong id="liveDrawerQueue">--</strong></div>
+              </div>
+              <select id="liveAssetSelect"></select>
+              <div class="quick-row">
+                <button class="mini-btn" type="button" onclick="goLiveWithSelection('liveAssetSelect')">start selected</button>
+                <button class="mini-btn" type="button" onclick="addSelectedArchiveToLiveQueue('liveAssetSelect')">queue</button>
+                <button class="mini-btn" type="button" onclick="stopLiveRoom()">stop</button>
+              </div>
+            </section>
+            <section>
+              <h3>queue transport</h3>
+              <div class="quick-row">
+                <button class="mini-btn" type="button" onclick="prevLiveQueueItem()">back</button>
+                <button class="mini-btn" type="button" onclick="pauseLiveQueue()">pause</button>
+                <button class="mini-btn" type="button" onclick="resumeLiveQueue()">resume</button>
+                <button class="mini-btn" type="button" onclick="nextLiveQueueItem()">next</button>
+              </div>
+              <div class="live-queue-list compact" id="liveQueueListInline"></div>
+            </section>
+            <section>
+              <h3>quick edit</h3>
+              <input type="text" id="liveInlineTitle" placeholder="live title">
+              <textarea id="liveInlineNotes" rows="2" placeholder="live notes"></textarea>
+              <input type="file" id="liveInlineCover" accept="image/*">
+              <div class="quick-row">
+                <button class="mini-btn" type="button" onclick="applyInlineLiveOverrides()">apply</button>
+                <label class="mini-toggle"><input type="checkbox" id="liveInlineAutoStart"> countdown auto-start</label>
+              </div>
+            </section>
+          </div>
+        </div>
         <button class="live-chat-toggle" type="button" onclick="toggleLiveChatSheet()"><strong>live chat</strong><span id="liveChatToggleCount">0 messages</span></button>
         <div>
           <div class="live-panel-title">broadcast status</div>
@@ -1658,33 +1745,6 @@
             <div class="live-stat">type<strong id="liveTypeText">none</strong></div>
             <div class="live-stat">source<strong id="liveSourceText">archive</strong></div>
             <div class="live-stat">time<strong id="liveTimeText">--</strong></div>
-          </div>
-        </div>
-        <div class="live-control-stack admin-only">
-          <div class="label-mini">broadcast asset</div>
-          <select id="liveAssetSelect"></select>
-          <div class="quick-row">
-            <button class="mini-btn" type="button" onclick="goLiveWithSelection()">start selected</button>
-            <button class="mini-btn" type="button" onclick="broadcastCurrentLiveState()">sync position</button>
-          </div>
-          <div class="label-mini">live-only file</div>
-          <input type="file" id="liveFileInput" accept="audio/*,video/*,image/*">
-          <input type="text" id="liveTitleInput" placeholder="live title">
-          <div class="quick-row">
-            <button class="mini-btn" type="button" onclick="goLiveWithFile()">broadcast file</button>
-            <button class="mini-btn" type="button" onclick="broadcastCurrentLiveState()">push now</button>
-          </div>
-          <div class="label-mini">countdown target (optional)</div>
-          <input type="datetime-local" id="liveCountdownInput">
-          <div class="quick-row">
-            <button class="mini-btn" type="button" onclick="setLiveCountdown()">set countdown</button>
-            <button class="mini-btn" type="button" onclick="clearLiveCountdown()">clear</button>
-          </div>
-          <div class="label-mini">announcement</div>
-          <textarea id="liveAnnounceInput" rows="2" placeholder="are you ready?" maxlength="200"></textarea>
-          <div class="quick-row">
-            <button class="mini-btn" type="button" onclick="sendAnnouncement(false)">send</button>
-            <button class="mini-btn" type="button" onclick="sendAnnouncement(true)">pin</button>
           </div>
         </div>
         <div class="live-chat">
@@ -2042,7 +2102,10 @@
   }
 
   function openIntro(force) {
-    if(!force && introWasSeen()) return;
+    if(!force && introWasSeen()) {
+      document.body.classList.remove('intro-preload', 'intro-active');
+      return;
+    }
     var overlay = document.getElementById('introOverlay');
     if(!overlay) return;
     buildIntroDots();
@@ -2053,7 +2116,7 @@
       element.style.removeProperty('--form-delay');
     });
     document.body.classList.add('intro-active');
-    document.body.classList.remove('archive-arriving');
+    document.body.classList.remove('intro-preload', 'archive-arriving');
     introIndex = 0;
     renderIntroSlide();
     overlay.classList.add('active');
@@ -2068,7 +2131,7 @@
     try { localStorage.setItem('akrasia-intro-v3', 'seen'); } catch(error) {}
     window.clearInterval(introLocationTimer);
     overlay.classList.add('departing');
-    document.body.classList.remove('intro-active');
+    document.body.classList.remove('intro-preload', 'intro-active');
     document.body.classList.add('archive-arriving');
     assembleArchiveView();
     window.setTimeout(() => {
@@ -2476,10 +2539,12 @@
   }
 
   function closeLiveRoom() {
+    liveJoined = false;
     if(!isAdmin) {
       exitLiveFollowerMode();
       stopLivePlayback();
     }
+    toggleLiveAdminDrawer(false);
     document.getElementById('liveRoom').classList.remove('active');
     document.getElementById('liveRoom').setAttribute('aria-hidden', 'true');
     restoreUnderlyingSection();
@@ -2520,6 +2585,7 @@
     }
     liveViewerCount = 0;
     updateLiveViewerDisplay();
+    syncLiveAdminControls();
   }
 
   function updateLiveViewerDisplay() {
@@ -2530,6 +2596,60 @@
     if(el) el.textContent = text;
     if(header) header.textContent = text;
     if(dash) dash.textContent = String(liveViewerCount);
+  }
+
+  function toggleLiveAdminDrawer(force) {
+    if(!isAdmin) return;
+    var drawer = document.getElementById('liveAdminDrawer');
+    if(!drawer) return;
+    var open = typeof force === 'boolean' ? force : !drawer.classList.contains('open');
+    drawer.classList.toggle('open', open);
+    drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+    syncLiveAdminControls();
+  }
+
+  function syncLiveAdminControls() {
+    var isLive = Boolean(liveState && liveState.is_live);
+    var stateText = isLive ? (liveState.playing ? 'on air' : 'paused') : (liveState && liveState.countdown_target ? 'countdown' : 'offline');
+    var queueText = liveQueue.length ? `${Math.max(0, liveQueueIndex) + 1}/${liveQueue.length}` : '--';
+    var stateEl = document.getElementById('liveDrawerState');
+    var queueEl = document.getElementById('liveDrawerQueue');
+    if(stateEl) stateEl.textContent = stateText;
+    if(queueEl) queueEl.textContent = queueText;
+    var inlineTitle = document.getElementById('liveInlineTitle');
+    var inlineNotes = document.getElementById('liveInlineNotes');
+    var inlineAuto = document.getElementById('liveInlineAutoStart');
+    if(inlineTitle && !inlineTitle.matches(':focus')) inlineTitle.value = isLive ? (liveState.title || '') : '';
+    if(inlineNotes && !inlineNotes.matches(':focus')) inlineNotes.value = isLive ? (liveState.notes || '') : '';
+    if(inlineAuto) inlineAuto.checked = liveCountdownAutoStart;
+  }
+
+  async function applyInlineLiveOverrides() {
+    if(!requireAdmin()) return;
+    liveCountdownAutoStart = Boolean(document.getElementById('liveInlineAutoStart')?.checked);
+    var title = document.getElementById('liveInlineTitle')?.value.trim();
+    var notes = document.getElementById('liveInlineNotes')?.value.trim();
+    var coverInput = document.getElementById('liveInlineCover');
+    var coverFile = coverInput && coverInput.files && coverInput.files[0];
+    var cover = '';
+    if(coverFile) {
+      if(isRemoteReady && supabaseClient) {
+        var safeCover = coverFile.name.replace(/[^a-z0-9._-]+/gi, '-');
+        var path = `live/covers/${Date.now()}-${safeCover}`;
+        var upload = await supabaseClient.storage.from(STORAGE_BUCKET).upload(path, coverFile, { upsert:false });
+        if(!upload.error) cover = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+      } else {
+        cover = URL.createObjectURL(coverFile);
+      }
+    }
+    var nextState = Object.assign({}, liveState || {}, {
+      title: title || (liveState && liveState.title) || 'live signal',
+      notes: notes || (liveState && liveState.notes) || '',
+      countdown_auto_start: liveCountdownAutoStart,
+      updated_at: new Date().toISOString()
+    });
+    if(cover) nextState.cover = cover;
+    saveLiveState(nextState);
   }
 
   function toggleLiveChatSheet(forceOpen) {
@@ -2731,14 +2851,12 @@
 
   function setLiveCountdown(inputId) {
     if(!requireAdmin()) return;
-    var input = document.getElementById(inputId || 'liveCountdownInput');
+    var input = document.getElementById(inputId || 'liveCountdownInputDash');
     if(!input || !input.value) return;
     liveCountdownAction = document.getElementById('liveCountdownAction')?.value || 'room';
     liveCountdownAutoStart = Boolean(document.getElementById('liveCountdownAutoStart')?.checked);
     countdownAutoStarted = false;
     var iso = new Date(input.value).toISOString();
-    var mirror = document.getElementById(inputId === 'liveCountdownInputDash' ? 'liveCountdownInput' : 'liveCountdownInputDash');
-    if(mirror) mirror.value = input.value;
     saveLiveState(Object.assign({}, liveState, {
       countdown_target: iso,
       is_live: false,
@@ -2751,7 +2869,7 @@
 
   function clearLiveCountdown() {
     if(!requireAdmin()) return;
-    ['liveCountdownInput', 'liveCountdownInputDash'].forEach(id => {
+    ['liveCountdownInputDash'].forEach(id => {
       var input = document.getElementById(id);
       if(input) input.value = '';
     });
@@ -2906,8 +3024,33 @@
   }
 
   function getLiveChatUsername() {
+    var locked = sessionStorage.getItem('akrasia_chat_name');
+    if(locked) return locked;
     var input = document.getElementById('liveChatUsername');
-    return (input && input.value.trim()) || sessionStorage.getItem('akrasia_chat_name') || 'listener';
+    return (input && input.value.trim()) || 'listener';
+  }
+
+  function lockLiveChatName(name) {
+    var clean = String(name || 'listener').replace(/<[^>]*>/g, '').trim().slice(0, 24) || 'listener';
+    sessionStorage.setItem('akrasia_chat_name', clean);
+    var input = document.getElementById('liveChatUsername');
+    var row = input && input.closest('.live-chat-input-row');
+    if(input) {
+      input.value = clean;
+      input.disabled = true;
+      input.placeholder = clean;
+    }
+    if(row) {
+      row.classList.add('name-locked');
+      if(!row.querySelector('.live-chat-name-lock')) {
+        var label = document.createElement('div');
+        label.className = 'live-chat-name-lock';
+        label.textContent = 'chatting as ' + clean;
+        row.insertBefore(label, row.firstChild);
+      } else {
+        row.querySelector('.live-chat-name-lock').textContent = 'chatting as ' + clean;
+      }
+    }
   }
 
   function setChatBanned(value) {
@@ -2937,7 +3080,7 @@
     if(!message || chatBanned) return;
     var token = getLiveUserToken();
     var username = getLiveChatUsername().replace(/<[^>]*>/g, '').slice(0, 24) || 'listener';
-    sessionStorage.setItem('akrasia_chat_name', username);
+    lockLiveChatName(username);
     if(supabaseClient) {
       var banned = await checkIfBanned();
       if(banned) {
@@ -3206,10 +3349,11 @@
       el.dataset.key = row.asset_key || '';
       el.innerHTML =
         '<span class="stats-rank">#' + (i + 1) + '</span>' +
-        '<span class="stats-name">' + escapeHtml(item.title || '--') + '<small>' + escapeHtml(item.folder + ' / ' + item.version + ' / ' + item.type) + '</small></span>' +
+        '<span class="stats-name">' + escapeHtml(item.title || '--') + '<small>' + escapeHtml(item.folder || 'archive') + '</small></span>' +
+        '<span class="stats-folder">' + escapeHtml(item.version || '--') + ' / ' + escapeHtml(item.type || 'asset') + '</span>' +
         '<span class="stats-count">' + (row.play_count || 0) + ' plays</span>' +
-        '<span class="stats-date">last: ' + lastPlayed + '</span>' +
-        '<span class="stats-date">' + (item.row ? 'open' : 'missing') + '</span>';
+        '<span class="stats-date">' + lastPlayed + '</span>' +
+        '<span class="stats-date">' + (item.row ? 'open item' : 'missing') + '</span>';
       if(item.row) el.onclick = () => {
         var type = item.row.getAttribute('data-type');
         if(type === 'audio') { buildQueue(); playTrackFromQueue(audioQueue.findIndex(q => liveRowKey(q) === liveRowKey(item.row))); }
@@ -3281,11 +3425,11 @@
 
   async function goLiveWithFile(inputId, titleId) {
     if(!requireAdmin()) return;
-    var input = document.getElementById(inputId || 'liveFileInput');
+    var input = document.getElementById(inputId || 'liveFileInputDash');
     var file = input && input.files && input.files[0];
     if(!file) return alert('choose a live-only file first.');
     var type = file.type.indexOf('audio/') === 0 ? 'audio' : (file.type.indexOf('video/') === 0 ? 'video' : 'image');
-    var titleInput = document.getElementById(titleId || 'liveTitleInput');
+    var titleInput = document.getElementById(titleId || 'liveTitleInputDash');
     var title = (titleInput ? titleInput.value.trim() : '') || file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ');
     var fileUrl = '';
     if(isRemoteReady && supabaseClient) {
@@ -3381,22 +3525,25 @@
   }
 
   function renderLiveQueue() {
-    var list = document.getElementById('liveQueueList');
-    if(!list) return;
-    list.innerHTML = '';
-    if(!liveQueue.length) {
-      list.innerHTML = '<div class="panel-copy">queue is empty.</div>';
-      return;
-    }
-    liveQueue.forEach((item, index) => {
-      var el = document.createElement('div');
-      el.className = 'live-queue-item' + (index === liveQueueIndex ? ' active' : '');
-      el.innerHTML =
-        '<span>' + (index + 1) + '</span>' +
-        '<div><span class="live-queue-title">' + escapeHtml(item.title) + '</span><span class="live-queue-sub">' + escapeHtml((item.folder || 'live') + ' / ' + item.type) + '</span></div>' +
-        '<div class="live-queue-actions"><button type="button" onclick="moveLiveQueueItem(' + index + ',-1)">^</button><button type="button" onclick="moveLiveQueueItem(' + index + ',1)">v</button><button type="button" onclick="removeLiveQueueItem(' + index + ')">x</button></div>';
-      list.appendChild(el);
+    ['liveQueueList', 'liveQueueListInline'].forEach(listId => {
+      var list = document.getElementById(listId);
+      if(!list) return;
+      list.innerHTML = '';
+      if(!liveQueue.length) {
+        list.innerHTML = '<div class="live-queue-empty">queue is empty.</div>';
+        return;
+      }
+      liveQueue.forEach((item, index) => {
+        var el = document.createElement('div');
+        el.className = 'live-queue-item' + (index === liveQueueIndex ? ' active' : '');
+        el.innerHTML =
+          '<span>' + (index + 1) + '</span>' +
+          '<div><span class="live-queue-title">' + escapeHtml(item.title) + '</span><span class="live-queue-sub">' + escapeHtml((item.folder || 'live') + ' / ' + item.type) + '</span></div>' +
+          '<div class="live-queue-actions"><button type="button" onclick="moveLiveQueueItem(' + index + ',-1)">^</button><button type="button" onclick="moveLiveQueueItem(' + index + ',1)">v</button><button type="button" onclick="removeLiveQueueItem(' + index + ')">x</button></div>';
+        list.appendChild(el);
+      });
     });
+    syncLiveAdminControls();
   }
 
   function addSelectedArchiveToLiveQueue(selectId) {
@@ -5173,8 +5320,7 @@
       document.getElementById('fsPlayer').classList.remove('media-mode', 'image-mode', 'video-mode');
       document.getElementById('fsPlayer').classList.add('audio-mode');
       closeNowInfo();
-      setModeLabel('now playing');
-      setAppSection('now playing');
+      if(document.getElementById('fsPlayer').classList.contains('active')) setAppSection('now playing');
       stage.classList.remove('active');
       visualizer.classList.remove('hidden');
       return;
@@ -5368,8 +5514,8 @@
     document.getElementById('fsPlayer').classList.remove('media-mode', 'image-mode', 'video-mode');
     document.getElementById('fsPlayer').classList.add('audio-mode');
     closeNowInfo();
-    setModeLabel('now playing');
-    setAppSection('now playing');
+    if(document.getElementById('fsPlayer').classList.contains('active')) setAppSection('now playing');
+    else restoreUnderlyingSection();
     queueIndex = index; var row = audioQueue[queueIndex];
     animateTrackSwap();
     document.querySelectorAll('.frow.playing').forEach(r => r.classList.remove('playing'));
@@ -5412,9 +5558,11 @@
       currentAudio.addEventListener('loadedmetadata', () => { if(currentAudio === trackAudio) updateTime(); }, { once: true });
       currentAudio.addEventListener('timeupdate', () => { if(currentAudio === trackAudio) updateTime(); });
       currentAudio.addEventListener('ended', () => { if(currentAudio === trackAudio) handleTrackEnd(); });
+      currentAudio.addEventListener('play', () => { if(currentAudio === trackAudio) syncCurrentAudioState(); });
+      currentAudio.addEventListener('pause', () => { if(currentAudio === trackAudio) syncCurrentAudioState(); });
       currentAudio.addEventListener('canplay', preloadNextTrack, { once: true });
       if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      currentAudio.play().then(() => { setPlayIcon(false); setPlayingState(true); trackPlayCount(row); maybeBroadcastLiveRow(row); }).catch(e => { setPlayIcon(true); setPlayingState(false); maybeBroadcastLiveRow(row, { playing: false }); });
+      currentAudio.play().then(() => { syncCurrentAudioState(); trackPlayCount(row); maybeBroadcastLiveRow(row); }).catch(e => { syncCurrentAudioState(); maybeBroadcastLiveRow(row, { playing: false }); });
     } else {
       currentAudio = createArchiveAudio(); setPlayIcon(false); setPlayingState(true); updateTimeMock(); trackPlayCount(row); maybeBroadcastLiveRow(row);
     }
@@ -5459,12 +5607,11 @@
     if(currentAudio.paused) {
       if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
       currentAudio.play()
-        .then(() => { setPlayIcon(false); setPlayingState(true); maybeBroadcastLiveRow(audioQueue[queueIndex]); })
-        .catch(() => { setPlayIcon(true); setPlayingState(false); maybeBroadcastLiveRow(audioQueue[queueIndex], { playing: false }); });
+        .then(() => { syncCurrentAudioState(); maybeBroadcastLiveRow(audioQueue[queueIndex]); })
+        .catch(() => { syncCurrentAudioState(); maybeBroadcastLiveRow(audioQueue[queueIndex], { playing: false }); });
     } else {
       currentAudio.pause();
-      setPlayIcon(true);
-      setPlayingState(false);
+      syncCurrentAudioState();
       maybeBroadcastLiveRow(audioQueue[queueIndex], { playing: false });
     }
   }
@@ -5574,6 +5721,12 @@
       : '<path d="M9 5v14M15 5v14" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>';
     document.getElementById('pbIcon').innerHTML = icon;
     document.getElementById('fsIcon').innerHTML = icon;
+  }
+
+  function syncCurrentAudioState() {
+    var isPlaying = Boolean(currentAudio && !currentAudio.paused && !currentAudio.ended);
+    setPlayIcon(!isPlaying);
+    setPlayingState(isPlaying);
   }
 
   function setPlayingState(isPlaying) {
@@ -5948,12 +6101,8 @@
   // Init
   var liveChatNameEl = document.getElementById('liveChatUsername');
   if(liveChatNameEl) {
-    liveChatNameEl.value = sessionStorage.getItem('akrasia_chat_name') || '';
-    liveChatNameEl.addEventListener('input', function() {
-      var name = liveChatNameEl.value.trim().replace(/<[^>]*>/g, '').slice(0, 24);
-      if(name) sessionStorage.setItem('akrasia_chat_name', name);
-      else sessionStorage.removeItem('akrasia_chat_name');
-    });
+    var savedLiveChatName = sessionStorage.getItem('akrasia_chat_name') || '';
+    if(savedLiveChatName) lockLiveChatName(savedLiveChatName);
   }
   var liveChatInputEl = document.getElementById('liveChatInput');
   if(liveChatInputEl) {
