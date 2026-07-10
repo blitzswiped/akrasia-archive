@@ -639,20 +639,42 @@
   .notes-card p{margin:0 0 9px;}
   .notes-card p:last-child{margin-bottom:0;}
   .lyrics-card{display:grid;gap:8px;margin-bottom:14px;}
-  .lyrics-mini{border:1px solid rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.38);border-radius:10px;background:rgba(0,0,0,0.38);padding:12px;max-height:190px;overflow:auto;font-family:'Inter',sans-serif;}
-  .lyrics-line{display:grid;grid-template-columns:54px minmax(0,1fr);gap:10px;align-items:baseline;padding:7px 0;color:var(--dim);transition:color 0.16s,transform 0.16s,text-shadow 0.16s;}
+  .lyrics-mini{border:1px solid rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.38);border-radius:10px;background:rgba(0,0,0,0.38);padding:12px;max-height:210px;overflow:auto;font-family:'Inter',sans-serif;}
+  .lyrics-line,.lyrics-focus-group{appearance:none;-webkit-appearance:none;border:0;background:transparent;text-align:left;font:inherit;}
+  .lyrics-line{display:grid;grid-template-columns:54px minmax(0,1fr);gap:10px;align-items:baseline;padding:8px 0;color:var(--dim);cursor:pointer;border-radius:7px;transition:color 0.16s,transform 0.16s,text-shadow 0.16s,background 0.16s;}
+  .lyrics-line:hover{background:rgba(255,255,255,0.055);color:var(--white);}
   .lyrics-line time{font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--dim);}
+  .lyrics-mini-text{display:grid;gap:2px;}
+  .lyrics-mini-text span[data-lane="adlib"],.lyrics-mini-text span[data-lane="bg"]{opacity:0.72;font-style:italic;}
   .lyrics-line.active{color:var(--white);transform:translateX(4px);text-shadow:0 0 22px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.42);}
   .lyrics-line.active time{color:rgb(var(--reactive-r),var(--reactive-g),var(--reactive-b));}
+  .lyrics-line.pause .lyrics-mini-text{display:flex;gap:6px;align-items:center;}
+  .lyric-dots{display:inline-flex;gap:7px;align-items:center;height:1em;}
+  .lyric-dots i{width:7px;height:7px;border-radius:999px;background:currentColor;opacity:0.38;animation:lyricDotPulse 1.1s ease-in-out infinite;}
+  .lyric-dots i:nth-child(2){animation-delay:0.16s}.lyric-dots i:nth-child(3){animation-delay:0.32s}
+  @keyframes lyricDotPulse{0%,80%,100%{opacity:0.25;transform:translateY(0) scale(0.86);}38%{opacity:1;transform:translateY(-4px) scale(1.08);}}
   .lyrics-actions{display:flex;flex-wrap:wrap;gap:8px;}
   .lyrics-edit-box{width:100%;min-height:150px;border:1px solid var(--line);border-radius:8px;background:#000;color:var(--white);font-family:'JetBrains Mono',monospace;font-size:0.68rem;line-height:1.55;padding:10px;resize:vertical;}
-  .lyrics-focus-panel{position:absolute;z-index:8;inset:34px 5vw 112px;display:none;align-content:center;justify-items:start;overflow:hidden;pointer-events:none;}
+  .lyrics-focus-panel{position:absolute;z-index:8;inset:34px 5vw 112px;display:none;grid-template-columns:minmax(220px,38vw) minmax(0,1fr);gap:clamp(28px,6vw,88px);align-items:center;overflow:hidden;pointer-events:none;}
   .fs-player.lyrics-focus .lyrics-focus-panel{display:grid;}
-  .lyrics-focus-lines{width:min(980px,100%);max-height:100%;overflow:hidden;display:grid;align-content:center;gap:10px;}
-  .lyrics-focus-line{font-size:clamp(2.2rem,6.5vw,6.6rem);font-weight:800;line-height:0.95;color:rgba(255,255,255,0.22);letter-spacing:0;transform-origin:left center;transition:color 0.22s,transform 0.22s,opacity 0.22s;text-wrap:balance;}
-  .lyrics-focus-line.past{color:rgba(255,255,255,0.16);}
-  .lyrics-focus-line.active{color:var(--white);transform:scale(1.035);text-shadow:0 0 34px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(0.18 + var(--reactive-pulse) * 0.46));}
-  .lyrics-focus-line.future{opacity:0.62;}
+  .fs-player.lyrics-focus::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 26% 42%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.20),transparent 34%),linear-gradient(115deg,rgba(255,255,255,0.08),transparent 34%,rgba(255,255,255,0.05));filter:blur(20px);opacity:calc(0.46 + var(--reactive-pulse) * 0.26);}
+  .lyrics-focus-art-wrap{position:relative;width:min(34vw,520px);aspect-ratio:1;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.055);box-shadow:0 34px 150px rgba(0,0,0,0.70),0 0 70px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.22);pointer-events:none;}
+  .lyrics-focus-art-wrap img{width:100%;height:100%;object-fit:cover;display:none;filter:contrast(1.08) saturate(0.72);}
+  .lyrics-focus-art-wrap.has-art img{display:block;}
+  .lyrics-focus-art-fallback{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:clamp(2rem,5vw,5rem);color:rgba(255,255,255,0.18);background:radial-gradient(circle at 50% 35%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.22),transparent 52%),#070707;}
+  .lyrics-focus-art-wrap.has-art .lyrics-focus-art-fallback{display:none;}
+  .lyrics-focus-lines{width:100%;max-height:100%;overflow:hidden;display:grid;align-content:center;gap:18px;pointer-events:auto;}
+  .lyrics-focus-group{display:grid;gap:4px;cursor:pointer;transform-origin:left center;transition:opacity 0.22s,filter 0.22s,transform 0.22s;color:rgba(255,255,255,0.20);}
+  .lyrics-focus-group:hover{color:rgba(255,255,255,0.72);}
+  .lyrics-focus-line{font-size:clamp(2.1rem,4.8vw,5.8rem);font-weight:800;line-height:0.95;letter-spacing:0;text-wrap:balance;}
+  .lyrics-focus-line[data-lane="adlib"],.lyrics-focus-line[data-lane="bg"]{font-size:clamp(1.55rem,3.6vw,4.4rem);opacity:0.72;text-align:right;font-style:italic;}
+  .lyrics-focus-group.past{color:rgba(255,255,255,0.13);filter:blur(0.2px);}
+  .lyrics-focus-group.active{color:var(--white);transform:scale(1.035);text-shadow:0 0 34px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(0.18 + var(--reactive-pulse) * 0.46));}
+  .lyrics-focus-group.active .lyrics-focus-line{animation:lyricLineArrive 0.42s cubic-bezier(0.16,1,0.3,1) both;}
+  @keyframes lyricLineArrive{from{opacity:0.34;transform:translateY(12px);filter:blur(6px);}to{opacity:1;transform:translateY(0);filter:blur(0);}}
+  .lyrics-focus-group.future{opacity:0.52;}
+  .lyrics-focus-group.pause{min-height:90px;align-content:center;}
+  .lyrics-focus-group.pause .lyric-dots i{width:16px;height:16px;}
   .lyrics-empty-focus{font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--dim-2);border:1px dashed var(--line);padding:18px;border-radius:10px;background:rgba(0,0,0,0.34);}
   .fs-player.lyrics-focus .fs-body{grid-template-columns:1fr;}
   .fs-player.lyrics-focus .fs-queue-panel{display:none;}
@@ -661,6 +683,13 @@
   .fs-player.lyrics-focus .fs-cover,.fs-player.lyrics-focus .fs-readouts{display:none!important;}
   .fs-player.lyrics-focus .fs-main{justify-content:flex-end;}
   .lyrics-toggle.active{background:var(--white)!important;color:var(--black)!important;border-color:var(--white)!important;}
+  @media (max-width:760px){
+    .lyrics-focus-panel{inset:18px 5vw 98px;grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:18px;align-content:center;}
+    .lyrics-focus-art-wrap{width:min(46vw,190px);justify-self:center;}
+    .lyrics-focus-lines{gap:10px;}
+    .lyrics-focus-line{font-size:clamp(1.8rem,10vw,3.4rem);}
+    .lyrics-focus-line[data-lane="adlib"],.lyrics-focus-line[data-lane="bg"]{font-size:clamp(1.25rem,7vw,2.6rem);}
+  }
   .link-stack { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
   .link-stack a { padding:4px 8px; border:1px solid var(--line); border-radius:999px; }
   .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
@@ -1301,7 +1330,7 @@
         <div class="field-group">
           <div class="field-group-title">04 / attach <span>notes + links</span></div>
           <textarea id="injNotes" class="full" rows="3" placeholder="notes (optional)"></textarea>
-          <textarea id="injLyrics" class="full" rows="4" placeholder="time synced lyrics, one per line: [0:12.30] lyric line"></textarea>
+          <textarea id="injLyrics" class="full" rows="4" placeholder="synced lyrics: [0:12] main line || [adlib] background line&#10;[0:28] ... for instrumental dots"></textarea>
           <input type="url" id="injSpotify" class="span-2" placeholder="spotify link (optional)">
           <input type="url" id="injApple" class="span-2" placeholder="apple music link (optional)">
           <input type="url" id="injYoutube" class="span-2" placeholder="youtube / video link (optional)">
@@ -1720,7 +1749,7 @@
         <input type="text" id="editMood" placeholder="mood / tag">
         <input type="color" id="editMoodColor" value="#ffffff" title="mood color">
         <textarea class="full" id="editNotes" rows="4" placeholder="notes"></textarea>
-        <textarea class="full" id="editLyrics" rows="5" placeholder="time synced lyrics, one per line: [0:12.30] lyric line"></textarea>
+        <textarea class="full" id="editLyrics" rows="5" placeholder="synced lyrics: [0:12] main line || [adlib] background line&#10;[0:28] ... for instrumental dots"></textarea>
         <input class="full" type="url" id="editSpotify" placeholder="spotify link">
         <input class="full" type="url" id="editApple" placeholder="apple music link">
         <input class="full" type="url" id="editYoutube" placeholder="youtube / video link">
@@ -1766,6 +1795,7 @@
     <div class="fs-main">
       <div class="fs-media-stage" id="fsMediaStage"></div>
       <div class="lyrics-focus-panel" id="lyricsFocusPanel" aria-live="polite">
+        <div class="lyrics-focus-art-wrap"><img id="lyricsFocusArt" alt="" aria-hidden="true"><div class="lyrics-focus-art-fallback">akrasia</div></div>
         <div class="lyrics-focus-lines" id="lyricsFocusLines"><div class="lyrics-empty-focus">no synced lyrics for this track yet.</div></div>
       </div>
       <div class="fs-meta">
@@ -1927,6 +1957,7 @@
   var audioQueue = [];
   var queueIndex = -1;
   var activeLyrics = [];
+  var activeLyricGroups = [];
   var activeLyricIndex = -1;
   var activeTimelineDate = null;
   var timelineAscending = false;
@@ -5265,7 +5296,7 @@
       <div class="lyrics-card">
         ${renderLyricsHtml(parseSyncedLyrics(row.getAttribute('data-lyrics') || ''))}
         <div class="lyrics-actions admin-only">
-          <textarea class="lyrics-edit-box" id="lyricsQuickEdit" placeholder="[0:12.30] lyric line">${escapeHtml(row.getAttribute('data-lyrics') || '')}</textarea>
+          <textarea class="lyrics-edit-box" id="lyricsQuickEdit" placeholder="[0:12] main line || [adlib] background line&#10;[0:28] ...">${escapeHtml(row.getAttribute('data-lyrics') || '')}</textarea>
           <button class="mini-btn" type="button" onclick="saveLyricsFromPlayer()">save lyrics</button>
         </div>
       </div>
@@ -5320,60 +5351,116 @@
   }
 
   function parseSyncedLyrics(text) {
-    return String(text || '').split(/\r?\n/).map(line => {
+    var entries = [];
+    String(text || '').split(/\r?\n/).forEach(line => {
       var clean = line.trim();
-      if(!clean) return null;
+      if(!clean) return;
       var bracket = clean.match(/^\[([^\]]+)\]\s*(.+)$/);
       var loose = clean.match(/^((?:(?:\d+:)?\d{1,2})(?:[.:]\d{1,3})?)\s+(.+)$/);
       var time = bracket ? parseLyricTime(bracket[1]) : (loose ? parseLyricTime(loose[1]) : null);
       var lyric = bracket ? bracket[2] : (loose ? loose[2] : clean);
-      if(time === null || !lyric) return null;
-      return { time, text: lyric };
-    }).filter(Boolean).sort((a, b) => a.time - b.time);
+      if(time === null || !lyric) return;
+      lyric.split(/\s*\|\|\s*/).forEach((part, splitIndex) => {
+        var raw = part.trim();
+        if(!raw) return;
+        var lane = splitIndex ? 'adlib' : 'main';
+        var laneMatch = raw.match(/^\[(adlib|bg|background|lead|main|effect)\]\s*(.*)$/i);
+        if(laneMatch) {
+          lane = laneMatch[1].toLowerCase() === 'background' ? 'bg' : laneMatch[1].toLowerCase();
+          raw = laneMatch[2].trim();
+        }
+        var isPause = /^(\.{3,}|pause|instrumental)$/i.test(raw);
+        entries.push({ time, text: isPause ? '...' : raw, lane, isPause });
+      });
+    });
+    return entries.sort((a, b) => a.time - b.time);
+  }
+
+  function groupSyncedLyrics(entries) {
+    var groups = [];
+    entries.forEach(entry => {
+      var last = groups[groups.length - 1];
+      if(last && Math.abs(last.time - entry.time) < 0.03) {
+        last.lines.push(entry);
+        last.isPause = last.isPause && entry.isPause;
+      } else {
+        groups.push({ time: entry.time, lines: [entry], isPause: entry.isPause });
+      }
+    });
+    return groups;
+  }
+
+  function lyricDotsHtml() {
+    return '<span class="lyric-dots" aria-label="instrumental pause"><i></i><i></i><i></i></span>';
   }
 
   function renderLyricsHtml(lyrics) {
-    if(!lyrics.length) return '<div class="notes-card notes-empty">no synced lyrics yet. add lines like [0:12.30] lyric line.</div>';
-    return '<div class="lyrics-mini" id="lyricsMiniList">' + lyrics.map((line, index) =>
-      `<div class="lyrics-line" data-lyric-index="${index}"><time>${fmt(line.time)}</time><span>${escapeHtml(line.text)}</span></div>`
+    var groups = groupSyncedLyrics(lyrics);
+    if(!groups.length) return '<div class="notes-card notes-empty">no synced lyrics yet. add lines like [0:12.30] lyric line.</div>';
+    return '<div class="lyrics-mini" id="lyricsMiniList">' + groups.map((group, index) =>
+      `<button class="lyrics-line${group.isPause ? ' pause' : ''}" type="button" data-lyric-index="${index}" onclick="seekToLyricGroup(${index})"><time>${fmt(group.time)}</time><span class="lyrics-mini-text">${group.isPause ? lyricDotsHtml() : group.lines.map(line => `<span data-lane="${escapeAttr(line.lane)}">${escapeHtml(line.text)}</span>`).join('')}</span></button>`
     ).join('') + '</div>';
   }
 
   function renderLyricsForRow(row) {
     activeLyrics = parseSyncedLyrics(row ? row.getAttribute('data-lyrics') : '');
+    activeLyricGroups = groupSyncedLyrics(activeLyrics);
     activeLyricIndex = -1;
+    updateLyricsArtwork(row);
     var panel = document.getElementById('lyricsFocusLines');
     if(panel) {
-      panel.innerHTML = activeLyrics.length
-        ? activeLyrics.map((line, index) => `<div class="lyrics-focus-line" data-lyric-index="${index}">${escapeHtml(line.text)}</div>`).join('')
+      panel.innerHTML = activeLyricGroups.length
+        ? activeLyricGroups.map((group, index) => `<button class="lyrics-focus-group${group.isPause ? ' pause' : ''}" type="button" data-lyric-index="${index}" onclick="seekToLyricGroup(${index})">${group.isPause ? lyricDotsHtml() : group.lines.map(line => `<span class="lyrics-focus-line" data-lane="${escapeAttr(line.lane)}">${escapeHtml(line.text)}</span>`).join('')}</button>`).join('')
         : '<div class="lyrics-empty-focus">no synced lyrics for this track yet.</div>';
     }
-    document.querySelectorAll('.lyrics-toggle').forEach(btn => btn.classList.toggle('has-lyrics', Boolean(activeLyrics.length)));
+    document.querySelectorAll('.lyrics-toggle').forEach(btn => btn.classList.toggle('has-lyrics', Boolean(activeLyricGroups.length)));
     updateLyricsDisplay(currentAudio ? currentAudio.currentTime : 0, true);
   }
 
   function updateLyricsDisplay(time, force) {
-    if(!activeLyrics.length) {
+    if(!activeLyricGroups.length) {
       activeLyricIndex = -1;
-      document.querySelectorAll('.lyrics-line.active,.lyrics-focus-line.active').forEach(line => line.classList.remove('active'));
+      document.querySelectorAll('.lyrics-line.active,.lyrics-focus-group.active').forEach(line => line.classList.remove('active'));
       return;
     }
-    var index = 0;
-    for(var i = 0; i < activeLyrics.length; i++) {
-      if(activeLyrics[i].time <= time + 0.04) index = i;
+    var index = -1;
+    for(var i = 0; i < activeLyricGroups.length; i++) {
+      if(activeLyricGroups[i].time <= time + 0.04) index = i;
       else break;
     }
     if(index === activeLyricIndex && !force) return;
     activeLyricIndex = index;
     document.querySelectorAll('.lyrics-line').forEach((line, i) => line.classList.toggle('active', i === index));
-    document.querySelectorAll('.lyrics-focus-line').forEach((line, i) => {
-      line.classList.toggle('active', i === index);
-      line.classList.toggle('past', i < index);
-      line.classList.toggle('future', i > index);
-      line.style.display = Math.abs(i - index) <= 3 ? '' : 'none';
+    document.querySelectorAll('.lyrics-focus-group').forEach((group, i) => {
+      group.classList.toggle('active', i === index);
+      group.classList.toggle('past', i < index);
+      group.classList.toggle('future', i > index);
+      group.style.display = index < 0 ? (i <= 3 ? '' : 'none') : (Math.abs(i - index) <= 3 ? '' : 'none');
     });
     var activeMini = document.querySelector('.lyrics-line.active');
     if(activeMini) activeMini.scrollIntoView({ block:'center', behavior:'smooth' });
+  }
+
+  function seekToLyricGroup(index) {
+    var group = activeLyricGroups[index];
+    if(!group || !currentAudio || !currentAudio.duration) return;
+    currentAudio.currentTime = Math.max(0, group.time);
+    updateTime();
+    if(currentAudio.paused) syncCurrentAudioState();
+  }
+
+  function updateLyricsArtwork(row) {
+    var wrap = document.querySelector('.lyrics-focus-art-wrap');
+    var img = document.getElementById('lyricsFocusArt');
+    if(!wrap || !img) return;
+    var src = row ? (row.getAttribute('data-cover') || row.getAttribute('data-img-src') || '') : '';
+    if(src) {
+      img.src = src;
+      wrap.classList.add('has-art');
+    } else {
+      img.removeAttribute('src');
+      wrap.classList.remove('has-art');
+    }
   }
 
   function toggleLyricsFocus(force) {
@@ -5667,7 +5754,7 @@
     document.getElementById('pbTime').textContent = '00:00 / 00:00';
     document.getElementById('fsTime').textContent = '00:00 / 00:00';
     document.querySelectorAll('.frow.playing').forEach(r => r.classList.remove('playing'));
-    activeLyrics = []; activeLyricIndex = -1; renderLyricsForRow(null);
+    activeLyrics = []; activeLyricGroups = []; activeLyricIndex = -1; renderLyricsForRow(null);
     currentAudio = null; nextAudioPreload = null; queueIndex = -1; activeMediaType = 'audio'; document.documentElement.style.setProperty('--reactive-pulse', '0'); setReactiveColor(reactiveBase); restoreUnderlyingSection();
   };
 
