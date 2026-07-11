@@ -1252,6 +1252,8 @@
   @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}.tour-world{transition:none!important}}
   /* cinematic tour readability + staged application reveal */
   body.shell-loading .wrap{opacity:0;visibility:hidden;pointer-events:none;transform:scale(.985);filter:blur(10px)}body.archive-ready .wrap{opacity:1;visibility:visible;pointer-events:auto;transform:scale(1);filter:blur(0);transition:opacity .8s var(--motion-ease),transform .9s var(--motion-ease),filter .8s var(--motion-ease)}body.archive-ready .topbar{animation:shellHeaderIn .85s var(--motion-ease) both}body.archive-ready .explorer-head{animation:shellSectionIn .75s var(--motion-ease) .12s both}body.archive-ready .archive-discovery{animation:shellSectionIn .75s var(--motion-ease) .2s both}body.archive-ready .col-head{animation:shellSectionIn .75s var(--motion-ease) .28s both}body.archive-ready #directoryContainer{animation:shellSectionIn .85s var(--motion-ease) .36s both}@keyframes shellHeaderIn{from{opacity:0;transform:translateY(-100%);filter:blur(8px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}@keyframes shellSectionIn{from{opacity:0;transform:translateY(22px);filter:blur(8px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+  body.shell-loading .wrap,body.archive-ready .wrap{transform:none!important;filter:none!important}
+  body[data-section="lyrics"] .header-actions-archive{display:none}body[data-section="lyrics"] .header-actions-viewer{display:flex}body[data-section="lyrics"] #fsMinimizeBtn{display:inline-flex!important}
   .tour-world{transition-duration:1.45s!important}.archive-intro[data-step="1"] .tour-world{transform:translate3d(-100vw,-1.5vh,0) scale(1.015)}.archive-intro[data-step="2"] .tour-world{transform:translate3d(-200vw,1vh,0) scale(.99)}.archive-intro[data-step="3"] .tour-world{transform:translate3d(-300vw,-1vh,0) scale(1.02)}.tour-zone{top:8vh;height:61vh}.tour-caption{left:3vw;right:3vw;bottom:2.5vh;padding:15px 17px;border:1px solid rgba(255,255,255,.27);border-radius:8px;background:linear-gradient(105deg,rgba(3,3,3,.94),rgba(12,12,12,.82));box-shadow:0 24px 90px rgba(0,0,0,.78),0 0 42px rgba(255,255,255,.06);backdrop-filter:blur(24px) saturate(1.15);align-items:center}.tour-caption-copy{max-width:76ch}.tour-kicker{font-size:.62rem;color:rgba(255,255,255,.62)}.tour-title{margin-top:6px;font-size:clamp(1.55rem,2.7vw,3rem);line-height:1}.tour-copy{margin-top:7px;font-size:clamp(.67rem,.85vw,.82rem);line-height:1.62;color:rgba(255,255,255,.78)}.tour-controls{align-self:stretch}.tour-progress{align-self:center}.tour-progress i{position:relative;width:34px;height:3px;overflow:hidden}.tour-progress i.current{background:rgba(255,255,255,.2);box-shadow:none}.tour-progress i.current::after{content:"";position:absolute;inset:0;background:#fff;box-shadow:0 0 10px #fff;transform-origin:left;animation:tourDwell 4.8s linear forwards}@keyframes tourDwell{from{transform:scaleX(0)}to{transform:scaleX(1)}}.tour-nav{display:flex;gap:5px}.tour-nav button{border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:7px 10px;font:600 .57rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.72);cursor:pointer}.tour-nav button:hover{background:#fff;color:#000}.tour-nav button:disabled{opacity:.24;pointer-events:none}
   @media(max-width:800px){.tour-zone{top:8vh!important;height:52vh!important}.tour-caption{left:10px;right:10px;bottom:10px;padding:11px;grid-template-columns:1fr!important;gap:9px}.tour-caption-copy{max-width:none}.tour-title{font-size:clamp(1.2rem,5.8vw,1.8rem)}.tour-copy{display:block!important;font-size:.6rem;line-height:1.5;max-height:4.5em;overflow:auto}.tour-controls{display:grid;grid-template-columns:1fr auto;gap:7px}.tour-progress{grid-column:1/-1;width:100%;justify-content:stretch}.tour-progress i{width:auto;flex:1}.tour-nav{justify-self:start}.tour-nav button{padding:6px 8px}.intro-skip{justify-self:end;padding:6px 9px}}
 </style>
@@ -2175,6 +2177,7 @@
   var timelineReadyTimer = null;
   var activeVisualRow = null;
   var activeMediaType = 'audio';
+  var viewerOrigin = 'archive';
   var supabaseClient = null;
   var isAdmin = false;
   var isRemoteReady = false;
@@ -2290,6 +2293,13 @@
     setAppSection(live && live.classList.contains('active') ? 'live' : (timeline && timeline.classList.contains('active') ? 'timeline' : 'archive'));
   }
 
+  function syncViewerExitControl() {
+    var button = document.getElementById('fsMinimizeBtn');
+    if(!button) return;
+    var timelineActive = document.getElementById('timelinePanel')?.classList.contains('active');
+    button.textContent = viewerOrigin === 'timeline' && timelineActive ? 'back to timeline' : 'minimize [-]';
+  }
+
   function leaveLiveViewForArchivePlayback() {
     liveJoined = false;
     setLiveFollower(false);
@@ -2316,9 +2326,11 @@
       toggleLyricsFocus(false);
       closeNowInfo();
       restoreUnderlyingSection();
+      viewerOrigin = 'archive';
     } else {
       setAppSection(activeMediaType === 'audio' ? 'now playing' : `${activeMediaType} viewer`);
     }
+    syncViewerExitControl();
     resizeCanvas();
   }
   function toggleNowInfo() {
@@ -2367,6 +2379,8 @@
   function closeViewport(id) {
     document.getElementById(id).classList.remove('active');
     if(id === 'propsViewport' || id === 'editViewport' || id === 'textViewport' || id === 'imageViewport' || id === 'connectionsViewport') restoreUnderlyingSection();
+    if(viewerOrigin === 'timeline') viewerOrigin = 'archive';
+    syncViewerExitControl();
   }
   window.addEventListener('resize', () => { isCompactVisual = window.matchMedia('(max-width: 980px)').matches; resizeCanvas(); alignImmersiveRail(); syncTimelineCardHeights(); drawActiveWaveforms(); });
   document.getElementById('timelineTrack').addEventListener('scroll', alignImmersiveRail);
@@ -4627,11 +4641,14 @@
   function openTimelineAsset(key) {
     var row = baseRows().find(item => timelineRowKey(item) === key);
     if(!row) return;
-    handleRowClick({ target: row }, row);
+    viewerOrigin = 'timeline';
+    handleRowClick({ target: row, fromTimeline: true }, row);
     if(row.getAttribute('data-type') === 'audio') {
       document.getElementById('fsPlayer').classList.add('active');
+      setAppSection('now playing');
       resizeCanvas();
     }
+    syncViewerExitControl();
   }
 
   function openTimelineInfo(key) {
@@ -5411,6 +5428,7 @@
 
   function handleRowClick(e, rowElement) {
     rowElement = canonicalRow(rowElement);
+    if(!(e && e.fromTimeline)) viewerOrigin = 'archive';
     if(!applyingLiveState) exitLiveFollowerMode();
     var type = rowElement.getAttribute('data-type');
     if(type === 'text') {
@@ -5431,6 +5449,7 @@
       var idx = audioQueue.findIndex(r => r === rowElement);
       if(idx !== -1) playTrackFromQueue(idx);
     }
+    syncViewerExitControl();
   }
 
   function showProperties(row) {
@@ -6156,6 +6175,8 @@
         if(fs.classList.contains('info-open')) { closeNowInfo(); return; }
         fs.classList.remove('active');
         restoreUnderlyingSection();
+        viewerOrigin = 'archive';
+        syncViewerExitControl();
         return;
       }
       var activeViewport = document.querySelector('.viewport-overlay.active');
@@ -6197,7 +6218,7 @@
     document.getElementById('fsTime').textContent = '00:00 / 00:00';
     document.querySelectorAll('.frow.playing').forEach(r => r.classList.remove('playing'));
     activeLyrics = []; activeLyricGroups = []; activeLyricIndex = -1; renderLyricsForRow(null);
-    currentAudio = null; nextAudioPreload = null; queueIndex = -1; activeMediaType = 'audio'; document.documentElement.style.setProperty('--reactive-pulse', '0'); setReactiveColor(reactiveBase); restoreUnderlyingSection();
+    currentAudio = null; nextAudioPreload = null; queueIndex = -1; activeMediaType = 'audio'; document.documentElement.style.setProperty('--reactive-pulse', '0'); setReactiveColor(reactiveBase); restoreUnderlyingSection(); viewerOrigin = 'archive'; syncViewerExitControl();
   };
 
   var miniPlayerTouchStartY = null;
