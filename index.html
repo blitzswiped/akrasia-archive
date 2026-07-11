@@ -3,7 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=()">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self';">
 <title>akrasia archive</title>
+<script>try{if(localStorage.getItem('akrasia_tour_seen_v4'))document.documentElement.classList.add('intro-seen')}catch(e){}</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
@@ -1220,11 +1224,80 @@
     .timeline-panel.immersive .immersive-day-label{position:relative!important;top:auto!important;max-width:none!important;}
     body.live-follower .player-bar::after{right:10px;top:6px;border-radius:8px;padding:3px 7px;}
   }
+  /* unified motion + rebuilt spatial intro */
+  :root{--motion-ease:cubic-bezier(.16,1,.3,1);}
+  .frow,.folder-row,.timeline-node,.immersive-file,.panel-sect,.live-action,.mini-btn,.viewport-box{transition:transform .28s var(--motion-ease),opacity .28s var(--motion-ease),background .28s var(--motion-ease),border-color .28s var(--motion-ease),box-shadow .28s var(--motion-ease),color .28s var(--motion-ease);}
+  .archive-intro{position:fixed;inset:0;z-index:1200;overflow:hidden;background:#000;color:#fff;transition:opacity .75s var(--motion-ease),filter .75s var(--motion-ease);isolation:isolate}.intro-seen .archive-intro{display:none!important}.archive-intro.is-leaving{opacity:0;filter:blur(12px);pointer-events:none}.tour-atmosphere{position:absolute;inset:-18%;z-index:-2;background:radial-gradient(circle at 20% 44%,rgba(255,255,255,.12),transparent 24%),radial-gradient(circle at 72% 32%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),.16),transparent 26%),repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,transparent 1px 80px),#000;filter:blur(calc(1px + var(--reactive-pulse) * 4px));animation:tourAtmosphere 12s ease-in-out infinite alternate}.tour-atmosphere::after{content:"";position:absolute;inset:0;background:conic-gradient(from 40deg,transparent,rgba(255,255,255,.06),transparent 30%,rgba(255,255,255,.04),transparent);animation:tourOrbit 16s linear infinite}.tour-brand{position:absolute;left:4vw;top:4vh;z-index:8;font-size:clamp(1rem,1.6vw,1.35rem);font-weight:800;letter-spacing:.04em;text-shadow:0 0 24px rgba(255,255,255,.28);will-change:transform}.tour-brand span{font-weight:500;color:rgba(255,255,255,.45)}.tour-world{position:absolute;inset:0;width:500vw;transform:translate3d(0,0,0);transition:transform 1.35s cubic-bezier(.72,0,.16,1),filter 1s ease}.archive-intro[data-step="1"] .tour-world{transform:translate3d(-100vw,0,0)}.archive-intro[data-step="2"] .tour-world{transform:translate3d(-200vw,0,0)}.archive-intro[data-step="3"] .tour-world{transform:translate3d(-300vw,0,0)}.archive-intro[data-step="4"] .tour-world{transform:translate3d(-400vw,0,0)}.tour-zone{position:absolute;top:13vh;width:76vw;height:68vh;opacity:.16;filter:blur(9px);transform:scale(.84) rotateY(5deg);transform-origin:center;transition:opacity .9s var(--motion-ease),filter .9s var(--motion-ease),transform 1.1s var(--motion-ease);perspective:1200px}.tour-zone[data-tour="0"]{left:12vw}.tour-zone[data-tour="1"]{left:112vw}.tour-zone[data-tour="2"]{left:212vw}.tour-zone[data-tour="3"]{left:312vw}.tour-zone[data-tour="4"]{left:412vw}.tour-zone.active{opacity:1;filter:blur(0);transform:scale(1) rotateY(0)}.tour-zone.past{opacity:.08;filter:blur(15px);transform:scale(.72) rotateY(-7deg)}.tour-window{position:absolute;inset:0;border:1px solid rgba(255,255,255,.28);border-radius:8px;background:rgba(3,3,3,.82);box-shadow:0 42px 160px rgba(0,0,0,.8),0 0 90px rgba(255,255,255,.09);overflow:hidden;backdrop-filter:blur(18px)}.tour-window-head{height:48px;padding:0 17px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.18);font:600 .62rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.58)}.tour-window-head strong{font:800 .88rem 'Inter',sans-serif;color:#fff}.tour-archive-body{padding:13px 16px}.tour-folder{padding:12px;border:1px solid rgba(255,255,255,.17);font:600 .67rem 'JetBrains Mono',monospace}.tour-row{display:grid;grid-template-columns:24px minmax(0,1fr) 90px 60px;gap:12px;align-items:center;padding:12px;border-bottom:1px solid rgba(255,255,255,.11);font:500 .62rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.45);transform:translateX(-16px);opacity:0}.tour-zone.active .tour-row{animation:tourRowIn .65s var(--motion-ease) forwards}.tour-zone.active .tour-row:nth-child(2){animation-delay:.1s}.tour-zone.active .tour-row:nth-child(3){animation-delay:.2s}.tour-zone.active .tour-row:nth-child(4){animation-delay:.3s}.tour-row b{font:700 .76rem 'Inter',sans-serif;color:#fff}.tour-file-icon{width:13px;height:16px;border:1px solid #fff;box-shadow:0 0 12px rgba(255,255,255,.28)}.tour-timeline{height:100%;padding:5vh 6vw;display:grid;gap:5vh;background:radial-gradient(circle at 80% 35%,rgba(255,255,255,.11),transparent 34%)}.tour-day{display:grid;grid-template-columns:220px minmax(0,1fr);gap:38px;align-items:start}.tour-date{font-size:clamp(2rem,4.2vw,4.8rem);font-weight:800;line-height:.85;text-shadow:0 0 30px rgba(255,255,255,.15)}.tour-date span{display:block;margin-top:9px;font:500 .6rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.42)}.tour-day-files{display:grid;gap:7px}.tour-timeline-file{padding:11px 13px;border:1px solid rgba(255,255,255,.16);font:600 .68rem 'JetBrains Mono',monospace;background:rgba(255,255,255,.025);opacity:0;transform:translateX(30px)}.tour-zone.active .tour-timeline-file{animation:tourTimelineIn .7s var(--motion-ease) forwards}.tour-zone.active .tour-timeline-file:nth-child(2){animation-delay:.14s}.tour-zone.active .tour-timeline-file:nth-child(3){animation-delay:.28s}.tour-player-scene{height:100%;display:grid;grid-template-columns:minmax(200px,.75fr) minmax(0,1.2fr);gap:5vw;align-items:center;padding:5vh 6vw;background:radial-gradient(circle at 24% 48%,rgba(255,255,255,.15),transparent 32%),linear-gradient(100deg,#080808,#232323 58%,#080808)}.tour-cover{aspect-ratio:1;border:1px solid rgba(255,255,255,.32);background:radial-gradient(circle at 35% 28%,#d8d8d8,transparent 7%),radial-gradient(circle at 52% 54%,#8a8a8a,transparent 18%),repeating-radial-gradient(circle at 50% 50%,#111 0 4px,#2d2d2d 5px 8px);box-shadow:0 30px 100px rgba(0,0,0,.72),0 0 60px rgba(255,255,255,.13);animation:tourCoverFloat 3.8s ease-in-out infinite alternate}.tour-lyrics{display:grid;gap:18px;font-size:clamp(1.4rem,3.4vw,4.4rem);font-weight:800;line-height:.96}.tour-lyrics span{color:rgba(255,255,255,.15);filter:blur(.6px);transform:translateY(10px);transition:all .7s var(--motion-ease)}.tour-zone.active .tour-lyrics span:nth-child(2){color:#fff;filter:blur(0);transform:scale(1.035);text-shadow:0 0 40px rgba(255,255,255,.46)}.tour-lyrics small{font:600 .68rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.52)}.tour-visuals{height:100%;display:grid;grid-template-columns:1.35fr .65fr;grid-template-rows:1fr 1fr;gap:10px;padding:12px;background:#050505}.tour-visual{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.2);background:radial-gradient(circle at var(--x,40%) var(--y,35%),rgba(255,255,255,.82),transparent 5%),repeating-linear-gradient(var(--angle,45deg),#050505 0 9px,#2b2b2b 10px 12px,#0a0a0a 13px 23px);filter:grayscale(1)}.tour-visual:first-child{grid-row:1/3;--x:52%;--y:30%;--angle:80deg}.tour-visual:nth-child(2){--x:26%;--y:68%;--angle:18deg}.tour-visual:nth-child(3){--x:72%;--y:42%;--angle:130deg}.tour-visual::after{content:attr(data-label);position:absolute;left:10px;bottom:9px;font:600 .58rem 'JetBrains Mono',monospace;color:#fff}.tour-zone.active .tour-visual{animation:tourVisualReveal 1s var(--motion-ease) both}.tour-zone.active .tour-visual:nth-child(2){animation-delay:.18s}.tour-zone.active .tour-visual:nth-child(3){animation-delay:.34s}.tour-live{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 270px;background:#050505}.tour-live-stage{padding:14px;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:10px}.tour-broadcast{position:relative;display:grid;place-items:center;border:1px solid rgba(255,255,255,.22);background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.18),transparent 28%),repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 18px),#080808;overflow:hidden}.tour-broadcast::before{content:"live";position:absolute;left:12px;top:12px;padding:5px 8px;border:1px solid #ff4949;color:#fff;background:rgba(255,35,35,.17);font:700 .58rem 'JetBrains Mono',monospace;box-shadow:0 0 20px rgba(255,35,35,.32)}.tour-live-art{width:min(34vh,240px);aspect-ratio:1;border:1px solid #fff;background:repeating-radial-gradient(circle,#e7e7e7 0 2px,#181818 3px 6px);box-shadow:0 0 80px rgba(255,255,255,.2);animation:tourLivePulse 2s ease-in-out infinite alternate}.tour-live-title{font-size:clamp(1.2rem,2.2vw,2.6rem);font-weight:800}.tour-chat{border-left:1px solid rgba(255,255,255,.17);padding:14px;display:grid;align-content:start;gap:9px}.tour-chat strong{padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.17)}.tour-chat-line{font:500 .59rem/1.45 'JetBrains Mono',monospace;color:rgba(255,255,255,.55);opacity:0;transform:translateY(8px)}.tour-chat-line b{color:#fff}.tour-zone.active .tour-chat-line{animation:tourChatIn .5s var(--motion-ease) forwards}.tour-zone.active .tour-chat-line:nth-child(3){animation-delay:.18s}.tour-zone.active .tour-chat-line:nth-child(4){animation-delay:.36s}.tour-zone.active .tour-chat-line:nth-child(5){animation-delay:.54s}.tour-caption{position:absolute;left:4vw;right:4vw;bottom:3.5vh;z-index:9;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:end}.tour-caption-copy{max-width:64ch}.tour-kicker{font:600 .58rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.48);letter-spacing:.14em}.tour-title{margin-top:5px;font-size:clamp(1.3rem,2.6vw,2.8rem);font-weight:800;line-height:.95}.tour-copy{margin-top:5px;font:500 .62rem/1.5 'JetBrains Mono',monospace;color:rgba(255,255,255,.55)}.tour-controls{display:flex;align-items:center;gap:10px}.tour-progress{display:flex;gap:5px}.tour-progress i{width:26px;height:2px;background:rgba(255,255,255,.18);transition:background .35s,box-shadow .35s}.tour-progress i.active{background:#fff;box-shadow:0 0 12px #fff}.intro-skip{border:1px solid rgba(255,255,255,.32);padding:7px 11px;border-radius:999px;font:600 .58rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.68);cursor:pointer;background:rgba(0,0,0,.35)}.intro-skip:hover{background:#fff;color:#000}.tour-scan{position:absolute;inset:0;z-index:7;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(255,255,255,.05),transparent);height:18vh;animation:tourScan 3.8s linear infinite;mix-blend-mode:screen}@keyframes tourAtmosphere{to{transform:translate(4%,2%) scale(1.06)}}@keyframes tourOrbit{to{transform:rotate(360deg)}}@keyframes tourRowIn{to{opacity:1;transform:translateX(0)}}@keyframes tourTimelineIn{to{opacity:1;transform:translateX(0)}}@keyframes tourCoverFloat{to{transform:translateY(-8px) rotate(.7deg)}}@keyframes tourVisualReveal{from{opacity:0;transform:scale(.9);filter:grayscale(1) blur(9px)}to{opacity:1;transform:scale(1);filter:grayscale(1) blur(0)}}@keyframes tourLivePulse{to{transform:scale(1.025);box-shadow:0 0 110px rgba(255,255,255,.28)}}@keyframes tourChatIn{to{opacity:1;transform:translateY(0)}}@keyframes tourScan{from{transform:translateY(-20vh)}to{transform:translateY(120vh)}}
+
+  /* apple-music-inspired lyric stage */
+  .lyrics-focus-panel{inset:0 0 92px!important;padding:54px 5vw 36px!important;isolation:isolate}.lyrics-ambient{position:absolute;inset:-16%;z-index:-2;overflow:hidden;background:#080808}.lyrics-ambient img{width:100%;height:100%;object-fit:cover;filter:blur(72px) saturate(1.65) brightness(.52);opacity:.76;animation:lyricGoo 12s ease-in-out infinite alternate}.lyrics-ambient::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 28% 44%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(.18 + var(--reactive-pulse) * .32)),transparent 38%),radial-gradient(ellipse at 74% 56%,rgba(255,255,255,calc(.06 + var(--reactive-pulse) * .13)),transparent 34%);mix-blend-mode:screen;filter:blur(24px);animation:lyricGooLayer 9s ease-in-out infinite alternate}@keyframes lyricGoo{from{transform:scale(1.14) translate(-2%,-1%) rotate(-1deg)}to{transform:scale(calc(1.2 + var(--reactive-pulse) * .08)) translate(3%,2%) rotate(2deg)}}@keyframes lyricGooLayer{to{transform:translate(-4%,3%) scale(1.08)}}
+  .lyrics-focus-song{position:absolute;left:5vw;bottom:20px;z-index:3;max-width:40vw}.lyrics-focus-song strong{display:block;font-size:clamp(1rem,1.6vw,1.45rem);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lyrics-focus-song span{display:block;margin-top:4px;font:500 .62rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.62);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lyrics-focus-lines{gap:clamp(16px,2.7vh,30px)!important;perspective:900px}.lyrics-focus-group{transition:opacity .6s var(--motion-ease),filter .6s var(--motion-ease),transform .7s var(--motion-ease),color .45s ease!important}.lyrics-focus-group.past{color:rgba(255,255,255,.09)!important;filter:blur(1.8px)!important;transform:translateY(-8px) scale(.94)}.lyrics-focus-group.future{opacity:.4!important;filter:blur(.55px);transform:translateY(7px) scale(.965)}.lyrics-focus-group.active{color:#fff!important;transform:translate3d(0,0,38px) scale(1.045)!important;filter:blur(0)!important;text-shadow:0 0 calc(24px + var(--reactive-pulse) * 38px) rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(.38 + var(--reactive-pulse) * .48)),0 0 9px rgba(255,255,255,.38)!important}.lyrics-focus-group.active .lyrics-focus-line{animation:lyricFloat 2.6s ease-in-out infinite alternate,lyricLineArrive .7s var(--motion-ease) both!important}@keyframes lyricFloat{to{transform:translateY(-5px)}}.fs-player.lyrics-focus .fs-meta{display:none!important}
+  .lyrics-focus-line[data-lane="commentary"],.lyrics-focus-line[data-lane="note"]{font:600 clamp(.72rem,1.1vw,1rem)/1.45 'JetBrains Mono',monospace!important;letter-spacing:.04em;padding:8px 10px;border-left:2px solid currentColor;background:rgba(0,0,0,.25);max-width:48ch;text-shadow:none}.lyrics-mini-text [data-lane="commentary"],.lyrics-mini-text [data-lane="note"]{font-family:'JetBrains Mono',monospace;font-size:.72em;color:var(--dim-2)}
+
+  .viewport-notes{border-top:1px solid var(--line-soft);padding:16px 20px;font:500 .7rem/1.6 'JetBrains Mono',monospace;color:var(--dim-2);background:rgba(255,255,255,.035)}.viewport-notes strong{display:block;margin-bottom:8px;color:#fff;font-family:'Inter',sans-serif;font-size:.82rem}
+  .archive-discovery{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin:0 0 14px;padding:10px 12px;border:1px solid var(--line-soft);border-radius:8px;background:linear-gradient(100deg,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),.08),rgba(255,255,255,.025));backdrop-filter:blur(12px)}.discovery-copy{min-width:0}.discovery-kicker{font:500 .54rem 'JetBrains Mono',monospace;color:var(--dim);letter-spacing:.12em}.discovery-title{margin-top:3px;font-size:.9rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.discovery-actions{display:flex;gap:6px}.discovery-actions button{border:1px solid var(--line);border-radius:999px;padding:6px 9px;font:500 .58rem 'JetBrains Mono',monospace;color:var(--dim-2);cursor:pointer}.discovery-actions button:hover{background:#fff;color:#000}.root-archive-list{display:grid;min-height:0;transition:min-height .2s,background .2s}.root-archive-list.drag-over{min-height:64px;background:rgba(255,255,255,.08);outline:1px dashed rgba(255,255,255,.5)}.root-archive-list:empty{display:none}.root-archive-list.drag-over:empty{display:grid}.root-divider{display:none;padding:9px 12px;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);font:500 .58rem 'JetBrains Mono',monospace;color:var(--dim);letter-spacing:.12em}.root-divider:has(+ .root-archive-list:not(:empty)),.root-divider:has(+ .root-archive-list.drag-over){display:block}.connections-shell{width:min(900px,94vw);max-height:min(760px,86vh)}.connections-body{padding:18px;overflow:auto}.connection-hero{padding:20px;border:1px solid var(--line-soft);background:radial-gradient(circle at 16% 20%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),.16),transparent 42%)}.connection-hero h2{font-size:clamp(1.7rem,4vw,3.4rem);line-height:.95}.connection-hero p{margin-top:9px;font:500 .66rem/1.6 'JetBrains Mono',monospace;color:var(--dim-2)}.connection-list{display:grid;gap:7px;margin-top:14px}.connection-item{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;padding:11px;border:1px solid var(--line-soft);border-radius:7px;text-align:left;cursor:pointer}.connection-item:hover{background:rgba(255,255,255,.08);transform:translateX(5px)}.connection-item strong{display:block}.connection-item span{font:500 .58rem 'JetBrains Mono',monospace;color:var(--dim)}
+  body.is-admin .root-archive-list:empty{display:grid;min-height:42px;border:1px dashed rgba(255,255,255,.16)}body.is-admin .root-divider:has(+ .root-archive-list:empty){display:block}
+  .root-placement{justify-content:center;min-height:38px;cursor:pointer}.root-placement.active{border-color:#fff;color:#fff;background:rgba(255,255,255,.09)}.edit-folder-field{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}.edit-folder-field input{min-width:0}.edit-folder-field button{border:1px solid var(--line);border-radius:7px;padding:0 10px;font:600 .6rem 'JetBrains Mono',monospace;color:var(--dim-2);cursor:pointer}.edit-folder-field button:hover{background:#fff;color:#000}
+
+  /* page-level live control modal; JS moves it outside the clipping chat rail */
+  body.is-admin .live-admin-drawer.admin-only{position:fixed!important;inset:calc(var(--app-header-h) + 3vh) 4vw 3vh!important;z-index:760!important;width:auto!important;max-width:1180px!important;max-height:none!important;margin:auto!important;padding:0!important;border:1px solid rgba(255,255,255,.35)!important;border-radius:12px!important;background:rgba(3,3,3,.94)!important;backdrop-filter:blur(30px) saturate(1.2)!important;box-shadow:0 40px 180px rgba(0,0,0,.86),0 0 90px rgba(var(--live-r),var(--live-g),var(--live-b),.15)!important;overflow:hidden!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important;transform:translateY(18px) scale(.975)!important;transition:opacity .32s var(--motion-ease),transform .32s var(--motion-ease),visibility .32s!important}body.is-admin .live-admin-drawer.admin-only.open{display:block!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important;transform:translateY(0) scale(1)!important}.live-admin-drawer-head{height:58px;padding:0 20px!important;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between}.live-admin-drawer-grid{height:calc(100% - 58px);padding:16px!important;overflow:auto!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}.live-admin-drawer-grid section{min-width:0}
+  @media(max-width:800px){body.is-admin .live-admin-drawer.admin-only{inset:calc(var(--app-header-h) + 8px) 8px 8px!important;width:auto!important}.live-admin-drawer-grid{grid-template-columns:1fr!important}.lyrics-focus-song{max-width:80vw}.tour-zone{top:12vh;left:auto!important;width:90vw;height:64vh}.tour-zone[data-tour="0"]{left:5vw!important}.tour-zone[data-tour="1"]{left:105vw!important}.tour-zone[data-tour="2"]{left:205vw!important}.tour-zone[data-tour="3"]{left:305vw!important}.tour-zone[data-tour="4"]{left:405vw!important}.tour-day{grid-template-columns:1fr;gap:12px}.tour-date{font-size:2rem}.tour-day:nth-child(2){display:none}.tour-player-scene{grid-template-columns:1fr;gap:14px;padding:24px}.tour-cover{width:min(34vw,150px)}.tour-lyrics{font-size:clamp(1.25rem,7vw,2.3rem);gap:10px}.tour-live{grid-template-columns:1fr}.tour-chat{display:none}.tour-visuals{grid-template-columns:1fr 1fr}.tour-visual:first-child{grid-column:1/3;grid-row:auto}.tour-caption{bottom:2vh;grid-template-columns:1fr}.tour-copy{display:none}.tour-controls{justify-content:space-between}.tour-progress i{width:18px}.archive-discovery{grid-template-columns:1fr}.discovery-actions{overflow-x:auto}.discovery-actions button{flex:0 0 auto}}
+
+  /* final shared surface language */
+  button:focus-visible,.frow:focus-visible,.immersive-file:focus-visible{outline:1px solid #fff;outline-offset:3px}.frow:hover,.frow:hover *,.immersive-file:hover,.immersive-file:hover *,.timeline-asset:hover,.timeline-asset:hover *{color:#fff!important}.panel-sect,.live-dash-section,.notes-card,.viewport-box,.live-chat,.archive-discovery{border-radius:8px}.panel-sect,.live-dash-section,.viewport-box{background-color:rgba(4,4,4,.88)}
+  .live-stage{padding:22px clamp(18px,3vw,42px) 26px!important}.live-hero{align-self:stretch!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(260px,1fr) auto auto!important;gap:12px!important;max-width:1400px!important;width:100%;min-height:0}.live-media-preview{width:100%!important;max-width:none!important;height:min(58vh,760px);aspect-ratio:16/9!important;background:#050505!important;box-shadow:0 26px 100px rgba(0,0,0,.65),0 0 70px rgba(var(--live-r),var(--live-g),var(--live-b),.14)!important}.live-media-preview img,.live-media-preview video{object-fit:contain!important}.live-title{font-size:clamp(1.8rem,3.6vw,4.2rem)!important;line-height:.95!important}.live-sub{margin-top:6px}.live-viewer-row{margin-bottom:7px}.live-stage-info{max-width:100%!important}.live-actions{padding-top:3px}.live-side{padding:18px 16px!important;background:rgba(5,5,5,.92)!important}
+  .frow,.immersive-file,.timeline-asset,.folder-row{position:relative;overflow:hidden;isolation:isolate}.frow::before,.immersive-file::before,.timeline-asset::before,.folder-row::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(105deg,transparent 28%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),.12),transparent 72%);transform:translateX(-120%);transition:transform .75s var(--motion-ease)}.frow:hover::before,.immersive-file:hover::before,.timeline-asset:hover::before,.folder-row:hover::before{transform:translateX(120%)}.frow:active,.immersive-file:active,.action-trigger:active,.mini-btn:active,.live-action:active{transform:scale(.985)}.timeline-panel.active .immersive-day{animation:surfaceResolve .75s var(--motion-ease) both}.timeline-panel.active .immersive-day:nth-child(2){animation-delay:.08s}.timeline-panel.active .immersive-day:nth-child(3){animation-delay:.16s}.fs-player.active .fs-meta,.fs-player.active .fs-controls{animation:surfaceResolve .65s var(--motion-ease) both}.fs-player.active .fs-controls{animation-delay:.08s}.live-room.active .live-media-preview{animation:surfaceResolve .8s var(--motion-ease) both}.live-room.active .live-side{animation:liveSideResolve .72s var(--motion-ease) both}.viewport-overlay.active .viewport-box{animation:viewportResolve .5s var(--motion-ease) both}.control-panel.active .panel-sect{animation:surfaceResolve .5s var(--motion-ease) both}.control-panel.active .panel-sect:nth-child(2){animation-delay:.06s}.control-panel.active .panel-sect:nth-child(3){animation-delay:.12s}@keyframes surfaceResolve{from{opacity:0;transform:translateY(18px) scale(.985);filter:blur(7px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}@keyframes liveSideResolve{from{opacity:0;transform:translateX(24px);filter:blur(7px)}to{opacity:1;transform:translateX(0);filter:blur(0)}}@keyframes viewportResolve{from{opacity:0;transform:translateY(26px) scale(.96);filter:blur(10px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+  .app-toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));z-index:1400;max-width:min(520px,calc(100vw - 24px));padding:10px 13px;border:1px solid rgba(255,255,255,.36);border-radius:8px;background:rgba(5,5,5,.92);backdrop-filter:blur(18px);box-shadow:0 18px 70px rgba(0,0,0,.65),0 0 28px rgba(255,255,255,.08);font:600 .65rem/1.45 'JetBrains Mono',monospace;color:#fff;opacity:0;visibility:hidden;transform:translate(-50%,18px) scale(.97);transition:opacity .3s var(--motion-ease),transform .3s var(--motion-ease),visibility .3s}.app-toast.active{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1)}.app-toast.error{border-color:rgba(255,90,90,.72);box-shadow:0 18px 70px rgba(0,0,0,.65),0 0 30px rgba(255,50,50,.15)}
+  @media(max-width:980px){.live-room{grid-template-columns:1fr!important}.live-stage{padding:14px!important}.live-media-preview{height:auto;max-height:48svh}.live-hero{grid-template-rows:auto auto auto!important}.live-title{font-size:clamp(1.6rem,8vw,3rem)!important}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}.tour-world{transition:none!important}}
+  /* cinematic tour readability + staged application reveal */
+  body.shell-loading .wrap{opacity:0;visibility:hidden;pointer-events:none;transform:scale(.985);filter:blur(10px)}body.archive-ready .wrap{opacity:1;visibility:visible;pointer-events:auto;transform:scale(1);filter:blur(0);transition:opacity .8s var(--motion-ease),transform .9s var(--motion-ease),filter .8s var(--motion-ease)}body.archive-ready .topbar{animation:shellHeaderIn .85s var(--motion-ease) both}body.archive-ready .explorer-head{animation:shellSectionIn .75s var(--motion-ease) .12s both}body.archive-ready .archive-discovery{animation:shellSectionIn .75s var(--motion-ease) .2s both}body.archive-ready .col-head{animation:shellSectionIn .75s var(--motion-ease) .28s both}body.archive-ready #directoryContainer{animation:shellSectionIn .85s var(--motion-ease) .36s both}@keyframes shellHeaderIn{from{opacity:0;transform:translateY(-100%);filter:blur(8px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}@keyframes shellSectionIn{from{opacity:0;transform:translateY(22px);filter:blur(8px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+  .tour-world{transition-duration:1.45s!important}.archive-intro[data-step="1"] .tour-world{transform:translate3d(-100vw,-1.5vh,0) scale(1.015)}.archive-intro[data-step="2"] .tour-world{transform:translate3d(-200vw,1vh,0) scale(.99)}.archive-intro[data-step="3"] .tour-world{transform:translate3d(-300vw,-1vh,0) scale(1.02)}.tour-zone{top:8vh;height:61vh}.tour-caption{left:3vw;right:3vw;bottom:2.5vh;padding:15px 17px;border:1px solid rgba(255,255,255,.27);border-radius:8px;background:linear-gradient(105deg,rgba(3,3,3,.94),rgba(12,12,12,.82));box-shadow:0 24px 90px rgba(0,0,0,.78),0 0 42px rgba(255,255,255,.06);backdrop-filter:blur(24px) saturate(1.15);align-items:center}.tour-caption-copy{max-width:76ch}.tour-kicker{font-size:.62rem;color:rgba(255,255,255,.62)}.tour-title{margin-top:6px;font-size:clamp(1.55rem,2.7vw,3rem);line-height:1}.tour-copy{margin-top:7px;font-size:clamp(.67rem,.85vw,.82rem);line-height:1.62;color:rgba(255,255,255,.78)}.tour-controls{align-self:stretch}.tour-progress{align-self:center}.tour-progress i{position:relative;width:34px;height:3px;overflow:hidden}.tour-progress i.current{background:rgba(255,255,255,.2);box-shadow:none}.tour-progress i.current::after{content:"";position:absolute;inset:0;background:#fff;box-shadow:0 0 10px #fff;transform-origin:left;animation:tourDwell 4.8s linear forwards}@keyframes tourDwell{from{transform:scaleX(0)}to{transform:scaleX(1)}}.tour-nav{display:flex;gap:5px}.tour-nav button{border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:7px 10px;font:600 .57rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.72);cursor:pointer}.tour-nav button:hover{background:#fff;color:#000}.tour-nav button:disabled{opacity:.24;pointer-events:none}
+  @media(max-width:800px){.tour-zone{top:8vh!important;height:52vh!important}.tour-caption{left:10px;right:10px;bottom:10px;padding:11px;grid-template-columns:1fr!important;gap:9px}.tour-caption-copy{max-width:none}.tour-title{font-size:clamp(1.2rem,5.8vw,1.8rem)}.tour-copy{display:block!important;font-size:.6rem;line-height:1.5;max-height:4.5em;overflow:auto}.tour-controls{display:grid;grid-template-columns:1fr auto;gap:7px}.tour-progress{grid-column:1/-1;width:100%;justify-content:stretch}.tour-progress i{width:auto;flex:1}.tour-nav{justify-self:start}.tour-nav button{padding:6px 8px}.intro-skip{justify-self:end;padding:6px 9px}}
 </style>
 </head>
-<body data-section="archive">
+<body data-section="archive" class="intro-active shell-loading">
+
+<div class="archive-intro" id="archiveIntro" data-step="0" aria-label="cinematic tour of the akrasia archive">
+  <div class="tour-atmosphere" aria-hidden="true"></div><div class="tour-scan" aria-hidden="true"></div>
+  <div class="tour-brand" id="introMark">akrasia <span>/ archive</span></div>
+  <div class="tour-world" id="tourWorld">
+    <section class="tour-zone active" data-tour="0" aria-label="archive index">
+      <div class="tour-window">
+        <div class="tour-window-head"><strong>archive index</strong><span>audio 24 / visual 13 / notes 08</span></div>
+        <div class="tour-archive-body">
+          <div class="tour-folder">[-] project angel / unreleased</div>
+          <div class="tour-row"><i class="tour-file-icon"></i><b>you left this version here</b><span>jun 18 / 02:14</span><span>v7</span></div>
+          <div class="tour-row"><i class="tour-file-icon"></i><b>session notes.txt</b><span>jun 18 / 02:41</span><span>note</span></div>
+          <div class="tour-row"><i class="tour-file-icon"></i><b>memory fragment 03</b><span>jun 21 / 23:09</span><span>visual</span></div>
+          <div class="tour-row"><i class="tour-file-icon"></i><b>untitled after midnight</b><span>jun 24 / 00:32</span><span>demo</span></div>
+        </div>
+      </div>
+    </section>
+    <section class="tour-zone" data-tour="1" aria-label="immersive timeline">
+      <div class="tour-window tour-timeline">
+        <div class="tour-day"><div class="tour-date">june 18<span>three files became one moment</span></div><div class="tour-day-files"><div class="tour-timeline-file">02:14 / first voice memo / audio</div><div class="tour-timeline-file">02:41 / what the song meant / note</div><div class="tour-timeline-file">03:08 / version seven / audio</div></div></div>
+        <div class="tour-day"><div class="tour-date">june 24<span>the archive keeps the distance between versions</span></div><div class="tour-day-files"><div class="tour-timeline-file">00:32 / untitled after midnight</div><div class="tour-timeline-file">01:09 / cover study 04</div></div></div>
+      </div>
+    </section>
+    <section class="tour-zone" data-tour="2" aria-label="player and synced lyrics">
+      <div class="tour-window tour-player-scene">
+        <div class="tour-cover" aria-hidden="true"></div>
+        <div class="tour-lyrics"><small>now playing / angel / version 7</small><span>everything stays somewhere</span><span>even when nobody hears it</span><span>[adlib] still here</span></div>
+      </div>
+    </section>
+    <section class="tour-zone" data-tour="3" aria-label="visual archive">
+      <div class="tour-window tour-visuals"><div class="tour-visual" data-label="cover study / 04"></div><div class="tour-visual" data-label="memory fragment / 03"></div><div class="tour-visual" data-label="session still / 11"></div></div>
+    </section>
+    <section class="tour-zone" data-tour="4" aria-label="live broadcast room">
+      <div class="tour-window tour-live"><div class="tour-live-stage"><div class="tour-broadcast"><div class="tour-live-art"></div></div><div class="tour-live-title">angel is broadcasting / version 7</div></div><div class="tour-chat"><strong>live chat / 24 watching</strong><div class="tour-chat-line"><b>mika</b> this version is unreal</div><div class="tour-chat-line"><b>006</b> the background vocal</div><div class="tour-chat-line"><b>angel</b> next one starts automatically</div><div class="tour-chat-line"><b>archive</b> announcement pinned</div></div></div>
+    </section>
+  </div>
+  <div class="tour-caption"><div class="tour-caption-copy"><div class="tour-kicker" id="tourKicker">01 / archive</div><div class="tour-title" id="tourTitle">everything begins as a file.</div><div class="tour-copy" id="tourCopy">unreleased music, versions, notes, visuals, and the details around them live together instead of disappearing into folders.</div></div><div class="tour-controls"><div class="tour-progress" id="tourProgress"><i class="active current"></i><i></i><i></i><i></i><i></i></div><div class="tour-nav"><button id="tourBack" type="button" onclick="moveArchiveTour(-1)" disabled>back</button><button id="tourNext" type="button" onclick="moveArchiveTour(1)">next</button></div><button class="intro-skip" type="button" onclick="finishArchiveIntro(true)">enter archive</button></div></div>
+</div>
 
 <svg class="grain" width="100%" height="100%"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0"/></filter><rect width="100%" height="100%" filter="url(#noiseFilter)"/></svg>
+<div class="app-toast" id="appToast" role="status" aria-live="polite"></div>
 
 <div class="wrap">
   <div class="topbar">
@@ -1243,7 +1316,7 @@
       </div>
       <div class="header-actions header-actions-timeline">
         <button class="action-trigger" type="button" onclick="toggleTimelineSort()" id="timelineSortBtn">newest</button>
-        <button class="action-trigger" type="button" onclick="toggleTimelineMode()" id="timelineModeBtn">immersive</button>
+        <button class="action-trigger active" type="button" onclick="toggleTimelineMode()" id="timelineModeBtn">cards</button>
         <button class="action-trigger timeline-minimize" type="button" onclick="closeTimelineView()">minimize [-]</button>
       </div>
       <div class="header-actions header-actions-live">
@@ -1308,6 +1381,7 @@
           <select id="injBatch" class="full-width" required>
             <!-- populated dynamically via js -->
           </select>
+          <label class="mini-toggle root-placement span-3"><input type="checkbox" id="injRoot" onchange="toggleRootPlacement()"> place directly in archive root</label>
           <input type="text" id="injSubfolder" class="span-3" placeholder="subfolder path (optional)">
           <input type="date" id="injDate" title="asset date">
           <input type="time" id="injTime" title="asset time">
@@ -1330,7 +1404,7 @@
         <div class="field-group">
           <div class="field-group-title">04 / attach <span>notes + links</span></div>
           <textarea id="injNotes" class="full" rows="3" placeholder="notes (optional)"></textarea>
-          <textarea id="injLyrics" class="full" rows="4" placeholder="synced lyrics: [0:12] main line || [adlib] background line&#10;[0:28] ... for instrumental dots"></textarea>
+          <textarea id="injLyrics" class="full" rows="4" placeholder="synced lyrics: [0:12] main line || [adlib] background line&#10;[0:18] [commentary] artist note&#10;[0:28] ... for instrumental dots"></textarea>
           <input type="url" id="injSpotify" class="span-2" placeholder="spotify link (optional)">
           <input type="url" id="injApple" class="span-2" placeholder="apple music link (optional)">
           <input type="url" id="injYoutube" class="span-2" placeholder="youtube / video link (optional)">
@@ -1530,6 +1604,11 @@
       </div>
     </div>
 
+    <div class="archive-discovery" id="archiveDiscovery">
+      <div class="discovery-copy"><div class="discovery-kicker">archive signal / today</div><div class="discovery-title" id="dailySignalTitle">finding a thread through the archive...</div></div>
+      <div class="discovery-actions"><button type="button" onclick="openDailySignal()">open signal</button><button type="button" onclick="startArchiveRadio()">archive radio</button><button type="button" onclick="openArchiveConnections()">connections</button></div>
+    </div>
+
     <div class="timeline-panel" id="timelinePanel">
       <div class="timeline-track" id="timelineTrack"></div>
     </div>
@@ -1702,6 +1781,9 @@
         <div class="folder-contents" id="smartFilterList"></div>
       </div>
 
+      <div class="root-divider">root / loose archive</div>
+      <div class="root-archive-list" id="rootArchiveList" data-root-target ondragover="handleRootDragOver(event)" ondragleave="handleRootDragLeave(event)" ondrop="handleRootDrop(event)"></div>
+
       <!-- EXISTING BASE DIRECTORY -->
       <div class="folder-block" data-standard-folder="batch 04" draggable="true">
         <div class="folder-row" onclick="toggleFolder(this)" ondragover="handleFolderDragOver(event)" ondragleave="handleFolderDragLeave(event)" ondrop="handleFolderDrop(event)">
@@ -1720,12 +1802,19 @@
   <div class="viewport-box">
     <div class="viewport-head"><span id="txtViewTitle">file.txt</span><button class="viewport-close" onclick="closeViewport('textViewport')">[x]</button></div>
     <div class="viewport-body" id="txtViewBody"></div>
+    <div class="viewport-notes" id="txtViewNotes" style="display:none"></div>
   </div>
 </div>
 <div class="viewport-overlay" id="imageViewport">
   <div class="viewport-box">
     <div class="viewport-head"><span id="imgViewTitle">file.jpg</span><button class="viewport-close" onclick="closeViewport('imageViewport')">[x]</button></div>
     <div class="viewport-body" style="padding:10px;"><img id="imgViewSrc" src="" alt="archive preview"></div>
+  </div>
+</div>
+<div class="viewport-overlay" id="connectionsViewport">
+  <div class="viewport-box connections-shell">
+    <div class="viewport-head"><span>archive connections</span><button class="viewport-close" onclick="closeViewport('connectionsViewport')">[x]</button></div>
+    <div class="connections-body" id="connectionsBody"></div>
   </div>
 </div>
 <div class="viewport-overlay" id="propsViewport">
@@ -1744,12 +1833,12 @@
         <input type="text" id="editVer" placeholder="version">
         <input type="date" id="editDate" title="asset date">
         <input type="time" id="editTime" title="asset time">
-        <input type="text" id="editFolder" placeholder="folder path">
+        <div class="edit-folder-field"><input type="text" id="editFolder" placeholder="folder path (blank = root)"><button type="button" onclick="setEditDestinationRoot()">root</button></div>
         <input type="number" id="editPosition" min="1" step="1" placeholder="list position">
         <input type="text" id="editMood" placeholder="mood / tag">
         <input type="color" id="editMoodColor" value="#ffffff" title="mood color">
         <textarea class="full" id="editNotes" rows="4" placeholder="notes"></textarea>
-        <textarea class="full" id="editLyrics" rows="5" placeholder="synced lyrics: [0:12] main line || [adlib] background line&#10;[0:28] ... for instrumental dots"></textarea>
+        <textarea class="full" id="editLyrics" rows="5" placeholder="synced lyrics: [0:12] main line || [adlib] background line&#10;[0:18] [commentary] artist note&#10;[0:28] ... for instrumental dots"></textarea>
         <input class="full" type="url" id="editSpotify" placeholder="spotify link">
         <input class="full" type="url" id="editApple" placeholder="apple music link">
         <input class="full" type="url" id="editYoutube" placeholder="youtube / video link">
@@ -1795,6 +1884,8 @@
     <div class="fs-main">
       <div class="fs-media-stage" id="fsMediaStage"></div>
       <div class="lyrics-focus-panel" id="lyricsFocusPanel" aria-live="polite">
+        <div class="lyrics-ambient" aria-hidden="true"><img id="lyricsAmbientArt" alt=""></div>
+        <div class="lyrics-focus-song"><strong id="lyricsFocusTitle">--</strong><span id="lyricsFocusSub">angel / akrasia archive</span></div>
         <div class="lyrics-focus-art-wrap"><img id="lyricsFocusArt" alt="" aria-hidden="true"><div class="lyrics-focus-art-fallback">akrasia</div></div>
         <div class="lyrics-focus-lines" id="lyricsFocusLines"><div class="lyrics-empty-focus">no synced lyrics for this track yet.</div></div>
       </div>
@@ -1839,9 +1930,12 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvcmxubXFndXl2bm5weGVwc3d2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MDAwMTQsImV4cCI6MjA5Nzk3NjAxNH0.vDIAXtRzu5CS0wmznYryX5Y-gscEoPzoTOlu4A-YGvg';
   const ADMIN_EMAIL = 'angelyzyy@gmail.com';
   const STORAGE_BUCKET = 'archive-assets';
+  const PRIVATE_LIVE_BUCKET = 'private-live-assets';
+  const ROOT_ARCHIVE_PATH = '__root__';
 
   /*
-  run once in supabase dashboard:
+  LEGACY REFERENCE ONLY - DO NOT RUN THIS FRAGMENT.
+  Use the complete, canonical supabase-setup.sql file beside index.html.
 
   alter table archive_live_state add column if not exists countdown_target timestamptz;
   alter table archive_live_state add column if not exists queue jsonb default '[]'::jsonb;
@@ -1908,30 +2002,105 @@
   set search_path = public
   as $$
     insert into play_counts (asset_key, play_count, last_played)
-    values (p_key, 1, now())
+    select btrim(p_key), 1, now()
+    where char_length(btrim(coalesce(p_key,''))) between 1 and 180
+      and p_key ~ '^[A-Za-z0-9:_./ -]+$'
     on conflict (asset_key) do update
     set play_count = play_counts.play_count + 1,
         last_played = now();
   $$;
 
   create index if not exists live_chat_room_idx on live_chat(room_id, created_at);
+  create index if not exists live_chat_token_time_idx on live_chat(user_token, created_at desc);
   alter table live_chat enable row level security;
   alter table live_banned_tokens enable row level security;
   alter table live_announcements enable row level security;
   alter table play_counts enable row level security;
   alter table private_live_items enable row level security;
+  alter table archive_assets enable row level security;
+  alter table archive_live_state enable row level security;
+
+  -- Remove policies left by older prototypes before installing this exact set.
+  do $$
+  declare p record;
+  begin
+    for p in select schemaname,tablename,policyname from pg_policies
+      where schemaname = 'public' and tablename in ('archive_assets','archive_live_state','live_chat','live_banned_tokens','live_announcements','private_live_items','play_counts')
+    loop
+      execute format('drop policy if exists %I on %I.%I',p.policyname,p.schemaname,p.tablename);
+    end loop;
+  end $$;
+
+  create or replace function is_live_chat_blocked(p_token text)
+  returns boolean
+  language sql
+  stable
+  security definer
+  set search_path = public
+  as $$
+    select exists(
+      select 1 from live_banned_tokens
+      where user_token = p_token
+      and (expires_at is null or expires_at > now())
+    );
+  $$;
+
+  create or replace function enforce_live_chat_safety()
+  returns trigger
+  language plpgsql
+  security definer
+  set search_path = public
+  as $$
+  begin
+    new.room_id := 'main';
+    new.username := btrim(regexp_replace(new.username, '[[:cntrl:]]', '', 'g'));
+    new.message := btrim(regexp_replace(new.message, '[[:cntrl:]]', '', 'g'));
+    if char_length(new.username) not between 1 and 24
+       or char_length(new.message) not between 1 and 280
+       or char_length(coalesce(new.user_token,'')) not between 16 and 128
+       or new.user_token !~ '^[A-Za-z0-9_-]+$' then
+      raise exception 'invalid chat payload';
+    end if;
+    if is_live_chat_blocked(new.user_token) then raise exception 'chat access blocked'; end if;
+    if exists(select 1 from live_chat where user_token = new.user_token and created_at > now() - interval '2 seconds') then
+      raise exception 'chat rate limit';
+    end if;
+    return new;
+  end;
+  $$;
+
+  drop trigger if exists live_chat_safety on live_chat;
+  create trigger live_chat_safety before insert on live_chat for each row execute function enforce_live_chat_safety();
 
   drop policy if exists "anyone can insert chat" on live_chat;
-  create policy "anyone can insert chat" on live_chat for insert with check (true);
+  drop policy if exists "validated public chat insert" on live_chat;
+  create policy "validated public chat insert" on live_chat for insert to anon, authenticated
+    with check (room_id = 'main' and char_length(username) between 1 and 24 and char_length(message) between 1 and 280);
   drop policy if exists "anyone can read unhidden chat" on live_chat;
-  create policy "anyone can read unhidden chat" on live_chat for select using (is_hidden = false);
   drop policy if exists "admin can read all chat" on live_chat;
   create policy "admin can read all chat" on live_chat for select to authenticated using (auth.email() = 'angelyzyy@gmail.com');
   drop policy if exists "admin can moderate chat" on live_chat;
   create policy "admin can moderate chat" on live_chat for update to authenticated using (auth.email() = 'angelyzyy@gmail.com') with check (auth.email() = 'angelyzyy@gmail.com');
 
+  create or replace function public_live_chat_history()
+  returns table(id uuid, room_id text, username text, message text, is_hidden boolean, created_at timestamptz)
+  language sql stable security definer set search_path = public
+  as $$
+    select c.id,c.room_id,c.username,c.message,c.is_hidden,c.created_at
+    from live_chat c where c.room_id = 'main' and c.is_hidden = false
+    order by c.created_at desc limit 100;
+  $$;
+
+  create or replace function post_live_chat(p_username text, p_message text, p_token text)
+  returns table(id uuid, room_id text, username text, message text, is_hidden boolean, created_at timestamptz)
+  language sql security definer set search_path = public
+  as $$
+    insert into live_chat(room_id,username,message,user_token)
+    values('main',p_username,p_message,p_token)
+    returning live_chat.id,live_chat.room_id,live_chat.username,live_chat.message,live_chat.is_hidden,live_chat.created_at;
+  $$;
+
   drop policy if exists "public can check chat bans" on live_banned_tokens;
-  create policy "public can check chat bans" on live_banned_tokens for select using (true);
   drop policy if exists "admin can manage chat bans" on live_banned_tokens;
   create policy "admin can manage chat bans" on live_banned_tokens for all to authenticated using (auth.email() = 'angelyzyy@gmail.com') with check (auth.email() = 'angelyzyy@gmail.com');
 
@@ -1945,6 +2114,46 @@
 
   drop policy if exists "public can read play counts" on play_counts;
   create policy "public can read play counts" on play_counts for select using (true);
+
+  drop policy if exists "public can read archive" on archive_assets;
+  create policy "public can read archive" on archive_assets for select to anon, authenticated using (true);
+  drop policy if exists "admin can manage archive" on archive_assets;
+  create policy "admin can manage archive" on archive_assets for all to authenticated using (auth.email() = 'angelyzyy@gmail.com') with check (auth.email() = 'angelyzyy@gmail.com');
+
+  drop policy if exists "public can read live state" on archive_live_state;
+  create policy "public can read live state" on archive_live_state for select to anon, authenticated using (room_id = 'main');
+  drop policy if exists "admin can manage live state" on archive_live_state;
+  create policy "admin can manage live state" on archive_live_state for all to authenticated using (auth.email() = 'angelyzyy@gmail.com') with check (auth.email() = 'angelyzyy@gmail.com');
+
+  insert into storage.buckets (id,name,public) values ('private-live-assets','private-live-assets',false)
+    on conflict (id) do update set public = false;
+  do $$
+  declare p record;
+  begin
+    for p in select policyname from pg_policies
+      where schemaname = 'storage' and tablename = 'objects'
+      and (coalesce(qual,'') ilike '%archive-assets%' or coalesce(with_check,'') ilike '%archive-assets%'
+        or coalesce(qual,'') ilike '%private-live-assets%' or coalesce(with_check,'') ilike '%private-live-assets%')
+    loop execute format('drop policy if exists %I on storage.objects',p.policyname); end loop;
+  end $$;
+  create policy "public archive storage read" on storage.objects for select to anon, authenticated using (bucket_id = 'archive-assets');
+  create policy "admin archive storage manage" on storage.objects for all to authenticated
+    using (bucket_id = 'archive-assets' and auth.email() = 'angelyzyy@gmail.com')
+    with check (bucket_id = 'archive-assets' and auth.email() = 'angelyzyy@gmail.com');
+  drop policy if exists "admin private live storage" on storage.objects;
+  create policy "admin private live storage" on storage.objects for all to authenticated
+    using (bucket_id = 'private-live-assets' and auth.email() = 'angelyzyy@gmail.com')
+    with check (bucket_id = 'private-live-assets' and auth.email() = 'angelyzyy@gmail.com');
+  revoke all on live_banned_tokens from anon;
+  revoke select on live_chat from anon;
+  revoke insert on live_chat from anon, authenticated;
+  revoke all on function public_live_chat_history() from public;
+  revoke all on function post_live_chat(text,text,text) from public;
+  grant execute on function public_live_chat_history() to anon, authenticated;
+  grant execute on function post_live_chat(text,text,text) to anon, authenticated;
+  revoke all on function is_live_chat_blocked(text) from public;
+  grant execute on function is_live_chat_blocked(text) to anon, authenticated;
+  revoke all on function increment_play_count(text) from public;
   grant execute on function increment_play_count(text) to anon, authenticated;
   */
 
@@ -1961,7 +2170,7 @@
   var activeLyricIndex = -1;
   var activeTimelineDate = null;
   var timelineAscending = false;
-  var timelineMode = 'classic';
+  var timelineMode = 'immersive';
   var timelineHasAnimated = false;
   var timelineReadyTimer = null;
   var activeVisualRow = null;
@@ -2000,8 +2209,10 @@
   var countdownAutoStarted = false;
   var countdownTimer = null;
   var chatChannel = null;
+  var chatPollTimer = null;
   var chatMessages = [];
   var chatBanned = false;
+  var lastChatSentAt = 0;
   var bannedUsers = [];
   var announcementTimer = null;
   var announcementChannel = null;
@@ -2155,7 +2366,7 @@
   }
   function closeViewport(id) {
     document.getElementById(id).classList.remove('active');
-    if(id === 'propsViewport' || id === 'editViewport' || id === 'textViewport' || id === 'imageViewport') restoreUnderlyingSection();
+    if(id === 'propsViewport' || id === 'editViewport' || id === 'textViewport' || id === 'imageViewport' || id === 'connectionsViewport') restoreUnderlyingSection();
   }
   window.addEventListener('resize', () => { isCompactVisual = window.matchMedia('(max-width: 980px)').matches; resizeCanvas(); alignImmersiveRail(); syncTimelineCardHeights(); drawActiveWaveforms(); });
   document.getElementById('timelineTrack').addEventListener('scroll', alignImmersiveRail);
@@ -2434,10 +2645,11 @@
   async function applyInlineLiveOverrides() {
     if(!requireAdmin()) return;
     liveCountdownAutoStart = Boolean(document.getElementById('liveInlineAutoStart')?.checked || document.getElementById('liveCountdownAutoStart')?.checked);
-    var title = document.getElementById('liveInlineTitle')?.value.trim();
-    var notes = document.getElementById('liveInlineNotes')?.value.trim();
+    var title = cleanSingleLine(document.getElementById('liveInlineTitle')?.value, 120);
+    var notes = cleanMultiline(document.getElementById('liveInlineNotes')?.value, 8000);
     var coverInput = document.getElementById('liveInlineCover');
     var coverFile = coverInput && coverInput.files && coverInput.files[0];
+    if(coverFile && validateAssetFile(coverFile, 'image')) return alert('live cover must be a valid image.');
     var cover = '';
     if(coverFile) {
       if(isRemoteReady && supabaseClient) {
@@ -2473,9 +2685,9 @@
   }
 
   function liveCustomOverrides() {
-    var title = document.getElementById('liveCustomTitle')?.value.trim() || '';
-    var notes = document.getElementById('liveCustomNotes')?.value.trim() || '';
-    var mood = document.getElementById('liveCustomMoodColor')?.value || '';
+    var title = cleanSingleLine(document.getElementById('liveCustomTitle')?.value, 120);
+    var notes = cleanMultiline(document.getElementById('liveCustomNotes')?.value, 8000);
+    var mood = safeHexColor(document.getElementById('liveCustomMoodColor')?.value);
     return {
       title: title || undefined,
       notes: notes || undefined,
@@ -2511,7 +2723,7 @@
   }
 
   function currentBroadcastRow() {
-    var playing = document.querySelector('[data-batch-target] .frow.playing');
+    var playing = document.querySelector('[data-batch-target] .frow.playing, [data-root-target] > .frow.playing');
     if(playing) return canonicalRow(playing);
     var selected = document.getElementById('liveAssetSelect');
     if(selected && selected.value) return findLiveRow(selected.value);
@@ -2858,7 +3070,7 @@
   }
 
   function lockLiveChatName(name) {
-    var clean = String(name || 'listener').replace(/<[^>]*>/g, '').trim().slice(0, 24) || 'listener';
+    var clean = cleanSingleLine(name || 'listener', 24) || 'listener';
     sessionStorage.setItem('akrasia_chat_name', clean);
     try { localStorage.setItem('akrasia_chat_name', clean); } catch(error) {}
     var input = document.getElementById('liveChatUsername');
@@ -2892,22 +3104,19 @@
   async function checkIfBanned() {
     if(!supabaseClient) return false;
     var token = getLiveUserToken();
-    var result = await supabaseClient.from('live_banned_tokens').select('*').eq('user_token', token).maybeSingle();
-    if(!result.data) return false;
-    if(result.data.expires_at && new Date(result.data.expires_at) < new Date()) {
-      await supabaseClient.from('live_banned_tokens').delete().eq('user_token', token);
-      return false;
-    }
-    return true;
+    var result = await supabaseClient.rpc('is_live_chat_blocked', { p_token: token });
+    if(result.error) return false;
+    return Boolean(result.data);
   }
 
   async function sendLiveChat() {
     var input = document.getElementById('liveChatInput');
     if(!input) return;
-    var message = input.value.replace(/<[^>]*>/g, '').trim().slice(0, 280);
+    var message = cleanSingleLine(input.value, 280);
     if(!message || chatBanned) return;
+    if(Date.now() - lastChatSentAt < 1800) return;
     var token = getLiveUserToken();
-    var username = getLiveChatUsername().replace(/<[^>]*>/g, '').slice(0, 24) || 'listener';
+    var username = cleanSingleLine(getLiveChatUsername(), 24) || 'listener';
     lockLiveChatName(username);
     if(supabaseClient) {
       var banned = await checkIfBanned();
@@ -2915,11 +3124,16 @@
         setChatBanned(true);
         return;
       }
-      var result = await supabaseClient.from('live_chat').insert({ room_id: 'main', username, message, user_token: token }).select('*').maybeSingle();
-      if(result.data) appendChatMessage(result.data);
+      var result = await supabaseClient.rpc('post_live_chat', { p_username:username, p_message:message, p_token:token });
+      var posted = Array.isArray(result.data) ? result.data[0] : result.data;
+      if(posted) {
+        appendChatMessage(posted);
+      }
+      if(result.error) return;
     } else {
       appendChatMessage({ id: 'local-' + Date.now(), username, message, created_at: new Date().toISOString(), user_token: token });
     }
+    lastChatSentAt = Date.now();
     input.value = '';
   }
 
@@ -2970,9 +3184,12 @@
   }
 
   function setupChatRealtime() {
-    if(!supabaseClient || chatChannel) return;
-    chatChannel = supabaseClient
-      .channel('akrasia-live-chat')
+    if(!supabaseClient || chatChannel || chatPollTimer) return;
+    if(!isAdmin) {
+      chatPollTimer = window.setInterval(loadChatHistory, 2500);
+      return;
+    }
+    chatChannel = supabaseClient.channel('akrasia-live-chat-admin')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'live_chat', filter: 'room_id=eq.main' }, payload => {
         if(payload.new) appendChatMessage(payload.new);
       })
@@ -2988,6 +3205,10 @@
   }
 
   function teardownChatRealtime() {
+    if(chatPollTimer) {
+      clearInterval(chatPollTimer);
+      chatPollTimer = null;
+    }
     if(chatChannel) {
       chatChannel.unsubscribe();
       chatChannel = null;
@@ -2996,12 +3217,13 @@
 
   async function loadChatHistory() {
     if(!supabaseClient) return;
-    var query = supabaseClient.from('live_chat').select('*').eq('room_id', 'main').order('created_at', { ascending: true }).limit(100);
-    if(!isAdmin) query = query.eq('is_hidden', false);
-    var result = await query;
+    var result;
+    if(isAdmin) result = await supabaseClient.from('live_chat').select('*').eq('room_id', 'main').order('created_at', { ascending: true }).limit(100);
+    else result = await supabaseClient.rpc('public_live_chat_history');
     if(result.data) {
-      chatMessages = [];
-      result.data.forEach(msg => appendChatMessage(msg));
+      chatMessages = result.data.slice().sort((a,b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
+      renderLiveChatMessages();
+      renderAdminChatFeed();
     }
   }
 
@@ -3041,7 +3263,7 @@
     if(!requireAdmin() || !supabaseClient) return;
     var token = btn.dataset.token;
     if(!token) return;
-    var minutes = Math.max(1, Number(document.getElementById('timeoutLength')?.value) || 10);
+    var minutes = Math.min(10080, Math.max(1, Number(document.getElementById('timeoutLength')?.value) || 10));
     var expires = new Date(Date.now() + minutes * 60 * 1000).toISOString();
     await supabaseClient.from('live_banned_tokens').upsert({ user_token: token, username: btn.dataset.username || '', reason: 'timeout', expires_at: expires }, { onConflict: 'user_token' });
     loadBannedUsers();
@@ -3092,7 +3314,7 @@
   async function sendAnnouncement(pinned, inputId) {
     if(!requireAdmin()) return;
     var input = document.getElementById(inputId || 'liveAnnounceInput');
-    var message = (input ? input.value.trim() : '').slice(0, 200);
+    var message = cleanSingleLine(input ? input.value : '', 200);
     if(!message) return;
     var kind = pinned === 'major' ? 'major' : (pinned ? 'pinned' : 'normal');
     var payload = { room_id: 'main', message, kind, is_pinned: Boolean(pinned === true), created_at: new Date().toISOString() };
@@ -3476,6 +3698,20 @@
     nextLiveQueueItem();
   }
 
+  async function hydratePrivateLiveItemUrls(item) {
+    if(!item || !supabaseClient || !isAdmin) return item;
+    var hydrated = Object.assign({}, item);
+    if(item.storage_path) {
+      var fileSigned = await supabaseClient.storage.from(PRIVATE_LIVE_BUCKET).createSignedUrl(item.storage_path, 21600);
+      if(!fileSigned.error) hydrated.file_url = fileSigned.data.signedUrl;
+    }
+    if(item.cover_storage_path) {
+      var coverSigned = await supabaseClient.storage.from(PRIVATE_LIVE_BUCKET).createSignedUrl(item.cover_storage_path, 21600);
+      if(!coverSigned.error) hydrated.cover_url = coverSigned.data.signedUrl;
+    }
+    return hydrated;
+  }
+
   async function savePrivateLiveItem(suffix) {
     if(!requireAdmin()) return;
     var suffixText = suffix || '';
@@ -3485,8 +3721,11 @@
     var coverInput = document.getElementById('livePrivateCoverInput' + suffixText) || document.getElementById('livePrivateCoverInput');
     var coverFile = coverInput && coverInput.files && coverInput.files[0];
     var type = file.type.indexOf('audio/') === 0 ? 'audio' : (file.type.indexOf('video/') === 0 ? 'video' : 'image');
-    var title = (document.getElementById('livePrivateTitleInput' + suffixText)?.value.trim() || document.getElementById('livePrivateTitleInput')?.value.trim()) || file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ');
-    var notes = (document.getElementById('livePrivateNotesInput' + suffixText)?.value.trim() || document.getElementById('livePrivateNotesInput')?.value.trim()) || '';
+    var fileError = validateAssetFile(file, type);
+    if(fileError) return alert(fileError);
+    if(coverFile && validateAssetFile(coverFile, 'image')) return alert('private cover must be a valid image.');
+    var title = cleanSingleLine((document.getElementById('livePrivateTitleInput' + suffixText)?.value || document.getElementById('livePrivateTitleInput')?.value) || file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' '), 120) || 'private live item';
+    var notes = cleanMultiline((document.getElementById('livePrivateNotesInput' + suffixText)?.value || document.getElementById('livePrivateNotesInput')?.value) || '', 8000);
     var folder = normalizeFolderPath(document.getElementById('livePrivateFolderInput' + suffixText)?.value || document.getElementById('livePrivateFolderInput')?.value || 'private live') || 'private live';
     var fileUrl = URL.createObjectURL(file);
     var coverUrl = coverFile ? URL.createObjectURL(coverFile) : '';
@@ -3494,24 +3733,30 @@
     if(isRemoteReady && supabaseClient) {
       var safeName = file.name.replace(/[^a-z0-9._-]+/gi, '-');
       storagePath = `live/private/${Date.now()}-${safeName}`;
-      var upload = await supabaseClient.storage.from(STORAGE_BUCKET).upload(storagePath, file, { upsert:false });
+      var upload = await supabaseClient.storage.from(PRIVATE_LIVE_BUCKET).upload(storagePath, file, { upsert:false });
       if(upload.error) return alert(upload.error.message || 'private upload failed.');
-      fileUrl = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(storagePath).data.publicUrl;
+      var signedFile = await supabaseClient.storage.from(PRIVATE_LIVE_BUCKET).createSignedUrl(storagePath, 21600);
+      if(signedFile.error) return alert('private file could not be signed.');
+      fileUrl = signedFile.data.signedUrl;
       if(coverFile) {
         var safeCover = coverFile.name.replace(/[^a-z0-9._-]+/gi, '-');
         coverPath = `live/private/${Date.now()}-cover-${safeCover}`;
-        var coverUpload = await supabaseClient.storage.from(STORAGE_BUCKET).upload(coverPath, coverFile, { upsert:false });
-        if(!coverUpload.error) coverUrl = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(coverPath).data.publicUrl;
+        var coverUpload = await supabaseClient.storage.from(PRIVATE_LIVE_BUCKET).upload(coverPath, coverFile, { upsert:false });
+        if(!coverUpload.error) {
+          var signedCover = await supabaseClient.storage.from(PRIVATE_LIVE_BUCKET).createSignedUrl(coverPath, 21600);
+          if(!signedCover.error) coverUrl = signedCover.data.signedUrl;
+        }
       }
     }
     var itemId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + '-' + Math.random().toString(16).slice(2);
     var item = { id:itemId, title, notes, type, folder, mood_color:document.getElementById('liveCustomMoodColor')?.value || '#ffffff', file_url:fileUrl, cover_url:coverUrl, storage_path:storagePath, cover_storage_path:coverPath };
     if(isRemoteReady && supabaseClient) {
-      var result = await supabaseClient.from('private_live_items').insert(item).select().single();
+      var storedItem = Object.assign({}, item, { file_url:null, cover_url:null });
+      var result = await supabaseClient.from('private_live_items').insert(storedItem).select().single();
       if(result.error) {
         var status = document.getElementById('authStatus');
         if(status) status.textContent = 'private not saved';
-      } else if(result.data) item = result.data;
+      } else if(result.data) item = await hydratePrivateLiveItemUrls(result.data);
     }
     privateLiveItems.unshift(item);
     renderPrivateLiveItems();
@@ -3520,7 +3765,7 @@
   async function loadPrivateLiveItems() {
     if(!supabaseClient || !isAdmin) return renderPrivateLiveItems();
     var result = await supabaseClient.from('private_live_items').select('*').order('created_at', { ascending:false }).limit(100);
-    if(result.data) privateLiveItems = result.data;
+    if(result.data) privateLiveItems = await Promise.all(result.data.map(hydratePrivateLiveItemUrls));
     renderPrivateLiveItems();
   }
 
@@ -3540,11 +3785,13 @@
     });
   }
 
-  function addPrivateLiveItemToQueue(selectId) {
+  async function addPrivateLiveItemToQueue(selectId) {
     if(!requireAdmin()) return;
     var id = document.getElementById(selectId || 'privateLiveItemSelectInline')?.value || document.getElementById('privateLiveItemSelect')?.value;
     var item = privateLiveItems.find(entry => entry.id === id);
     if(!item) return;
+    item = await hydratePrivateLiveItemUrls(item);
+    if(!item.file_url) return alert('private live file is unavailable. run the private bucket SQL and try again.');
     liveQueue.push(privateToLiveQueueItem(item));
     if(liveQueueIndex < 0) liveQueueIndex = 0;
     renderLiveQueue();
@@ -3729,12 +3976,89 @@
     document.getElementById('injFile').accept = type === 'audio' ? 'audio/*' : (type === 'image' ? 'image/*' : (type === 'video' ? 'video/*' : '.txt,text/plain'));
   }
 
+  function toggleRootPlacement(force) {
+    var checkbox = document.getElementById('injRoot');
+    var select = document.getElementById('injBatch');
+    var subfolder = document.getElementById('injSubfolder');
+    if(!checkbox || !select || !subfolder) return;
+    if(typeof force === 'boolean') checkbox.checked = force;
+    var atRoot = checkbox.checked;
+    checkbox.closest('.root-placement')?.classList.toggle('active', atRoot);
+    select.disabled = atRoot;
+    subfolder.disabled = atRoot;
+    if(atRoot) {
+      select.value = '__root__';
+      subfolder.value = '';
+      if(typeof force !== 'boolean') showAppNotice('new files will be placed directly in archive root.');
+    } else if(typeof force !== 'boolean' && select.value === '__root__') {
+      var firstFolder = Array.from(select.options).find(option => option.value !== '__root__');
+      if(firstFolder) select.value = firstFolder.value;
+    }
+  }
+
+  function setEditDestinationRoot() {
+    var field = document.getElementById('editFolder');
+    if(field) { field.value = ''; field.focus(); }
+  }
+
   function normalizeFolderPath(value) {
     return String(value || '')
       .split('/')
-      .map(part => part.trim().toLowerCase())
+      .map(part => part.trim().toLowerCase().replace(/[<>\\:"|?*\x00-\x1f]/g, '').replace(/\s+/g, ' ').slice(0, 64))
       .filter(Boolean)
-      .join('/');
+      .slice(0, 12)
+      .join('/')
+      .slice(0, 240);
+  }
+
+  function normalizeArchiveDestination(value) {
+    var path = normalizeFolderPath(value);
+    return path === ROOT_ARCHIVE_PATH ? '' : path;
+  }
+
+  function cleanSingleLine(value, maxLength) {
+    return String(value || '').replace(/[\x00-\x1f\x7f<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, maxLength || 160);
+  }
+
+  function cleanMultiline(value, maxLength) {
+    return String(value || '').replace(/\r/g, '').replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '').replace(/<\/?script\b[^>]*>/gi, '').trim().slice(0, maxLength || 12000);
+  }
+
+  function safeExternalUrl(value) {
+    var raw = String(value || '').trim();
+    if(!raw) return '';
+    try {
+      var parsed = new URL(raw);
+      return parsed.protocol === 'https:' ? parsed.href : '';
+    } catch(error) { return ''; }
+  }
+
+  function safeHexColor(value, fallback) {
+    var color = String(value || '').trim();
+    return /^#[0-9a-f]{6}$/i.test(color) ? color : (fallback || '#ffffff');
+  }
+
+  function showAppNotice(message, tone) {
+    var toast = document.getElementById('appToast');
+    if(!toast) return;
+    toast.textContent = cleanSingleLine(message, 260);
+    toast.classList.toggle('error', tone === 'error');
+    toast.classList.add('active');
+    clearTimeout(window.appToastTimer);
+    window.appToastTimer = setTimeout(() => toast.classList.remove('active'), 3200);
+  }
+
+  function validateAssetFile(file, type) {
+    if(!file) return 'select a file.';
+    var limits = { audio:786432000, video:2147483648, image:52428800, text:5242880 };
+    if(file.size <= 0) return `${file.name || 'file'} is empty.`;
+    if(file.size > (limits[type] || limits.text)) return `${file.name || 'file'} is too large for ${type}.`;
+    var mime = String(file.type || '').toLowerCase();
+    var extension = String(file.name || '').split('.').pop().toLowerCase();
+    var extensions = { audio:['mp3','wav','m4a','aac','flac','ogg','opus'], video:['mp4','mov','webm','m4v'], image:['jpg','jpeg','png','webp','gif','avif'], text:['txt','md','text'] };
+    var mimeOkay = !mime || mime.indexOf(type === 'text' ? 'text/' : type + '/') === 0;
+    if(!mimeOkay && !(extensions[type] || []).includes(extension)) return `${file.name || 'file'} does not match the selected ${type} type.`;
+    return '';
   }
 
   function folderDisplayName(path) {
@@ -3853,6 +4177,7 @@
   function clearUploadForm() {
     var form = document.getElementById('injectForm');
     if(form) form.reset();
+    toggleRootPlacement(false);
     toggleCoverInput();
     setAssetDateToday();
   }
@@ -3883,6 +4208,10 @@
     var select = document.getElementById('injBatch');
     var currentVal = select.value;
     select.innerHTML = '';
+    var rootOpt = document.createElement('option');
+    rootOpt.value = '__root__';
+    rootOpt.textContent = 'root / loose archive';
+    select.appendChild(rootOpt);
     
     document.querySelectorAll('.folder-block[data-standard-folder]').forEach(folder => {
       var name = folder.getAttribute('data-standard-folder');
@@ -3902,6 +4231,7 @@
     if(!requireAdmin()) return;
     var name = normalizeFolderPath(document.getElementById('newFolder').value);
     if(!name) return;
+    if(name === ROOT_ARCHIVE_PATH) return alert('that name is reserved for archive root.');
     if(findFolderBlock(name)) return alert("directory already exists.");
     ensureFolder(name);
     document.getElementById('newFolder').value = '';
@@ -3949,7 +4279,7 @@
       document.getElementById('smartFolderTitle').textContent = `isolated: ${tag}`;
       smartBlock.style.display = 'block';
 
-      document.querySelectorAll('[data-batch-target] .frow').forEach(row => {
+      document.querySelectorAll('[data-batch-target] .frow, [data-root-target] > .frow').forEach(row => {
         if (row.getAttribute('data-mood') === tag || row.getAttribute('data-type') === tag) {
           row.style.display = 'grid';
           var clone = row.cloneNode(true);
@@ -3964,7 +4294,57 @@
   }
 
   function baseRows() {
-    return Array.from(document.querySelectorAll('[data-batch-target] .frow'));
+    return Array.from(document.querySelectorAll('[data-batch-target] .frow, [data-root-target] > .frow'));
+  }
+
+  function dailySignalRow() {
+    var rows = baseRows();
+    if(!rows.length) return null;
+    var dayKey = Math.floor(Date.now() / 86400000);
+    return rows[Math.abs(dayKey) % rows.length];
+  }
+
+  function updateDiscoverySignal() {
+    var row = dailySignalRow();
+    var title = document.getElementById('dailySignalTitle');
+    if(title) title.textContent = row ? `${row.getAttribute('data-title') || 'untitled'} / ${row.getAttribute('data-type') || 'asset'} / ${row.getAttribute('data-sub') || 'root'}` : 'the archive is waiting for its first file';
+  }
+
+  function openDailySignal() {
+    var row = dailySignalRow();
+    if(row) handleRowClick({ target:row }, row);
+  }
+
+  function startArchiveRadio() {
+    var audioRows = baseRows().filter(row => row.getAttribute('data-type') === 'audio');
+    if(!audioRows.length) return;
+    var row = audioRows[Math.floor(Math.random() * audioRows.length)];
+    buildQueue();
+    var index = audioQueue.indexOf(row);
+    if(index >= 0) playTrackFromQueue(index);
+  }
+
+  function connectionTitleKey(row) {
+    return String(row.getAttribute('data-title') || '').toLowerCase().replace(/\b(v(?:er(?:sion)?)?\s*\d+|demo|mix|master|rough|final)\b/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+  }
+
+  function openArchiveConnections(seedRow) {
+    var candidate = seedRow || document.querySelector('.frow.playing') || dailySignalRow();
+    if(!candidate) return;
+    var seed = canonicalRow(candidate);
+    var key = connectionTitleKey(seed);
+    var folder = seed.getAttribute('data-sub') || '';
+    var mood = seed.getAttribute('data-mood') || '';
+    var related = baseRows().filter(row => row !== seed && ((key && connectionTitleKey(row) === key) || (folder && row.getAttribute('data-sub') === folder) || (mood && row.getAttribute('data-mood') === mood)));
+    var rows = [seed].concat(related).slice(0, 18);
+    var body = document.getElementById('connectionsBody');
+    body.innerHTML = `<div class="connection-hero"><h2>${escapeHtml(seed.getAttribute('data-title') || 'archive thread')}</h2><p>versions, neighboring files, visuals, and notes connected by title, folder, or mood.</p></div><div class="connection-list">${rows.map((row,index) => `<button class="connection-item" type="button" data-connection-key="${escapeAttr(timelineRowKey(row))}"><b>${String(index + 1).padStart(2,'0')}</b><span><strong>${escapeHtml(row.getAttribute('data-title') || 'untitled')}</strong>${escapeHtml(row.getAttribute('data-sub') || 'root')} / ${escapeHtml(row.getAttribute('data-type') || 'asset')} / ${escapeHtml(row.getAttribute('data-ver') || 'v1')}</span><em>${row === seed ? 'origin' : 'open'}</em></button>`).join('')}</div>`;
+    body.querySelectorAll('.connection-item').forEach(button => button.addEventListener('click', function(){
+      var row = baseRows().find(item => timelineRowKey(item) === this.getAttribute('data-connection-key'));
+      if(row) { closeViewport('connectionsViewport'); handleRowClick({ target:row }, row); }
+    }));
+    document.getElementById('connectionsViewport').classList.add('active');
+    setAppSection('connections');
   }
 
   function timelineDateForRow(row) {
@@ -4201,7 +4581,7 @@
 
   function sortExplorerRows() {
     if(!explorerSortKey) return;
-    var lists = Array.from(document.querySelectorAll('[data-batch-target]'));
+    var lists = Array.from(document.querySelectorAll('[data-batch-target], [data-root-target]'));
     var smartList = document.getElementById('smartFilterList');
     if(smartList) lists.push(smartList);
     lists.forEach(list => {
@@ -4261,7 +4641,7 @@
 
   // ---- FILE INJECTION ----
   function titleForUpload(file, baseTitle, index, total) {
-    var cleanName = file && file.name ? file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').trim() : 'untitled file';
+    var cleanName = file && file.name ? cleanSingleLine(file.name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' '), 120) : 'untitled file';
     if(total <= 1) return baseTitle || cleanName || 'untitled file';
     if(baseTitle) return `${baseTitle} ${String(index + 1).padStart(2, '0')}`;
     return cleanName || `untitled file ${index + 1}`;
@@ -4269,36 +4649,42 @@
 
   async function handleFileInject() {
     if(!requireAdmin()) return;
-    var title = document.getElementById('injTitle').value.trim();
-    var ver = document.getElementById('injVer').value || 'v1';
-    var baseBatch = normalizeFolderPath(document.getElementById('injBatch').value);
-    var subfolder = normalizeFolderPath(document.getElementById('injSubfolder').value);
-    var batch = subfolder ? normalizeFolderPath(`${baseBatch}/${subfolder}`) : baseBatch;
+    var title = cleanSingleLine(document.getElementById('injTitle').value, 120);
+    var ver = cleanSingleLine(document.getElementById('injVer').value, 24) || 'v1';
+    var forceRoot = Boolean(document.getElementById('injRoot')?.checked);
+    var selectedBatch = forceRoot ? '__root__' : document.getElementById('injBatch').value;
+    var baseBatch = selectedBatch === '__root__' ? '' : normalizeFolderPath(selectedBatch);
+    var subfolder = forceRoot ? '' : normalizeFolderPath(document.getElementById('injSubfolder').value);
+    var batch = subfolder ? normalizeFolderPath(baseBatch ? `${baseBatch}/${subfolder}` : subfolder) : baseBatch;
     var type = document.getElementById('injType').value;
-    var mood = document.getElementById('injMood').value.toLowerCase().trim() || 'raw';
-    var moodColor = document.getElementById('injMoodColor').value || '#ffffff';
-    var notes = document.getElementById('injNotes').value.trim();
-    var lyrics = document.getElementById('injLyrics').value.trim();
-    var links = {
-      spotify: document.getElementById('injSpotify').value.trim(),
-      apple: document.getElementById('injApple').value.trim(),
-      youtube: document.getElementById('injYoutube').value.trim(),
-      soundcloud: document.getElementById('injSoundcloud').value.trim()
+    var mood = cleanSingleLine(document.getElementById('injMood').value.toLowerCase(), 32) || 'raw';
+    var moodColor = safeHexColor(document.getElementById('injMoodColor').value);
+    var notes = cleanMultiline(document.getElementById('injNotes').value, 12000);
+    var lyrics = cleanMultiline(document.getElementById('injLyrics').value, 40000);
+    var rawLinks = {
+      spotify: document.getElementById('injSpotify').value,
+      apple: document.getElementById('injApple').value,
+      youtube: document.getElementById('injYoutube').value,
+      soundcloud: document.getElementById('injSoundcloud').value
     };
+    var links = Object.fromEntries(Object.entries(rawLinks).map(([key,value]) => [key,safeExternalUrl(value)]));
     var fileInput = document.getElementById('injFile');
     var coverInput = document.getElementById('injCover');
     
     if(!fileInput.files.length) return alert("select at least one core file.");
-    if(!batch) return alert("create a directory first to store this file.");
-
     var files = Array.from(fileInput.files);
+    var invalidLink = Object.keys(rawLinks).find(key => String(rawLinks[key] || '').trim() && !links[key]);
+    if(invalidLink) return alert(`${invalidLink} must be a secure https link.`);
+    var invalidFile = files.map(file => validateAssetFile(file, type)).find(Boolean);
+    if(invalidFile) return alert(invalidFile);
     var assetDate = selectedAssetDate();
     var assetTime = selectedAssetTime();
     var dateStr = displayDateTime(assetDate, assetTime);
     var submitBtn = document.querySelector('#injectForm button[onclick="handleFileInject()"]');
     var coverFile = coverInput.files.length > 0 ? coverInput.files[0] : null;
+    if(coverFile && (validateAssetFile(coverFile, 'image') || coverFile.size > 26214400)) return alert('cover art must be a valid image under 25mb.');
 
-    ensureFolder(batch);
+    archiveDestination(batch);
     updateDirectoryDropdown();
     generateFilterChip(mood, moodColor);
     setUploadProgress(4, files.length > 1 ? `preparing ${files.length} files` : 'preparing file');
@@ -4334,7 +4720,9 @@
           setUploadProgress(((i + 1) / files.length) * 92 + 4, files.length > 1 ? `indexed ${i + 1}/${files.length}` : 'indexed file');
         }
         setUploadProgress(100, 'upload complete');
+        showAppNotice(batch ? `indexed in ${batch}` : 'indexed directly in archive root');
         document.getElementById('injectForm').reset();
+        toggleRootPlacement(false);
         toggleCoverInput();
         setDefaultAssetDate();
         setFilter(activeFilter);
@@ -4365,7 +4753,9 @@
       createRow(file, file.name, uploadTitle, batch, mood, type, sizeStr, dateStr, coverUrl, ver, notes, links, moodColor, assetDate, assetTime, true, lyrics);
     });
     setUploadProgress(100, 'indexed locally');
+    showAppNotice(batch ? `indexed in ${batch}` : 'indexed directly in archive root');
     document.getElementById('injectForm').reset();
+    toggleRootPlacement(false);
     toggleCoverInput();
     setDefaultAssetDate();
     setFilter(activeFilter);
@@ -4380,6 +4770,8 @@
     }
 
     document.querySelectorAll('.folder-block[data-standard-folder]').forEach(folder => folder.remove());
+    var rootArchive = document.getElementById('rootArchiveList');
+    if(rootArchive) rootArchive.innerHTML = '';
     result.data.sort((a, b) => {
       var aOrder = Number.isFinite(Number(a.sort_order)) ? Number(a.sort_order) : Number.MAX_SAFE_INTEGER;
       var bOrder = Number.isFinite(Number(b.sort_order)) ? Number(b.sort_order) : Number.MAX_SAFE_INTEGER;
@@ -4412,6 +4804,12 @@
     container.appendChild(newBlock);
     attachExplorerDrag(newBlock);
     return newBlock.querySelector('[data-batch-target]');
+  }
+
+  function archiveDestination(batch) {
+    var path = normalizeFolderPath(batch);
+    if(path === ROOT_ARCHIVE_PATH) path = '';
+    return path ? ensureFolder(path) : document.getElementById('rootArchiveList');
   }
 
   function findFolderBlock(name) {
@@ -4499,10 +4897,10 @@
     targetRow.classList.remove('row-drop-target');
     var oldList = draggedExplorerItem.parentElement;
     var targetList = targetRow.parentElement;
-    var targetPath = targetList.getAttribute('data-batch-target');
+    var targetPath = targetList.hasAttribute('data-root-target') ? '' : (targetList.getAttribute('data-batch-target') || '');
     var insertAfter = e.clientY > targetRow.getBoundingClientRect().top + targetRow.getBoundingClientRect().height / 2;
     targetList.insertBefore(draggedExplorerItem, insertAfter ? targetRow.nextSibling : targetRow);
-    if(targetPath && draggedExplorerItem.getAttribute('data-sub') !== targetPath) {
+    if((draggedExplorerItem.getAttribute('data-sub') || '') !== targetPath) {
       draggedExplorerItem.setAttribute('data-sub', targetPath);
       saveMovedRowBatch(draggedExplorerItem, targetPath);
     }
@@ -4510,6 +4908,33 @@
     updateSortIndicators();
     persistRowOrder(targetList);
     if(oldList && oldList !== targetList) persistRowOrder(oldList);
+    buildQueue();
+    renderQueueList();
+  }
+
+  function handleRootDragOver(e) {
+    if(!isAdmin || !draggedExplorerItem || !draggedExplorerItem.classList.contains('frow')) return;
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+  }
+
+  function handleRootDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+  }
+
+  function handleRootDrop(e) {
+    if(!isAdmin || !draggedExplorerItem || !draggedExplorerItem.classList.contains('frow')) return;
+    e.preventDefault();
+    var rootList = e.currentTarget;
+    var oldList = draggedExplorerItem.parentElement;
+    rootList.classList.remove('drag-over');
+    rootList.appendChild(draggedExplorerItem);
+    draggedExplorerItem.setAttribute('data-sub','');
+    saveMovedRowBatch(draggedExplorerItem,'');
+    persistRowOrder(rootList);
+    if(oldList && oldList !== rootList) persistRowOrder(oldList);
+    removeEmptyFolders();
+    updateCounts();
     buildQueue();
     renderQueueList();
   }
@@ -4649,7 +5074,7 @@
     if(!isRemoteReady) return;
     var assetId = row.getAttribute('data-id');
     if(!assetId) return;
-    var result = await supabaseClient.from('archive_assets').update({ batch }).eq('id', assetId);
+    var result = await supabaseClient.from('archive_assets').update({ batch:batch || ROOT_ARCHIVE_PATH }).eq('id', assetId);
     if(result.error) {
       document.getElementById('authStatus').textContent = 'move not saved';
     }
@@ -4672,8 +5097,8 @@
     var list = folder.querySelector(':scope > .folder-contents');
     var parentPath = folderParentPath(folder.getAttribute('data-standard-folder'));
     var destination = parentPath ? ensureFolder(parentPath) : document.getElementById('directoryContainer');
-    var rowDestination = parentPath ? destination : ensureFolder('uncategorized');
-    var rowDestinationPath = parentPath || 'uncategorized';
+    var rowDestination = parentPath ? destination : archiveDestination('');
+    var rowDestinationPath = parentPath || '';
     var children = Array.from(list.children);
     if(!children.length) {
       folder.remove();
@@ -4732,8 +5157,9 @@
 
   function createRowFromRecord(record, skipRefresh) {
     var type = record.type || 'audio';
-    var batch = normalizeFolderPath(record.batch) || 'uncategorized';
-    var targetBatchList = ensureFolder(batch);
+    var batch = normalizeFolderPath(record.batch);
+    if(batch === ROOT_ARCHIVE_PATH) batch = '';
+    var targetBatchList = archiveDestination(batch);
     var row = document.createElement('div');
     row.className = 'frow';
     row.draggable = true;
@@ -4801,7 +5227,7 @@
   }
 
   async function saveRemoteAsset(payload) {
-    var safeFolder = normalizeFolderPath(payload.batch).split('/').map(part => part.replace(/[^a-z0-9_-]+/g, '-')).filter(Boolean).join('/') || 'uncategorized';
+    var safeFolder = normalizeFolderPath(payload.batch).split('/').map(part => part.replace(/[^a-z0-9_-]+/g, '-')).filter(Boolean).join('/') || 'root';
     var safeName = payload.name.replace(/[^a-z0-9._-]+/gi, '-');
     var basePath = `${safeFolder}/${Date.now()}-${safeName}`;
     var fileUpload = await supabaseClient.storage.from(STORAGE_BUCKET).upload(basePath, payload.file, { upsert: false });
@@ -4821,7 +5247,7 @@
       filename: payload.name,
       title: payload.title,
       version: payload.ver,
-      batch: payload.batch,
+      batch: payload.batch || ROOT_ARCHIVE_PATH,
       asset_date: payload.assetDate,
       asset_time: payload.assetTime || null,
       mood: payload.mood,
@@ -4858,8 +5284,8 @@
   }
 
   function createRow(fileObj, name, title, batch, mood, type, size, date, coverUrl, ver, notes, links, moodColor, assetDate, assetTime, skipFormReset, lyrics) {
-    batch = normalizeFolderPath(batch) || 'uncategorized';
-    var targetBatchList = ensureFolder(batch);
+    batch = normalizeFolderPath(batch);
+    var targetBatchList = archiveDestination(batch);
     
     var row = document.createElement('div');
     row.className = 'frow';
@@ -4922,6 +5348,7 @@
       attachExplorerDrag(row);
       if(!skipFormReset) {
         document.getElementById('injectForm').reset();
+        toggleRootPlacement(false);
         toggleCoverInput();
         setDefaultAssetDate();
       }
@@ -4930,7 +5357,7 @@
   }
 
   function updateCounts() {
-    var rows = Array.from(document.querySelectorAll('[data-batch-target] .frow'));
+    var rows = baseRows();
     var audio = rows.filter(row => row.getAttribute('data-type') === 'audio').length;
     var visual = rows.filter(row => ['image','video'].includes(row.getAttribute('data-type'))).length;
     document.getElementById('itemCount').textContent = `${rows.length} indexed`;
@@ -4938,6 +5365,7 @@
     document.getElementById('statVisual').textContent = visual;
     document.getElementById('statAccess').textContent = isAdmin ? 'admin' : 'open';
     document.getElementById('emptyState').classList.toggle('active', rows.length === 0);
+    updateDiscoverySignal();
     refreshLiveAssetSelect();
     buildTimeline();
   }
@@ -4988,6 +5416,10 @@
     if(type === 'text') {
       document.getElementById('txtViewTitle').textContent = rowElement.getAttribute('data-title');
       document.getElementById('txtViewBody').textContent = rowElement.getAttribute('data-text-content');
+      var attachedNotes = String(rowElement.getAttribute('data-notes') || '').trim();
+      var textNotes = document.getElementById('txtViewNotes');
+      textNotes.innerHTML = attachedNotes ? `<strong>attached notes</strong>${escapeHtml(attachedNotes).replace(/\n/g,'<br>')}` : '';
+      textNotes.style.display = attachedNotes ? 'block' : 'none';
       document.getElementById('textViewport').classList.add('active');
       setAppSection('text viewer');
     } else if(type === 'image') {
@@ -5063,7 +5495,7 @@
   }
 
   function applyEditedValues(row, values) {
-    var oldBatch = row.getAttribute('data-sub') || 'uncategorized';
+    var oldBatch = row.getAttribute('data-sub') || '';
     var oldList = row.parentElement;
     row.setAttribute('data-title', values.title);
     row.setAttribute('data-ver', values.ver);
@@ -5090,7 +5522,7 @@
     if(moodPill) moodPill.textContent = values.mood;
 
     if(values.batch !== oldBatch) {
-      ensureFolder(values.batch).appendChild(row);
+      archiveDestination(values.batch).appendChild(row);
       removeEmptyFolders();
     }
     var targetList = row.parentElement;
@@ -5106,23 +5538,26 @@
   async function saveEditedAsset() {
     if(!requireAdmin() || !editingRow) return;
     var values = {
-      title: document.getElementById('editTitle').value.trim() || 'untitled file',
-      ver: document.getElementById('editVer').value.trim() || 'v1',
+      title: cleanSingleLine(document.getElementById('editTitle').value, 120) || 'untitled file',
+      ver: cleanSingleLine(document.getElementById('editVer').value, 24) || 'v1',
       assetDate: document.getElementById('editDate').value || new Date().toISOString().slice(0, 10),
       assetTime: document.getElementById('editTime').value || '',
-      batch: normalizeFolderPath(document.getElementById('editFolder').value) || 'uncategorized',
+      batch: normalizeArchiveDestination(document.getElementById('editFolder').value),
       position: Math.max(1, parseInt(document.getElementById('editPosition').value, 10) || 1),
-      mood: document.getElementById('editMood').value.toLowerCase().trim() || 'raw',
-      moodColor: document.getElementById('editMoodColor').value || '#ffffff',
-      notes: document.getElementById('editNotes').value.trim(),
-      lyrics: document.getElementById('editLyrics').value.trim(),
+      mood: cleanSingleLine(document.getElementById('editMood').value.toLowerCase(), 32) || 'raw',
+      moodColor: safeHexColor(document.getElementById('editMoodColor').value),
+      notes: cleanMultiline(document.getElementById('editNotes').value, 12000),
+      lyrics: cleanMultiline(document.getElementById('editLyrics').value, 40000),
       links: {
-        spotify: document.getElementById('editSpotify').value.trim(),
-        apple: document.getElementById('editApple').value.trim(),
-        youtube: document.getElementById('editYoutube').value.trim(),
-        soundcloud: document.getElementById('editSoundcloud').value.trim()
+        spotify: safeExternalUrl(document.getElementById('editSpotify').value),
+        apple: safeExternalUrl(document.getElementById('editApple').value),
+        youtube: safeExternalUrl(document.getElementById('editYoutube').value),
+        soundcloud: safeExternalUrl(document.getElementById('editSoundcloud').value)
       }
     };
+    var editUrlFields = ['editSpotify','editApple','editYoutube','editSoundcloud'];
+    var badEditUrl = editUrlFields.find(id => document.getElementById(id).value.trim() && !safeExternalUrl(document.getElementById(id).value));
+    if(badEditUrl) return alert('all external links must use https.');
 
     var assetId = editingRow.getAttribute('data-id');
     if(isRemoteReady && assetId) {
@@ -5131,7 +5566,7 @@
         version: values.ver,
         asset_date: values.assetDate,
         asset_time: values.assetTime || null,
-        batch: values.batch,
+        batch: values.batch || ROOT_ARCHIVE_PATH,
         mood: values.mood,
         mood_color: values.moodColor,
         notes: values.notes,
@@ -5287,8 +5722,8 @@
       ['apple music', row.getAttribute('data-apple')],
       ['youtube', row.getAttribute('data-youtube')],
       ['soundcloud', row.getAttribute('data-soundcloud')]
-    ].filter(item => item[1]);
-    var linkHtml = links.length ? links.map(item => `<a href="${escapeAttr(item[1])}" target="_blank" rel="noopener">${escapeHtml(item[0])}</a>`).join('') : '<span>no links added</span>';
+    ].map(item => [item[0], safeExternalUrl(item[1])]).filter(item => item[1]);
+    var linkHtml = links.length ? links.map(item => `<a href="${escapeAttr(item[1])}" target="_blank" rel="noopener noreferrer">${escapeHtml(item[0])}</a>`).join('') : '<span>no links added</span>';
     meta.innerHTML = `
       <div class="meta-section-title">notes</div>
       ${renderNotesHtml(row.getAttribute('data-notes') || '')}
@@ -5352,7 +5787,7 @@
 
   function parseSyncedLyrics(text) {
     var entries = [];
-    String(text || '').split(/\r?\n/).forEach(line => {
+    String(text || '').slice(0, 40000).split(/\r?\n/).slice(0, 1500).forEach(line => {
       var clean = line.trim();
       if(!clean) return;
       var bracket = clean.match(/^\[([^\]]+)\]\s*(.+)$/);
@@ -5361,10 +5796,10 @@
       var lyric = bracket ? bracket[2] : (loose ? loose[2] : clean);
       if(time === null || !lyric) return;
       lyric.split(/\s*\|\|\s*/).forEach((part, splitIndex) => {
-        var raw = part.trim();
+        var raw = cleanSingleLine(part, 500);
         if(!raw) return;
         var lane = splitIndex ? 'adlib' : 'main';
-        var laneMatch = raw.match(/^\[(adlib|bg|background|lead|main|effect)\]\s*(.*)$/i);
+        var laneMatch = raw.match(/^\[(adlib|bg|background|lead|main|effect|commentary|note)\]\s*(.*)$/i);
         if(laneMatch) {
           lane = laneMatch[1].toLowerCase() === 'background' ? 'bg' : laneMatch[1].toLowerCase();
           raw = laneMatch[2].trim();
@@ -5452,13 +5887,20 @@
   function updateLyricsArtwork(row) {
     var wrap = document.querySelector('.lyrics-focus-art-wrap');
     var img = document.getElementById('lyricsFocusArt');
+    var ambient = document.getElementById('lyricsAmbientArt');
+    var title = document.getElementById('lyricsFocusTitle');
+    var sub = document.getElementById('lyricsFocusSub');
     if(!wrap || !img) return;
     var src = row ? (row.getAttribute('data-cover') || row.getAttribute('data-img-src') || '') : '';
+    if(title) title.textContent = row ? (row.getAttribute('data-title') || 'untitled') : '--';
+    if(sub) sub.textContent = row ? `${row.getAttribute('data-sub') || 'archive'} / ${row.getAttribute('data-ver') || 'version'}` : 'angel / akrasia archive';
     if(src) {
       img.src = src;
+      if(ambient) ambient.src = src;
       wrap.classList.add('has-art');
     } else {
       img.removeAttribute('src');
+      if(ambient) ambient.removeAttribute('src');
       wrap.classList.remove('has-art');
     }
   }
@@ -5559,7 +6001,7 @@
   }
 
   function buildQueue() {
-    var scope = (activeFilter === 'all') ? document.querySelectorAll('[data-batch-target] .frow[data-type="audio"]') : document.querySelectorAll('#smartFilterList .frow[data-type="audio"]');
+    var scope = (activeFilter === 'all') ? document.querySelectorAll('[data-batch-target] .frow[data-type="audio"], [data-root-target] > .frow[data-type="audio"]') : document.querySelectorAll('#smartFilterList .frow[data-type="audio"]');
     audioQueue = Array.from(scope);
     renderQueueList();
   }
@@ -5569,7 +6011,7 @@
     audioQueue.forEach((row, i) => {
       var el = document.createElement('div');
       el.className = 'queue-item' + (i === queueIndex ? ' active' : '');
-      el.innerHTML = `<span>${i+1}. ${row.getAttribute('data-title')}</span> <span style="opacity:0.5">${row.getAttribute('data-sub')} / ${row.getAttribute('data-ver')}</span>`;
+      el.innerHTML = `<span>${i+1}. ${escapeHtml(row.getAttribute('data-title') || 'untitled')}</span> <span style="opacity:0.5">${escapeHtml(row.getAttribute('data-sub') || 'root')} / ${escapeHtml(row.getAttribute('data-ver') || 'v1')}</span>`;
       el.onclick = () => playTrackFromQueue(i);
       qList.appendChild(el);
     });
@@ -6197,8 +6639,109 @@
   toggleCoverInput();
   setDefaultAssetDate();
   updateDirectoryDropdown();
+  toggleRootPlacement(false);
   updateCounts();
   initExplorerDrag();
+  var archiveTourTimers = [];
+  var archiveTourStep = 0;
+  var archiveTourDwell = 4800;
+  var archiveTourCopy = [
+    { kicker:'01 / archive', title:'everything begins as a file.', copy:'unreleased music, versions, notes, visuals, and the details around them live together instead of disappearing into folders.' },
+    { kicker:'02 / immersive timeline', title:'then the files become a history.', copy:'every session, draft, image, and note keeps its exact place in time, creating a living chronology of angel.' },
+    { kicker:'03 / player + lyrics', title:'listening opens the world inside it.', copy:'artwork, queues, waveform, artist commentary, synced lead vocals, adlibs, and instrumental space all move with the song.' },
+    { kicker:'04 / visual archive', title:'the music leaves a visual memory.', copy:'covers, photographs, video, and unfinished studies stay connected to the versions and moments that created them.' },
+    { kicker:'05 / live room', title:'and sometimes the archive becomes present tense.', copy:'angel controls a broadcast queue while listeners watch, follow announcements, read live notes, and talk together without controlling the stream.' }
+  ];
+
+  function setArchiveTourStep(index) {
+    var intro = document.getElementById('archiveIntro');
+    if(!intro) return;
+    var safeIndex = Math.max(0, Math.min(archiveTourCopy.length - 1, Number(index) || 0));
+    archiveTourStep = safeIndex;
+    intro.setAttribute('data-step', safeIndex);
+    intro.querySelectorAll('.tour-zone').forEach((zone, zoneIndex) => {
+      zone.classList.toggle('active', zoneIndex === safeIndex);
+      zone.classList.toggle('past', zoneIndex < safeIndex);
+      zone.setAttribute('aria-hidden', zoneIndex === safeIndex ? 'false' : 'true');
+    });
+    intro.querySelectorAll('.tour-progress i').forEach((dot, dotIndex) => {
+      dot.classList.toggle('active', dotIndex <= safeIndex);
+      dot.classList.toggle('current', dotIndex === safeIndex);
+    });
+    var back = document.getElementById('tourBack');
+    var next = document.getElementById('tourNext');
+    if(back) back.disabled = safeIndex === 0;
+    if(next) next.textContent = safeIndex === archiveTourCopy.length - 1 ? 'finish' : 'next';
+    var copy = archiveTourCopy[safeIndex];
+    var caption = intro.querySelector('.tour-caption-copy');
+    if(caption && caption.animate) caption.animate([{opacity:.12,transform:'translateY(10px)',filter:'blur(5px)'},{opacity:1,transform:'translateY(0)',filter:'blur(0)'}],{duration:650,easing:'cubic-bezier(.16,1,.3,1)'});
+    document.getElementById('tourKicker').textContent = copy.kicker;
+    document.getElementById('tourTitle').textContent = copy.title;
+    document.getElementById('tourCopy').textContent = copy.copy;
+  }
+
+  function scheduleArchiveTour(fromStep) {
+    archiveTourTimers.forEach(timer => clearTimeout(timer));
+    archiveTourTimers = [];
+    for(var step = fromStep + 1; step < archiveTourCopy.length; step++) {
+      ((targetStep, delay) => archiveTourTimers.push(setTimeout(() => setArchiveTourStep(targetStep), delay)))(step, (step - fromStep) * archiveTourDwell);
+    }
+    archiveTourTimers.push(setTimeout(() => finishArchiveIntro(false), (archiveTourCopy.length - fromStep) * archiveTourDwell + 900));
+  }
+
+  function moveArchiveTour(direction) {
+    var target = archiveTourStep + Number(direction || 0);
+    if(target >= archiveTourCopy.length) return finishArchiveIntro(false);
+    setArchiveTourStep(Math.max(0, target));
+    scheduleArchiveTour(archiveTourStep);
+  }
+
+  function revealArchiveShell(delay) {
+    setTimeout(() => {
+      document.body.classList.remove('shell-loading');
+      document.body.classList.add('archive-ready');
+    }, delay || 0);
+  }
+
+  function finishArchiveIntro(skipped) {
+    var intro = document.getElementById('archiveIntro');
+    if(!intro || intro.classList.contains('is-leaving')) return;
+    archiveTourTimers.forEach(timer => clearTimeout(timer));
+    archiveTourTimers = [];
+    var mark = document.getElementById('introMark');
+    var target = document.querySelector('.topbar .wordmark');
+    if(mark && target && !skipped && mark.animate) {
+      var from = mark.getBoundingClientRect();
+      var to = target.getBoundingClientRect();
+      var dx = to.left + to.width / 2 - (from.left + from.width / 2);
+      var dy = to.top + to.height / 2 - (from.top + from.height / 2);
+      var scale = Math.max(.12, to.width / Math.max(1, from.width));
+      mark.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(${scale})`,opacity:.92}],{duration:780,easing:'cubic-bezier(.16,1,.3,1)',fill:'forwards'});
+    }
+    intro.classList.add('is-leaving');
+    document.body.classList.remove('intro-active');
+    revealArchiveShell(skipped ? 80 : 340);
+    try { localStorage.setItem('akrasia_tour_seen_v4','1'); } catch(error) {}
+    setTimeout(() => intro.remove(), 820);
+  }
+
+  function startArchiveIntro() {
+    var drawer = document.getElementById('liveAdminDrawer');
+    if(drawer && drawer.parentElement !== document.body) document.body.appendChild(drawer);
+    var alreadySeen = false;
+    try { alreadySeen = localStorage.getItem('akrasia_tour_seen_v4') === '1'; } catch(error) {}
+    if(alreadySeen) {
+      var intro = document.getElementById('archiveIntro');
+      if(intro) intro.remove();
+      document.body.classList.remove('intro-active');
+      revealArchiveShell(90);
+      return;
+    }
+    setArchiveTourStep(0);
+    scheduleArchiveTour(0);
+  }
+
+  startArchiveIntro();
   initSupabase();
 </script>
 
