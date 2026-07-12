@@ -7,7 +7,7 @@
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=()">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self';">
 <title>akrasia archive</title>
-<script>try{if(localStorage.getItem('akrasia_tour_seen_v4'))document.documentElement.classList.add('intro-seen')}catch(e){}</script>
+<script>try{if(localStorage.getItem('akrasia_tour_seen_v5'))document.documentElement.classList.add('intro-seen')}catch(e){}</script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
@@ -1256,6 +1256,147 @@
   body[data-section="lyrics"] .header-actions-archive{display:none}body[data-section="lyrics"] .header-actions-viewer{display:flex}body[data-section="lyrics"] #fsMinimizeBtn{display:inline-flex!important}
   .tour-world{transition-duration:1.45s!important}.archive-intro[data-step="1"] .tour-world{transform:translate3d(-100vw,-1.5vh,0) scale(1.015)}.archive-intro[data-step="2"] .tour-world{transform:translate3d(-200vw,1vh,0) scale(.99)}.archive-intro[data-step="3"] .tour-world{transform:translate3d(-300vw,-1vh,0) scale(1.02)}.tour-zone{top:8vh;height:61vh}.tour-caption{left:3vw;right:3vw;bottom:2.5vh;padding:15px 17px;border:1px solid rgba(255,255,255,.27);border-radius:8px;background:linear-gradient(105deg,rgba(3,3,3,.94),rgba(12,12,12,.82));box-shadow:0 24px 90px rgba(0,0,0,.78),0 0 42px rgba(255,255,255,.06);backdrop-filter:blur(24px) saturate(1.15);align-items:center}.tour-caption-copy{max-width:76ch}.tour-kicker{font-size:.62rem;color:rgba(255,255,255,.62)}.tour-title{margin-top:6px;font-size:clamp(1.55rem,2.7vw,3rem);line-height:1}.tour-copy{margin-top:7px;font-size:clamp(.67rem,.85vw,.82rem);line-height:1.62;color:rgba(255,255,255,.78)}.tour-controls{align-self:stretch}.tour-progress{align-self:center}.tour-progress i{position:relative;width:34px;height:3px;overflow:hidden}.tour-progress i.current{background:rgba(255,255,255,.2);box-shadow:none}.tour-progress i.current::after{content:"";position:absolute;inset:0;background:#fff;box-shadow:0 0 10px #fff;transform-origin:left;animation:tourDwell 4.8s linear forwards}@keyframes tourDwell{from{transform:scaleX(0)}to{transform:scaleX(1)}}.tour-nav{display:flex;gap:5px}.tour-nav button{border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:7px 10px;font:600 .57rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.72);cursor:pointer}.tour-nav button:hover{background:#fff;color:#000}.tour-nav button:disabled{opacity:.24;pointer-events:none}
   @media(max-width:800px){.tour-zone{top:8vh!important;height:52vh!important}.tour-caption{left:10px;right:10px;bottom:10px;padding:11px;grid-template-columns:1fr!important;gap:9px}.tour-caption-copy{max-width:none}.tour-title{font-size:clamp(1.2rem,5.8vw,1.8rem)}.tour-copy{display:block!important;font-size:.6rem;line-height:1.5;max-height:4.5em;overflow:auto}.tour-controls{display:grid;grid-template-columns:1fr auto;gap:7px}.tour-progress{grid-column:1/-1;width:100%;justify-content:stretch}.tour-progress i{width:auto;flex:1}.tour-nav{justify-self:start}.tour-nav button{padding:6px 8px}.intro-skip{justify-self:end;padding:6px 9px}}
+
+  /* Stable responsive contracts for lyrics, live controls, and the mobile dock. */
+  .lyrics-focus-panel{grid-template-columns:minmax(220px,min(34vw,520px)) minmax(0,1fr)!important;max-width:100%;}
+  .lyrics-focus-lines,.lyrics-focus-group,.lyrics-focus-line{min-width:0;max-width:100%;}
+  .lyrics-focus-group{width:100%;overflow:visible;box-sizing:border-box;padding-inline:1.5%;white-space:normal!important;}
+  .lyrics-focus-line{display:block;inline-size:100%;max-inline-size:100%;font-size:clamp(1.9rem,3.2vw,4rem)!important;line-height:1.02!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:break-word;text-wrap:pretty;}
+  .lyrics-focus-line[data-lane="adlib"],.lyrics-focus-line[data-lane="bg"]{width:min(82%,32ch);justify-self:end;font-size:clamp(1rem,1.9vw,2.25rem)!important;line-height:1.08!important;}
+  .lyrics-focus-group.active{transform:translate3d(0,0,38px) scale(1.015)!important;}
+
+  body.is-admin .live-admin-drawer.admin-only{box-sizing:border-box!important;max-width:min(1180px,calc(100vw - 32px))!important;}
+  body.is-admin .live-admin-drawer.admin-only .live-admin-drawer-grid{box-sizing:border-box;width:100%;max-width:100%;}
+  body.is-admin .live-admin-drawer.admin-only section{min-width:0;max-width:100%;}
+  body.is-admin .live-admin-drawer.admin-only input[type="file"]{display:block;max-width:100%;overflow:hidden;}
+  @media(max-width:1100px){
+    body.is-admin .live-admin-drawer.admin-only .live-admin-drawer-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  }
+
+  @media(max-width:980px){
+    body:not(.live-follower) .player-bar{left:10px!important;right:10px!important;bottom:max(10px,env(safe-area-inset-bottom))!important;width:auto!important;max-width:none!important;min-height:0!important;margin:0!important;padding:13px 10px 8px!important;transform:none!important;grid-template-columns:44px minmax(0,1fr) auto!important;grid-template-areas:"cover info transport" "progress progress time"!important;column-gap:9px!important;row-gap:4px!important;}
+    body:not(.live-follower) .player-bar .pb-cover{grid-area:cover;width:44px;height:44px;}
+    body:not(.live-follower) .player-bar .pb-info{grid-area:info;min-width:0;align-self:center;}
+    body:not(.live-follower) .player-bar .pb-center{display:contents!important;}
+    body:not(.live-follower) .player-bar .pb-center>.pb-ctrls{grid-area:transport!important;display:flex!important;width:auto!important;height:40px!important;align-items:center!important;justify-self:end!important;gap:5px!important;}
+    body:not(.live-follower) .player-bar .pb-center #pbPrev,
+    body:not(.live-follower) .player-bar .pb-center #pbNext{display:none!important;}
+    body:not(.live-follower) .player-bar .pb-center .pb-play,
+    body:not(.live-follower) .player-bar .pb-center .pb-notes-mobile{display:grid!important;width:40px!important;height:40px!important;margin:0!important;place-items:center!important;}
+    body:not(.live-follower) .player-bar .pb-progress-row{display:contents!important;}
+    body:not(.live-follower) .player-bar .pb-progress-container{grid-area:progress!important;display:flex!important;width:100%!important;min-width:0!important;height:26px!important;}
+    body:not(.live-follower) .player-bar .pb-time{grid-area:time!important;display:block!important;width:64px!important;min-width:0!important;max-width:64px!important;align-self:center!important;text-align:right!important;font-size:.5rem!important;white-space:nowrap!important;overflow:hidden!important;}
+    body:not(.live-follower) .player-bar>.pb-ctrls:last-child{display:none!important;}
+  }
+
+  @media(max-width:700px){
+    body.is-admin .live-admin-drawer.admin-only{inset:calc(var(--app-header-h) + 8px) 8px 8px!important;max-width:calc(100vw - 16px)!important;}
+    body.is-admin .live-admin-drawer.admin-only .live-admin-drawer-grid{grid-template-columns:1fr!important;padding:10px!important;}
+    .lyrics-focus-panel{grid-template-columns:1fr!important;grid-template-rows:auto minmax(0,1fr)!important;padding:18px 5vw 30px!important;gap:14px!important;}
+    .lyrics-focus-art-wrap{width:min(38vw,160px)!important;}
+    .lyrics-focus-line{font-size:clamp(1.45rem,7.4vw,2.7rem)!important;}
+    .lyrics-focus-line[data-lane="adlib"],.lyrics-focus-line[data-lane="bg"]{font-size:clamp(.88rem,4.5vw,1.55rem)!important;}
+  }
+
+  /* The lyric player changes modes at the same breakpoint as its transport. */
+  @media(max-width:1180px){
+    .fs-player.lyrics-focus .fs-main{justify-content:flex-end!important;padding:0!important;}
+    .fs-player.lyrics-focus .lyrics-focus-panel{inset:0 0 94px!important;padding:5vh 6vw 86px!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;align-items:center!important;gap:0!important;}
+    .fs-player.lyrics-focus .lyrics-focus-art-wrap{display:block!important;position:absolute!important;left:6vw;top:4vh;width:clamp(92px,15vw,148px)!important;height:auto!important;aspect-ratio:1;z-index:3;border-radius:8px;opacity:.94;box-shadow:0 18px 58px rgba(0,0,0,.58),0 0 34px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),.18);}
+    .fs-player.lyrics-focus .lyrics-focus-lines{width:100%;max-width:100%;max-height:100%;padding:3vh 0 8vh;align-content:center;justify-self:stretch;overflow:hidden;}
+    .fs-player.lyrics-focus .lyrics-focus-group{width:100%;padding-inline:2vw;overflow:visible;text-align:left!important;transform-origin:left center!important;}
+    .fs-player.lyrics-focus .lyrics-focus-group.active{transform:translate3d(0,0,20px) scale(1)!important;}
+    .fs-player.lyrics-focus .lyrics-focus-line{width:100%!important;max-width:100%!important;justify-self:stretch!important;text-align:left!important;padding-right:3vw;}
+    .fs-player.lyrics-focus .lyrics-focus-line[data-lane="adlib"],.fs-player.lyrics-focus .lyrics-focus-line[data-lane="bg"]{width:100%!important;max-width:100%!important;justify-self:stretch!important;text-align:left!important;}
+    .fs-player.lyrics-focus .lyrics-focus-line:not([data-lane="adlib"]):not([data-lane="bg"]):not([data-lane="commentary"]):not([data-lane="note"]){font-size:clamp(2rem,5.2vw,4rem)!important;}
+    .fs-player.lyrics-focus .lyrics-focus-line[data-lane="adlib"],.fs-player.lyrics-focus .lyrics-focus-line[data-lane="bg"]{font-size:clamp(1.1rem,3.2vw,2.2rem)!important;}
+    .fs-player.lyrics-focus .lyrics-empty-focus{justify-self:center;width:min(520px,100%);padding:16px;text-align:center;background:rgba(0,0,0,.34);backdrop-filter:blur(14px);}
+    .fs-player.lyrics-focus .lyrics-focus-song{left:calc(6vw + clamp(92px,15vw,148px) + 16px);right:6vw;top:4vh;bottom:auto;max-width:none;min-height:clamp(92px,15vw,148px);display:flex;flex-direction:column;justify-content:center;}
+    .fs-player.lyrics-focus .lyrics-focus-song strong{font-size:clamp(1.05rem,2.6vw,1.55rem);white-space:normal;line-height:1.05;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+    .fs-player.lyrics-focus .lyrics-focus-song span{font-size:clamp(.52rem,1.25vw,.68rem);white-space:normal;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+    .fs-player.lyrics-focus .fs-controls{position:absolute!important;left:6vw!important;right:6vw!important;bottom:14px!important;width:auto!important;margin:0!important;display:grid!important;grid-template-columns:auto minmax(0,1fr) auto!important;grid-template-rows:40px!important;gap:10px!important;padding:0!important;border:0!important;align-items:center!important;z-index:20!important;}
+    .fs-player.lyrics-focus .fs-buttons{grid-column:1!important;grid-row:1!important;gap:5px!important;}
+    .fs-player.lyrics-focus .fs-progress-container{grid-column:2!important;grid-row:1!important;width:100%!important;min-width:0!important;}
+    .fs-player.lyrics-focus .fs-time{grid-column:3!important;grid-row:1!important;min-width:72px!important;text-align:right!important;}
+  }
+  @media(max-width:560px){
+    .fs-player.lyrics-focus .lyrics-focus-panel{padding:3vh 5vw 80px!important;}
+    .fs-player.lyrics-focus .lyrics-focus-art-wrap{left:5vw;top:3vh;width:clamp(76px,22vw,110px)!important;}
+    .fs-player.lyrics-focus .lyrics-focus-line:not([data-lane="adlib"]):not([data-lane="bg"]):not([data-lane="commentary"]):not([data-lane="note"]){font-size:clamp(1.8rem,8vw,3.2rem)!important;}
+    .fs-player.lyrics-focus .lyrics-focus-line[data-lane="adlib"],.fs-player.lyrics-focus .lyrics-focus-line[data-lane="bg"]{font-size:clamp(1rem,5.2vw,1.8rem)!important;}
+    .fs-player.lyrics-focus .lyrics-focus-song{left:calc(5vw + clamp(76px,22vw,110px) + 12px);right:5vw;top:3vh;bottom:auto;min-height:clamp(76px,22vw,110px);}
+    .fs-player.lyrics-focus .fs-controls{left:5vw!important;right:5vw!important;bottom:10px!important;grid-template-columns:auto minmax(70px,1fr) 58px!important;gap:7px!important;}
+    .fs-player.lyrics-focus .fs-buttons #fsPrev,.fs-player.lyrics-focus .fs-buttons #fsNext{display:none!important;}
+    .fs-player.lyrics-focus .fs-time{min-width:58px!important;font-size:.5rem!important;overflow:hidden;}
+  }
+
+  @media(min-width:1181px){
+    .fs-player.lyrics-focus .lyrics-focus-panel{padding:4vh 5vw 26px!important;grid-template-columns:min(40vw,58vh,620px) minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr) auto!important;column-gap:clamp(54px,7vw,134px)!important;row-gap:14px!important;align-items:center!important;}
+    .fs-player.lyrics-focus .lyrics-focus-art-wrap{grid-column:1;grid-row:1;width:100%!important;max-width:100%;align-self:end;justify-self:stretch;}
+    .fs-player.lyrics-focus .lyrics-focus-song{position:relative!important;grid-column:1;grid-row:2;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;width:100%;max-width:100%;text-align:center;}
+    .fs-player.lyrics-focus .lyrics-focus-song strong{font-size:clamp(1.05rem,1.35vw,1.45rem);white-space:normal;line-height:1.1;}
+    .fs-player.lyrics-focus .lyrics-focus-song span{font-size:clamp(.58rem,.72vw,.72rem);white-space:normal;line-height:1.45;}
+    .fs-player.lyrics-focus .lyrics-focus-lines{grid-column:2;grid-row:1 / 3;padding-right:2vw;align-self:center;}
+    .fs-player.lyrics-focus .lyrics-focus-line:not([data-lane="adlib"]):not([data-lane="bg"]):not([data-lane="commentary"]):not([data-lane="note"]){font-size:clamp(2.6rem,4.15vw,5.35rem)!important;line-height:.98!important;}
+    .fs-player.lyrics-focus .lyrics-focus-line[data-lane="adlib"],.fs-player.lyrics-focus .lyrics-focus-line[data-lane="bg"]{font-size:clamp(1.35rem,2.45vw,3.15rem)!important;width:min(84%,30ch);justify-self:end;}
+    .fs-player.lyrics-focus .fs-controls{position:absolute!important;left:5vw!important;bottom:14px!important;width:min(40vw,58vh,620px)!important;margin:0!important;padding:0!important;border:0!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:30px 42px!important;gap:5px 10px!important;align-items:center!important;z-index:20!important;}
+    .fs-player.lyrics-focus .fs-progress-container{grid-column:1;grid-row:1;width:100%!important;min-width:0!important;}
+    .fs-player.lyrics-focus .fs-time{grid-column:2;grid-row:1;min-width:84px;text-align:right;}
+    .fs-player.lyrics-focus .fs-buttons{grid-column:1 / 3;grid-row:2;justify-self:center;gap:10px;}
+  }
+
+  /* Feature-led final chapter of the first-visit cinematic tour. */
+  .tour-world{width:600vw!important;}
+  .archive-intro[data-step="5"] .tour-world{transform:translate3d(-500vw,1vh,0) scale(.995);}
+  .tour-zone[data-tour="5"]{left:512vw;}
+  .tour-feature-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+  .tour-feature-list span{padding:5px 7px;border:1px solid rgba(255,255,255,.22);border-radius:999px;background:rgba(255,255,255,.055);font:600 .54rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.72);white-space:nowrap;animation:tourFeatureIn .55s var(--motion-ease) both;}
+  .tour-feature-list span:nth-child(2){animation-delay:.06s}.tour-feature-list span:nth-child(3){animation-delay:.12s}.tour-feature-list span:nth-child(4){animation-delay:.18s}.tour-feature-list span:nth-child(5){animation-delay:.24s}
+  .tour-system{padding:18px;background:radial-gradient(circle at 76% 24%,rgba(255,255,255,.12),transparent 32%),#050505;}
+  .tour-system-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.18);font:600 .62rem 'JetBrains Mono',monospace;color:rgba(255,255,255,.55);}
+  .tour-system-head strong{font:800 1rem 'Inter',sans-serif;color:#fff;}
+  .tour-system-grid{height:calc(100% - 46px);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding-top:14px;}
+  .tour-system-card{position:relative;overflow:hidden;padding:15px;border:1px solid rgba(255,255,255,.17);background:rgba(255,255,255,.035);font:500 .6rem/1.55 'JetBrains Mono',monospace;color:rgba(255,255,255,.52);opacity:0;transform:translateY(18px);}
+  .tour-system-card strong{display:block;margin-bottom:8px;font:800 clamp(.9rem,1.5vw,1.3rem) 'Inter',sans-serif;color:#fff;}
+  .tour-system-card i{display:block;height:3px;margin-top:13px;background:linear-gradient(90deg,#fff,rgba(255,255,255,.08));box-shadow:0 0 14px rgba(255,255,255,.22);}
+  .tour-zone.active .tour-system-card{animation:tourSystemIn .7s var(--motion-ease) forwards;}
+  .tour-zone.active .tour-system-card:nth-child(2){animation-delay:.1s}.tour-zone.active .tour-system-card:nth-child(3){animation-delay:.2s}.tour-zone.active .tour-system-card:nth-child(4){animation-delay:.3s}.tour-zone.active .tour-system-card:nth-child(5){animation-delay:.4s}.tour-zone.active .tour-system-card:nth-child(6){animation-delay:.5s}
+  @keyframes tourFeatureIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes tourSystemIn{to{opacity:1;transform:translateY(0)}}
+  @media(max-width:800px){
+    .tour-zone[data-tour="5"]{left:505vw!important;}
+    .tour-feature-list{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
+    .tour-feature-list::-webkit-scrollbar{display:none;}
+    .tour-system{padding:11px;}
+    .tour-system-grid{grid-template-columns:1fr 1fr;gap:7px;padding-top:9px;}
+    .tour-system-card{padding:10px;font-size:.52rem;}
+    .tour-system-card:nth-child(n+5){display:none;}
+  }
+
+  /* One reliable exit affordance for every immersive mobile surface. */
+  .mobile-exit{display:none;align-items:center;justify-content:center;min-width:54px;border:1px solid rgba(255,255,255,.42);border-radius:999px;padding:6px 9px;background:rgba(255,255,255,.07);color:#fff;font:600 .58rem 'JetBrains Mono',monospace;white-space:nowrap;cursor:pointer;}
+  @media(min-width:1181px){
+    body.mobile-exit-visible[data-section="now-playing"] .mobile-exit,
+    body.mobile-exit-visible[data-section="image-viewer"] .mobile-exit,
+    body.mobile-exit-visible[data-section="video-viewer"] .mobile-exit,
+    body.mobile-exit-visible[data-section="lyrics"] .mobile-exit{display:inline-flex;}
+    body.mobile-exit-visible[data-section="now-playing"] .header-actions-viewer #fsMinimizeBtn,
+    body.mobile-exit-visible[data-section="image-viewer"] .header-actions-viewer #fsMinimizeBtn,
+    body.mobile-exit-visible[data-section="video-viewer"] .header-actions-viewer #fsMinimizeBtn,
+    body.mobile-exit-visible[data-section="lyrics"] .header-actions-viewer #fsMinimizeBtn{display:none!important;}
+  }
+  @media(max-width:1180px){
+    body.mobile-exit-visible .mobile-exit{display:inline-flex;}
+    body.mobile-exit-visible .header-actions-archive,
+    body.mobile-exit-visible .header-actions-timeline,
+    body.mobile-exit-visible .header-actions-live{display:none!important;}
+    body.mobile-exit-visible[data-section="now-playing"] .header-actions-viewer,
+    body.mobile-exit-visible[data-section="image-viewer"] .header-actions-viewer,
+    body.mobile-exit-visible[data-section="video-viewer"] .header-actions-viewer,
+    body.mobile-exit-visible[data-section="lyrics"] .header-actions-viewer{display:flex!important;}
+    body.mobile-exit-visible .header-actions-viewer #fsMinimizeBtn{display:none!important;}
+    body.mobile-exit-visible .utility-btns{gap:6px;flex:0 0 auto;}
+  }
 </style>
 </head>
 <body data-section="archive" class="intro-active shell-loading">
@@ -1294,8 +1435,21 @@
     <section class="tour-zone" data-tour="4" aria-label="live broadcast room">
       <div class="tour-window tour-live"><div class="tour-live-stage"><div class="tour-broadcast"><div class="tour-live-art"></div></div><div class="tour-live-title">angel is broadcasting / version 7</div></div><div class="tour-chat"><strong>live chat / 24 watching</strong><div class="tour-chat-line"><b>mika</b> this version is unreal</div><div class="tour-chat-line"><b>006</b> the background vocal</div><div class="tour-chat-line"><b>angel</b> next one starts automatically</div><div class="tour-chat-line"><b>archive</b> announcement pinned</div></div></div>
     </section>
+    <section class="tour-zone" data-tour="5" aria-label="archive system and administration">
+      <div class="tour-window tour-system">
+        <div class="tour-system-head"><strong>the system behind the world</strong><span>private / protected / measurable</span></div>
+        <div class="tour-system-grid">
+          <div class="tour-system-card"><strong>private preload</strong>prepare unreleased files and covers before a live room begins.<i></i></div>
+          <div class="tour-system-card"><strong>song memory</strong>plays, recency, versions, dates, moods, and connections remain tied to each file.<i></i></div>
+          <div class="tour-system-card"><strong>control room</strong>queue, reorder, countdown, notes, cover, announcements, and broadcast state.<i></i></div>
+          <div class="tour-system-card"><strong>moderation</strong>stable names, timeouts, bans, hidden messages, and restoration tools.<i></i></div>
+          <div class="tour-system-card"><strong>protected archive</strong>public listening with authenticated writing and private storage policies.<i></i></div>
+          <div class="tour-system-card"><strong>one living place</strong>archive, timeline, player, visuals, lyrics, and live all return to the same history.<i></i></div>
+        </div>
+      </div>
+    </section>
   </div>
-  <div class="tour-caption"><div class="tour-caption-copy"><div class="tour-kicker" id="tourKicker">01 / archive</div><div class="tour-title" id="tourTitle">everything begins as a file.</div><div class="tour-copy" id="tourCopy">unreleased music, versions, notes, visuals, and the details around them live together instead of disappearing into folders.</div></div><div class="tour-controls"><div class="tour-progress" id="tourProgress"><i class="active current"></i><i></i><i></i><i></i><i></i></div><div class="tour-nav"><button id="tourBack" type="button" onclick="moveArchiveTour(-1)" disabled>back</button><button id="tourNext" type="button" onclick="moveArchiveTour(1)">next</button></div><button class="intro-skip" type="button" onclick="finishArchiveIntro(true)">enter archive</button></div></div>
+  <div class="tour-caption"><div class="tour-caption-copy"><div class="tour-kicker" id="tourKicker">01 / archive</div><div class="tour-title" id="tourTitle">everything begins as a file.</div><div class="tour-copy" id="tourCopy">unreleased music, versions, notes, visuals, and the details around them live together instead of disappearing into folders.</div><div class="tour-feature-list" id="tourFeatures"><span>root archive</span><span>folders + drag</span><span>private uploads</span><span>metadata</span><span>notes + links</span></div></div><div class="tour-controls"><div class="tour-progress" id="tourProgress"><i class="active current"></i><i></i><i></i><i></i><i></i><i></i></div><div class="tour-nav"><button id="tourBack" type="button" onclick="moveArchiveTour(-1)" disabled>back</button><button id="tourNext" type="button" onclick="moveArchiveTour(1)">next</button></div><button class="intro-skip" type="button" onclick="finishArchiveIntro(true)">enter archive</button></div></div>
 </div>
 
 <svg class="grain" width="100%" height="100%"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0"/></filter><rect width="100%" height="100%" filter="url(#noiseFilter)"/></svg>
@@ -1305,6 +1459,7 @@
   <div class="topbar">
     <div class="wordmark" id="appModeLabel">akrasia <span>/ <span class="mode-word" id="appSectionLabel">archive</span></span></div>
     <div class="utility-btns">
+      <button class="mobile-exit" id="mobileExitBtn" type="button" onclick="exitActiveMobileView()" aria-label="go back">back</button>
       <div class="header-actions header-actions-archive">
         <button class="action-trigger live-header-btn" id="liveHeaderBtn" type="button" onclick="openLiveRoom()">live</button>
         <button class="action-trigger" type="button" onclick="toggleTimelineView()">timeline</button>
@@ -2252,6 +2407,7 @@
     } else {
       stopStatsInterval();
     }
+    syncMobileExitControl();
   }
 
   function switchPanelTab(name) {
@@ -2291,6 +2447,47 @@
       return;
     }
     setAppSection(live && live.classList.contains('active') ? 'live' : (timeline && timeline.classList.contains('active') ? 'timeline' : 'archive'));
+  }
+
+  function syncMobileExitControl() {
+    var button = document.getElementById('mobileExitBtn');
+    if(!button) return;
+    var drawerOpen = document.getElementById('liveAdminDrawer')?.classList.contains('open');
+    var viewportOpen = Boolean(document.querySelector('.viewport-overlay.active'));
+    var fs = document.getElementById('fsPlayer');
+    var fsOpen = fs?.classList.contains('active');
+    var lyricsOpen = fsOpen && fs.classList.contains('lyrics-focus');
+    var liveOpen = document.getElementById('liveRoom')?.classList.contains('active');
+    var timelineOpen = document.getElementById('timelinePanel')?.classList.contains('active');
+    var panelOpen = document.getElementById('controlPanel')?.classList.contains('active');
+    var visible = Boolean(drawerOpen || viewportOpen || fsOpen || liveOpen || timelineOpen || panelOpen);
+    document.body.classList.toggle('mobile-exit-visible', visible);
+    var compactView = window.matchMedia('(max-width:1180px)').matches;
+    button.textContent = liveOpen && !drawerOpen && !fsOpen && !viewportOpen ? 'leave' : (fsOpen && (!lyricsOpen || !compactView) ? 'close' : (panelOpen || drawerOpen || viewportOpen ? 'close' : 'back'));
+    button.setAttribute('aria-label', button.textContent === 'leave' ? 'leave live room' : 'go back');
+  }
+
+  function exitActiveMobileView() {
+    var drawer = document.getElementById('liveAdminDrawer');
+    if(drawer?.classList.contains('open')) return toggleLiveAdminDrawer(false);
+    var viewport = document.querySelector('.viewport-overlay.active');
+    if(viewport) return closeViewport(viewport.id);
+    var fs = document.getElementById('fsPlayer');
+    if(fs?.classList.contains('active')) {
+      if(fs.classList.contains('lyrics-focus')) {
+        if(window.matchMedia('(max-width:1180px)').matches) return toggleLyricsFocus(false);
+        toggleLyricsFocus(false);
+        toggleFullscreen();
+        return;
+      }
+      if(fs.classList.contains('info-open')) { closeNowInfo(); syncMobileExitControl(); return; }
+      toggleFullscreen();
+      return;
+    }
+    if(document.getElementById('liveRoom')?.classList.contains('active')) return closeLiveRoom();
+    if(document.getElementById('timelinePanel')?.classList.contains('active')) return closeTimelineView();
+    if(document.getElementById('controlPanel')?.classList.contains('active')) return togglePanel();
+    setAppSection('archive');
   }
 
   function syncViewerExitControl() {
@@ -2375,12 +2572,14 @@
     var mode = String(label || 'archive');
     document.body.setAttribute('data-section', mode.toLowerCase().replace(/\s+/g, '-'));
     setSectionTitle(document.getElementById('appSectionLabel'), mode);
+    syncMobileExitControl();
   }
   function closeViewport(id) {
     document.getElementById(id).classList.remove('active');
     if(id === 'propsViewport' || id === 'editViewport' || id === 'textViewport' || id === 'imageViewport' || id === 'connectionsViewport') restoreUnderlyingSection();
     if(viewerOrigin === 'timeline') viewerOrigin = 'archive';
     syncViewerExitControl();
+    syncMobileExitControl();
   }
   window.addEventListener('resize', () => { isCompactVisual = window.matchMedia('(max-width: 980px)').matches; resizeCanvas(); alignImmersiveRail(); syncTimelineCardHeights(); drawActiveWaveforms(); });
   document.getElementById('timelineTrack').addEventListener('scroll', alignImmersiveRail);
@@ -2632,6 +2831,7 @@
     drawer.classList.toggle('open', open);
     drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
     syncLiveAdminControls();
+    syncMobileExitControl();
   }
 
   function syncLiveAdminControls() {
@@ -6663,15 +6863,24 @@
   toggleRootPlacement(false);
   updateCounts();
   initExplorerDrag();
+  var mobileExitObserver = new MutationObserver(syncMobileExitControl);
+  ['controlPanel','liveAdminDrawer','liveRoom','timelinePanel','fsPlayer'].forEach(id => {
+    var element = document.getElementById(id);
+    if(element) mobileExitObserver.observe(element, { attributes:true, attributeFilter:['class'] });
+  });
+  document.querySelectorAll('.viewport-overlay').forEach(viewport => mobileExitObserver.observe(viewport, { attributes:true, attributeFilter:['class'] }));
+  window.addEventListener('resize', syncMobileExitControl, { passive:true });
+  syncMobileExitControl();
   var archiveTourTimers = [];
   var archiveTourStep = 0;
-  var archiveTourDwell = 4800;
+  var archiveTourDwell = 5600;
   var archiveTourCopy = [
-    { kicker:'01 / archive', title:'everything begins as a file.', copy:'unreleased music, versions, notes, visuals, and the details around them live together instead of disappearing into folders.' },
-    { kicker:'02 / immersive timeline', title:'then the files become a history.', copy:'every session, draft, image, and note keeps its exact place in time, creating a living chronology of angel.' },
-    { kicker:'03 / player + lyrics', title:'listening opens the world inside it.', copy:'artwork, queues, waveform, artist commentary, synced lead vocals, adlibs, and instrumental space all move with the song.' },
-    { kicker:'04 / visual archive', title:'the music leaves a visual memory.', copy:'covers, photographs, video, and unfinished studies stay connected to the versions and moments that created them.' },
-    { kicker:'05 / live room', title:'and sometimes the archive becomes present tense.', copy:'angel controls a broadcast queue while listeners watch, follow announcements, read live notes, and talk together without controlling the stream.' }
+    { kicker:'01 / archive', title:'everything begins as a file.', copy:'Unreleased music, versions, notes, visuals, and their details can live at the root or inside a folder without losing where they came from.', features:['root archive','folders + drag','private uploads','metadata','notes + links'] },
+    { kicker:'02 / immersive timeline', title:'then the files become a history.', copy:'Sessions, drafts, images, and notes resolve into a dated chronology where every asset opens in place and returns to its moment.', features:['immersive date rail','session history','open in place','versions','connections'] },
+    { kicker:'03 / player + lyrics', title:'listening opens the world inside it.', copy:'The player brings together artwork, queue, waveform, commentary, notes, and time-synced vocals that can be clicked to seek.', features:['fullscreen player','queue + waveform','lead + adlibs','instrumental pauses','commentary'] },
+    { kicker:'04 / visual archive', title:'the music leaves a visual memory.', copy:'Cover studies, photographs, video, and unfinished images keep their own viewers while staying connected to the music around them.', features:['image viewer','video viewer','cover art','visual notes','related files'] },
+    { kicker:'05 / live room', title:'the archive becomes present tense.', copy:'A broadcast stage and control room let angel run an automatic queue while viewers watch, read announcements, and talk without controlling playback.', features:['broadcast stage','control room','auto queue + countdown','announcements','chat + moderation'] },
+    { kicker:'06 / system', title:'the world remembers and protects itself.', copy:'Private preloads, song-level stats, moderation, authenticated editing, validated input, and storage policies support everything behind the scenes.', features:['song stats','private preload','admin access','moderation','storage policies'] }
   ];
 
   function setArchiveTourStep(index) {
@@ -6699,6 +6908,8 @@
     document.getElementById('tourKicker').textContent = copy.kicker;
     document.getElementById('tourTitle').textContent = copy.title;
     document.getElementById('tourCopy').textContent = copy.copy;
+    var features = document.getElementById('tourFeatures');
+    if(features) features.innerHTML = (copy.features || []).map(feature => `<span>${escapeHtml(feature)}</span>`).join('');
   }
 
   function scheduleArchiveTour(fromStep) {
@@ -6742,7 +6953,7 @@
     intro.classList.add('is-leaving');
     document.body.classList.remove('intro-active');
     revealArchiveShell(skipped ? 80 : 340);
-    try { localStorage.setItem('akrasia_tour_seen_v4','1'); } catch(error) {}
+    try { localStorage.setItem('akrasia_tour_seen_v5','1'); } catch(error) {}
     setTimeout(() => intro.remove(), 820);
   }
 
@@ -6750,7 +6961,7 @@
     var drawer = document.getElementById('liveAdminDrawer');
     if(drawer && drawer.parentElement !== document.body) document.body.appendChild(drawer);
     var alreadySeen = false;
-    try { alreadySeen = localStorage.getItem('akrasia_tour_seen_v4') === '1'; } catch(error) {}
+    try { alreadySeen = localStorage.getItem('akrasia_tour_seen_v5') === '1'; } catch(error) {}
     if(alreadySeen) {
       var intro = document.getElementById('archiveIntro');
       if(intro) intro.remove();
