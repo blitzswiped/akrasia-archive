@@ -1397,6 +1397,30 @@
     body.mobile-exit-visible .header-actions-viewer #fsMinimizeBtn{display:none!important;}
     body.mobile-exit-visible .utility-btns{gap:6px;flex:0 0 auto;}
   }
+
+  /* Final overflow boundaries: glows breathe; the control room never leaves the viewport. */
+  .fs-player.lyrics-focus .lyrics-focus-lines{overflow:visible!important;clip-path:none!important;}
+  .fs-player.lyrics-focus .lyrics-focus-group.active{filter:drop-shadow(0 0 18px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(.18 + var(--reactive-pulse) * .34)))!important;}
+  body.is-admin #liveAdminDrawer.live-admin-drawer.admin-only{
+    position:fixed!important;
+    left:50%!important;
+    right:auto!important;
+    top:calc(var(--app-header-h) + 12px)!important;
+    bottom:12px!important;
+    width:min(1180px,calc(100vw - 24px))!important;
+    max-width:calc(100vw - 24px)!important;
+    max-height:none!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+    transform:translate(-50%,18px) scale(.985)!important;
+    overflow:hidden!important;
+  }
+  body.is-admin #liveAdminDrawer.live-admin-drawer.admin-only.open{transform:translate(-50%,0) scale(1)!important;}
+  body.is-admin #liveAdminDrawer .live-admin-drawer-grid{height:calc(100% - 58px)!important;max-width:100%!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;}
+  body.is-admin #liveAdminDrawer .live-admin-drawer-grid>*{min-width:0;max-width:100%;}
+  @media(max-width:700px){
+    body.is-admin #liveAdminDrawer.live-admin-drawer.admin-only{top:calc(var(--app-header-h) + 8px)!important;bottom:8px!important;width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important;}
+  }
 </style>
 </head>
 <body data-section="archive" class="intro-active shell-loading">
