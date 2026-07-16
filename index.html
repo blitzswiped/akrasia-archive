@@ -788,11 +788,12 @@
   .player-bar .pb-notes.has-notes{background:rgba(255,255,255,0.075);border-color:rgba(255,255,255,0.28);box-shadow:inset 0 1px rgba(255,255,255,0.10);}
   .player-bar .pb-notes.has-notes:hover,.player-bar .pb-notes.has-notes:focus-visible,.player-bar .pb-notes.has-notes:active{outline:none;background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.55);color:var(--white);box-shadow:inset 0 1px rgba(255,255,255,0.12),0 0 14px rgba(255,255,255,0.08);}
 
-  /* Carry the mobile reactive light language into the desktop archive. */
-  body{background-image:radial-gradient(circle at 18% 16%,rgba(255,255,255,calc(0.035 + var(--reactive-pulse) * 0.22)) 0%,transparent 38%),radial-gradient(circle at 88% 76%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(0.08 + var(--reactive-pulse) * 0.46)) 0%,transparent 42%);}
+  /* Keep the archive light bounded so a long library never becomes one giant paint surface. */
+  body{background-image:none;background-attachment:scroll;}
   .topbar{background-image:radial-gradient(ellipse at 48% 125%,rgba(255,255,255,calc(0.12 + var(--reactive-pulse) * 0.42)),transparent 60%),radial-gradient(ellipse at 75% 110%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(0.12 + var(--reactive-pulse) * 0.44)),transparent 58%),linear-gradient(180deg,rgba(255,255,255,0.07),#000 76%);box-shadow:0 12px 42px rgba(255,255,255,calc(0.05 + var(--reactive-pulse) * 0.16)),0 18px 64px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(0.12 + var(--reactive-pulse) * 0.34));}
   .topbar::after{height:7px;filter:blur(6px);opacity:calc(0.42 + var(--reactive-pulse) * 0.58);}
-  .explorer{background:radial-gradient(circle at 10% 4%,rgba(255,255,255,calc(0.05 + var(--reactive-pulse) * 0.15)),transparent 28%),radial-gradient(circle at 88% 20%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(0.08 + var(--reactive-pulse) * 0.30)),transparent 38%);box-shadow:inset 0 28px 90px rgba(255,255,255,0.025);}
+  .explorer{background:#000;box-shadow:none;}
+  .explorer::after{content:"";position:absolute;z-index:-1;inset:0 0 auto;height:min(500px,62svh);pointer-events:none;background:radial-gradient(ellipse at 12% 0%,rgba(255,255,255,calc(0.035 + var(--reactive-pulse) * 0.09)),transparent 46%),radial-gradient(ellipse at 88% 8%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(0.06 + var(--reactive-pulse) * 0.14)),transparent 48%);}
   .explorer-head{box-shadow:0 14px 42px rgba(255,255,255,calc(0.02 + var(--reactive-pulse) * 0.06)),0 16px 48px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(0.04 + var(--reactive-pulse) * 0.16));}
   .folder-row{box-shadow:inset 0 1px rgba(255,255,255,0.04),0 8px 30px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),calc(0.025 + var(--reactive-pulse) * 0.09));}
 
@@ -819,6 +820,13 @@
   .frow:hover .pill,.frow.playing .pill{border-color:var(--line)!important;color:var(--white)!important;background:rgba(0,0,0,0.26)!important;}
   .frow:hover .action-btn,.frow.playing .action-btn{background:var(--white)!important;color:var(--black)!important;border-color:var(--white)!important;}
 
+  /* Hundreds of archive files should cost roughly what the viewport can display. */
+  body.large-archive .frow,
+  body.large-archive .immersive-file{content-visibility:auto;contain-intrinsic-size:auto 58px;backdrop-filter:none;animation:none;}
+  body.large-archive .folder-row{backdrop-filter:none;box-shadow:none;}
+  body.large-archive .immersive-day{filter:none;animation:none;transition:opacity .24s ease,transform .3s var(--motion-ease);}
+  body.large-archive .timeline-panel.immersive::before{inset:0;filter:none;animation:none;}
+
   /* Timeline becomes the immersive centerpiece. */
   .timeline-panel{background:radial-gradient(circle at 14% 12%,rgba(var(--theme-r),var(--theme-g),var(--theme-b),0.22),transparent 30%),radial-gradient(circle at 82% 72%,rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),0.13),transparent 34%),linear-gradient(180deg,rgba(255,255,255,0.025),transparent 24%),#000;}
   .timeline-track{position:relative;grid-template-columns:minmax(0,1180px);gap:42px;padding:8vh 6vw 14vh;scroll-behavior:smooth;}
@@ -835,10 +843,8 @@
   .timeline-asset{min-height:58px;border-color:var(--line-soft);border-radius:7px;background:rgba(0,0,0,0.34);padding:13px 15px;}.timeline-asset:hover{transform:translateX(7px);}
 
   @media (max-width: 980px){
-    body{background-attachment:scroll;background-image:
-      radial-gradient(circle at 18% 16%, rgba(var(--reactive-r), var(--reactive-g), var(--reactive-b), calc(var(--reactive-pulse) * 0.58)) 0%, rgba(0,0,0,0) 38%),
-      radial-gradient(circle at 88% 76%, rgba(var(--reactive-r), var(--reactive-g), var(--reactive-b), calc(var(--reactive-pulse) * 0.46)) 0%, rgba(0,0,0,0) 42%);
-    }
+    body{background-attachment:scroll;background-image:none;}
+    .explorer::after{height:min(390px,54svh);}
     @keyframes mobileContentIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
     @keyframes mobileLabelIn{from{opacity:0;}to{opacity:1;}}
     .grain,body::before{display:none;}
@@ -2625,6 +2631,13 @@
   var timelineMode = 'immersive';
   var timelineHasAnimated = false;
   var timelineReadyTimer = null;
+  var timelineNeedsBuild = true;
+  var timelineScrollFrame = 0;
+  var timelineResizeFrame = 0;
+  var immersiveTimelineMetrics = [];
+  var currentImmersiveSection = null;
+  var currentImmersiveRailMark = null;
+  var liveAssetSelectNeedsRefresh = true;
   var activeVisualRow = null;
   var activeMediaType = 'audio';
   var viewerOrigin = 'archive';
@@ -2704,6 +2717,7 @@
   var visualFade = 0;
   var reactivePulseLevel = 0;
   var visualLastFrame = 0;
+  var reactiveCssLastFrame = 0;
   var isCompactVisual = window.matchMedia('(max-width: 980px)').matches;
   var visualFrame = 0;
   const canvas = document.getElementById('visualizerCanvas');
@@ -2715,7 +2729,7 @@
     if(isOpen) {
       if(document.querySelector('.panel-tab[data-tab="stats"].active')) startStatsInterval();
       renderAdminChatFeed();
-      refreshLiveAssetSelect();
+      if(document.querySelector('.panel-tab[data-tab="live-control"].active')) refreshLiveAssetSelect();
     } else {
       stopStatsInterval();
     }
@@ -2900,11 +2914,31 @@
     syncViewerExitControl();
     syncMobileExitControl();
   }
-  window.addEventListener('resize', () => { isCompactVisual = window.matchMedia('(max-width: 980px)').matches; resizeCanvas(); alignImmersiveRail(); updateImmersiveTimelineFocus(); syncTimelineCardHeights(); drawActiveWaveforms(); });
-  document.getElementById('timelineTrack').addEventListener('scroll', function(){
-    alignImmersiveRail();
-    updateImmersiveTimelineFocus();
-  }, { passive:true });
+  window.addEventListener('resize', () => {
+    isCompactVisual = window.matchMedia('(max-width: 980px)').matches;
+    resizeCanvas();
+    window.cancelAnimationFrame(timelineResizeFrame);
+    timelineResizeFrame = window.requestAnimationFrame(function(){
+      alignImmersiveRail();
+      updateImmersiveTimelineFocus();
+      syncTimelineCardHeights();
+      drawActiveWaveforms();
+    });
+  });
+  var timelineTrackElement = document.getElementById('timelineTrack');
+  if(timelineTrackElement) {
+    timelineTrackElement.addEventListener('scroll', scheduleImmersiveTimelineFocus, { passive:true });
+    timelineTrackElement.addEventListener('click', function(e){
+      var target = e.target && e.target.closest ? e.target : null;
+      var button = target?.closest('.timeline-asset, .immersive-file');
+      if(!button || !this.contains(button)) return;
+      e.stopPropagation();
+      var info = target.closest('.timeline-info, .immersive-info');
+      var key = (info || button).getAttribute('data-row-key');
+      if(info) openTimelineInfo(key);
+      else openTimelineAsset(key);
+    });
+  }
   function resizeCanvas() {
     var scale = isCompactVisual ? 0.55 : 1;
     canvas.width = Math.max(1, Math.floor(canvas.clientWidth * scale));
@@ -2929,6 +2963,18 @@
     document.documentElement.style.setProperty('--reactive-g', reactiveBase.g);
     document.documentElement.style.setProperty('--reactive-b', reactiveBase.b);
     document.documentElement.style.setProperty('--reactive-accent', rgbToHex(reactiveBase));
+  }
+
+  function applyReactiveCssFrame(pulse, rgb, frameTime, force) {
+    var now = frameTime || performance.now();
+    if(!force && now - reactiveCssLastFrame < 48) return;
+    reactiveCssLastFrame = now;
+    document.documentElement.style.setProperty('--reactive-pulse', Math.max(0, pulse || 0).toFixed(3));
+    if(!rgb) return;
+    document.documentElement.style.setProperty('--reactive-r', Math.round(rgb.r));
+    document.documentElement.style.setProperty('--reactive-g', Math.round(rgb.g));
+    document.documentElement.style.setProperty('--reactive-b', Math.round(rgb.b));
+    document.documentElement.style.setProperty('--reactive-accent', rgbToHex(rgb));
   }
 
   function setMoodTheme(color) {
@@ -3276,21 +3322,24 @@
   }
 
   function refreshLiveAssetSelect() {
-    ['liveAssetSelect', 'liveAssetSelectDash'].forEach(id => {
-      var select = document.getElementById(id);
-      if(!select) return;
+    var selects = ['liveAssetSelect', 'liveAssetSelectDash'].map(id => document.getElementById(id)).filter(Boolean);
+    if(!liveAssetSelectNeedsRefresh) return;
+    var rows = baseRows();
+    selects.forEach(select => {
       var current = select.value;
-      select.innerHTML = '';
-      baseRows().forEach(row => {
+      var fragment = document.createDocumentFragment();
+      rows.forEach(row => {
         var option = document.createElement('option');
         option.value = liveRowKey(row);
         option.textContent = `${row.getAttribute('data-title') || 'untitled'} / ${row.getAttribute('data-ver') || 'v1'} / ${row.getAttribute('data-type') || 'asset'}`;
-        select.appendChild(option);
+        fragment.appendChild(option);
       });
+      select.replaceChildren(fragment);
       var values = Array.from(select.options).map(option => option.value);
       if(current && values.includes(current)) select.value = current;
       else if(liveState && liveState.asset_key && values.includes(liveState.asset_key)) select.value = liveState.asset_key;
     });
+    liveAssetSelectNeedsRefresh = false;
   }
 
   function liveStateFromRow(row, overrides) {
@@ -4944,7 +4993,13 @@
     var isActive = panel.classList.toggle('active');
     if(isActive) document.getElementById('liveRoom').classList.remove('active');
     setAppSection(isActive ? 'timeline' : 'archive');
-    buildTimeline({ animate: isActive && !timelineHasAnimated });
+    if(!isActive) return;
+    if(timelineNeedsBuild || !document.getElementById('timelineTrack')?.childElementCount) {
+      buildTimeline({ animate: !timelineHasAnimated });
+    } else {
+      alignImmersiveRail();
+      updateImmersiveTimelineFocus();
+    }
   }
 
   function closeTimelineView() {
@@ -4995,6 +5050,12 @@
     var track = document.getElementById('timelineTrack');
     var panel = document.getElementById('timelinePanel');
     if(!track) return;
+    timelineNeedsBuild = false;
+    immersiveTimelineMetrics = [];
+    currentImmersiveSection = null;
+    currentImmersiveRailMark = null;
+    window.cancelAnimationFrame(timelineScrollFrame);
+    timelineScrollFrame = 0;
     if(panel) {
       panel.classList.toggle('immersive', timelineMode === 'immersive');
       window.clearTimeout(timelineReadyTimer);
@@ -5042,13 +5103,6 @@
       `;
       track.appendChild(node);
     });
-    track.querySelectorAll('.timeline-asset').forEach(button => {
-      button.addEventListener('click', function(e) {
-        e.stopPropagation();
-        if(e.target.classList.contains('timeline-info')) return openTimelineInfo(e.target.getAttribute('data-row-key'));
-        openTimelineAsset(this.getAttribute('data-row-key'));
-      });
-    });
     window.requestAnimationFrame(syncTimelineCardHeights);
   }
 
@@ -5069,7 +5123,7 @@
         var ver = row.getAttribute('data-ver') || 'v1';
         var mood = row.getAttribute('data-mood') || 'raw';
         var color = row.getAttribute('data-mood-color') || moodColorFor(mood);
-        return `<button class="immersive-file" type="button" data-row-key="${escapeAttr(timelineRowKey(row))}" style="--dot-color:${escapeAttr(color)};--file-index:${index}">
+        return `<button class="immersive-file" type="button" data-row-key="${escapeAttr(timelineRowKey(row))}" style="--dot-color:${escapeAttr(color)};--file-index:${Math.min(index, 12)}">
           <span class="immersive-file-number">${String(index + 1).padStart(2,'0')}</span>
           <span class="immersive-file-icon"></span>
           <span class="immersive-file-main">
@@ -5089,16 +5143,29 @@
       </section>`;
     }).join('');
     track.innerHTML = `<div class="immersive-timeline-list">${body}</div><div class="immersive-rail">${rails}</div>`;
-    track.querySelectorAll('.immersive-file').forEach(button => {
-      button.addEventListener('click', function(e) {
-        e.stopPropagation();
-        if(e.target.classList.contains('immersive-info')) return openTimelineInfo(e.target.getAttribute('data-row-key'));
-        openTimelineAsset(this.getAttribute('data-row-key'));
-      });
-    });
     alignImmersiveRail();
     updateImmersiveTimelineFocus();
     window.setTimeout(function(){ alignImmersiveRail(); updateImmersiveTimelineFocus(); }, 120);
+  }
+
+  function cacheImmersiveTimelineLayout() {
+    var track = document.getElementById('timelineTrack');
+    if(!track || timelineMode !== 'immersive') {
+      immersiveTimelineMetrics = [];
+      return immersiveTimelineMetrics;
+    }
+    var trackRect = track.getBoundingClientRect();
+    immersiveTimelineMetrics = Array.from(track.querySelectorAll('.immersive-day')).map(section => {
+      var rect = section.getBoundingClientRect();
+      var top = rect.top - trackRect.top + track.scrollTop;
+      return {
+        section,
+        day: section.getAttribute('data-immersive-day'),
+        top,
+        focus: top + Math.min(rect.height * .24, 150)
+      };
+    });
+    return immersiveTimelineMetrics;
   }
 
   function alignImmersiveRail() {
@@ -5107,42 +5174,54 @@
     var rail = track.querySelector('.immersive-rail');
     if(!rail) return;
     var railRect = rail.getBoundingClientRect();
-    var trackRect = track.getBoundingClientRect();
     var usableRail = Math.max(1, railRect.height - 40);
+    var metricsByDay = new Map(cacheImmersiveTimelineLayout().map(metric => [metric.day, metric]));
     rail.querySelectorAll('.immersive-rail-mark').forEach(mark => {
       var day = mark.getAttribute('data-rail-day');
-      var section = track.querySelector(`[data-immersive-day="${cssEscape(day)}"]`);
-      if(!section) return;
-      var sectionRect = section.getBoundingClientRect();
-      var contentTop = sectionRect.top - trackRect.top + track.scrollTop;
-      var ratio = Math.max(0, Math.min(1, contentTop / Math.max(1, track.scrollHeight)));
+      var metric = metricsByDay.get(day);
+      if(!metric) return;
+      var ratio = Math.max(0, Math.min(1, metric.top / Math.max(1, track.scrollHeight)));
       mark.style.top = (20 + ratio * usableRail) + 'px';
     });
   }
 
   function jumpToTimelineDay(day) {
     var track = document.getElementById('timelineTrack');
-    var section = track?.querySelector(`[data-immersive-day="${cssEscape(day)}"]`);
-    if(!track || !section) return;
-    var top = Math.max(0, section.offsetTop - track.clientHeight * .12);
+    if(!track) return;
+    if(!immersiveTimelineMetrics.length) cacheImmersiveTimelineLayout();
+    var metric = immersiveTimelineMetrics.find(item => item.day === day);
+    if(!metric) return;
+    var top = Math.max(0, metric.top - track.clientHeight * .12);
     track.scrollTo({ top, behavior:archiveSettings?.motion === 'off' ? 'auto' : 'smooth' });
+  }
+
+  function scheduleImmersiveTimelineFocus() {
+    if(timelineScrollFrame) return;
+    timelineScrollFrame = window.requestAnimationFrame(function(){
+      timelineScrollFrame = 0;
+      updateImmersiveTimelineFocus();
+    });
   }
 
   function updateImmersiveTimelineFocus() {
     var track = document.getElementById('timelineTrack');
     if(!track || timelineMode !== 'immersive') return;
-    var sections = Array.from(track.querySelectorAll('.immersive-day'));
-    if(!sections.length) return;
-    var trackRect = track.getBoundingClientRect();
-    var focusY = trackRect.top + trackRect.height * .38;
-    var current = sections.reduce((closest, section) => {
-      var rect = section.getBoundingClientRect();
-      var distance = Math.abs((rect.top + Math.min(rect.height * .24, 150)) - focusY);
-      return !closest || distance < closest.distance ? { section, distance } : closest;
-    }, null)?.section;
-    sections.forEach(section => section.classList.toggle('is-current', section === current));
-    var currentDay = current?.getAttribute('data-immersive-day');
-    track.querySelectorAll('.immersive-rail-mark').forEach(mark => mark.classList.toggle('is-current', mark.getAttribute('data-rail-day') === currentDay));
+    if(!immersiveTimelineMetrics.length) cacheImmersiveTimelineLayout();
+    if(!immersiveTimelineMetrics.length) return;
+    var focusY = track.scrollTop + track.clientHeight * .38;
+    var currentMetric = immersiveTimelineMetrics.reduce((closest, metric) => {
+      var distance = Math.abs(metric.focus - focusY);
+      return !closest || distance < closest.distance ? { metric, distance } : closest;
+    }, null)?.metric;
+    var current = currentMetric?.section || null;
+    if(current !== currentImmersiveSection) {
+      currentImmersiveSection?.classList.remove('is-current');
+      current?.classList.add('is-current');
+      currentImmersiveSection = current;
+      currentImmersiveRailMark?.classList.remove('is-current');
+      currentImmersiveRailMark = currentMetric ? track.querySelector(`[data-rail-day="${cssEscape(currentMetric.day)}"]`) : null;
+      currentImmersiveRailMark?.classList.add('is-current');
+    }
     var range = Math.max(1, track.scrollHeight - track.clientHeight);
     track.style.setProperty('--timeline-progress', Math.max(0, Math.min(1, track.scrollTop / range)));
   }
@@ -6857,6 +6936,10 @@
   function updateCounts() {
     pruneArchiveSelection();
     var rows = baseRows();
+    var isLargeLibrary = rows.length >= 160;
+    document.body.classList.toggle('large-archive', isLargeLibrary);
+    timelineNeedsBuild = true;
+    liveAssetSelectNeedsRefresh = true;
     var audio = rows.filter(row => row.getAttribute('data-type') === 'audio').length;
     var visual = rows.filter(row => ['image','video'].includes(row.getAttribute('data-type'))).length;
     document.getElementById('itemCount').textContent = `${rows.length} indexed`;
@@ -6865,8 +6948,11 @@
     document.getElementById('statAccess').textContent = isAdmin ? 'admin' : 'open';
     document.getElementById('emptyState').classList.toggle('active', rows.length === 0);
     updateDiscoverySignal();
-    refreshLiveAssetSelect();
-    buildTimeline();
+    var liveRoomOpen = document.getElementById('liveRoom')?.classList.contains('active');
+    var liveDrawerOpen = document.getElementById('liveAdminDrawer')?.classList.contains('active');
+    var livePanelOpen = document.getElementById('controlPanel')?.classList.contains('active') && document.getElementById('tab-live-control')?.classList.contains('active');
+    if(liveRoomOpen || liveDrawerOpen || livePanelOpen) refreshLiveAssetSelect();
+    if(document.getElementById('timelinePanel')?.classList.contains('active')) buildTimeline();
   }
 
   document.addEventListener('click', function(e) {
@@ -8075,6 +8161,7 @@
     if(isCompactVisual && frameTime && frameTime - visualLastFrame < 34) return;
     if(frameTime) visualLastFrame = frameTime;
     if(!analyser || !currentAudio) return;
+    var visualizerVisible = document.getElementById('fsPlayer')?.classList.contains('active') && !canvas.classList.contains('hidden');
     if(currentAudio.paused) {
       if(visualFade <= 0) return;
       var fadeRate = isCompactVisual ? 0.965 : 0.982;
@@ -8083,12 +8170,14 @@
       visualEnergy *= 0.965;
       visualBass *= 0.965;
       visualBeat *= 0.94;
-      canvasCtx.save();
-      canvasCtx.globalCompositeOperation = 'destination-in';
-      canvasCtx.fillStyle = `rgba(0,0,0,${fadeRate})`;
-      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-      canvasCtx.restore();
-      document.documentElement.style.setProperty('--reactive-pulse', reactivePulseLevel.toFixed(3));
+      if(visualizerVisible) {
+        canvasCtx.save();
+        canvasCtx.globalCompositeOperation = 'destination-in';
+        canvasCtx.fillStyle = `rgba(0,0,0,${fadeRate})`;
+        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+        canvasCtx.restore();
+      }
+      applyReactiveCssFrame(reactivePulseLevel, null, frameTime);
       if(visualFade < 0.012) {
         visualFade = 0;
         reactivePulseLevel = 0;
@@ -8096,8 +8185,7 @@
         visualBass = 0;
         visualBeat = 0;
         canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-        document.documentElement.style.setProperty('--reactive-pulse', '0');
-        setReactiveColor(reactiveBase);
+        applyReactiveCssFrame(0, reactiveBase, frameTime, true);
       }
       return;
     }
@@ -8131,11 +8219,8 @@
     var activeColor = reactiveBandColor(low, mid, high, energy);
     visualFade = 1;
     reactivePulseLevel = tempoPulse;
-    document.documentElement.style.setProperty('--reactive-pulse', tempoPulse.toFixed(3));
-    document.documentElement.style.setProperty('--reactive-r', Math.round(activeColor.r));
-    document.documentElement.style.setProperty('--reactive-g', Math.round(activeColor.g));
-    document.documentElement.style.setProperty('--reactive-b', Math.round(activeColor.b));
-    document.documentElement.style.setProperty('--reactive-accent', rgbToHex(activeColor));
+    applyReactiveCssFrame(tempoPulse, activeColor, frameTime);
+    if(!visualizerVisible) return;
 
     canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
     var w = canvas.width;
