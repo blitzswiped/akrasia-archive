@@ -490,6 +490,21 @@
     <datalist id="archiveFolderOptions"></datalist>
 
     <div class="timeline-panel" id="timelinePanel">
+      <div class="timeline-view-controls" aria-label="timeline view controls">
+        <div class="timeline-control-group" role="group" aria-label="timeline scale">
+          <span>scale</span>
+          <button class="active" data-timeline-scale="days" type="button" onclick="setTimelineScale('days')">days</button>
+          <button data-timeline-scale="months" type="button" onclick="setTimelineScale('months')">months</button>
+          <button data-timeline-scale="eras" type="button" onclick="setTimelineScale('eras')">eras</button>
+        </div>
+        <div class="timeline-control-group" role="group" aria-label="timeline file filter">
+          <span>show</span>
+          <button class="active" data-timeline-filter="all" type="button" onclick="setTimelineAssetFilter('all')">all</button>
+          <button data-timeline-filter="audio" type="button" onclick="setTimelineAssetFilter('audio')">audio</button>
+          <button data-timeline-filter="visual" type="button" onclick="setTimelineAssetFilter('visual')">visual</button>
+          <button data-timeline-filter="notes" type="button" onclick="setTimelineAssetFilter('notes')">notes</button>
+        </div>
+      </div>
       <div class="timeline-track" id="timelineTrack"></div>
     </div>
 
@@ -675,7 +690,6 @@
       <button class="sort-trigger" data-sort="date" type="button" onclick="triggerSort('date')" title="sort by modified date">modified<span class="sort-icon" aria-hidden="true"></span></button>
       <button class="sort-trigger" data-sort="ver" type="button" onclick="triggerSort('ver')" title="sort by version">ver<span class="sort-icon" aria-hidden="true"></span></button>
       <button class="sort-trigger" data-sort="mood" type="button" onclick="triggerSort('mood')" title="sort by mood">mood<span class="sort-icon" aria-hidden="true"></span></button>
-      <div>size</div>
       <div>type</div>
       <div></div>
     </div>
