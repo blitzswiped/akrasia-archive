@@ -8,12 +8,14 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self';">
 <title>akrasia archive</title>
 <script>try{if(localStorage.getItem('akrasia_tour_seen_v6'))document.documentElement.classList.add('intro-seen')}catch(e){}</script>
-  <link rel="stylesheet" href="assets/css/base.css">
-  <link rel="stylesheet" href="assets/css/live.css">
-  <link rel="stylesheet" href="assets/css/player.css">
-  <link rel="stylesheet" href="assets/css/archive-timeline.css">
-  <link rel="stylesheet" href="assets/css/polish-responsive.css">
-  <link rel="stylesheet" href="assets/css/intro-worlds.css">
+  <link rel="stylesheet" href="assets/css/base.css?v=20260718-3">
+  <link rel="stylesheet" href="assets/css/live.css?v=20260718-3">
+  <link rel="stylesheet" href="assets/css/player.css?v=20260718-3">
+  <link rel="stylesheet" href="assets/css/archive-timeline.css?v=20260718-3">
+  <link rel="stylesheet" href="assets/css/polish-responsive.css?v=20260718-3">
+  <link rel="stylesheet" href="assets/css/intro-worlds.css?v=20260718-3">
+  <link rel="stylesheet" href="assets/css/admin-workspace.css?v=20260718-4">
+  <link rel="stylesheet" href="assets/css/enrichment.css?v=20260718-3">
 </head>
 <body data-section="archive" class="intro-active shell-loading">
 
@@ -71,7 +73,7 @@
         <button class="action-trigger" type="button" onclick="toggleTimelineView()">timeline</button>
         <button class="action-trigger" type="button" onclick="openWorldsHub('worlds')">worlds</button>
         <button class="action-trigger" type="button" onclick="openSettings()">settings</button>
-        <div class="action-trigger admin-only" onclick="togglePanel()">system panel</div>
+        <div class="action-trigger admin-only" onclick="togglePanel()">organize</div>
         <div class="auth-tools">
           <input type="email" id="authEmail" placeholder="admin email" style="display:none;">
           <button class="action-trigger" id="authLogin" onclick="adminLogin()" style="display:none;">send admin link</button>
@@ -81,7 +83,7 @@
       </div>
       <div class="header-actions header-actions-timeline">
         <button class="action-trigger" type="button" onclick="toggleTimelineSort()" id="timelineSortBtn">newest</button>
-        <button class="action-trigger active" type="button" onclick="toggleTimelineMode()" id="timelineModeBtn">cards</button>
+        <button class="action-trigger active" type="button" onclick="toggleTimelineMode()" id="timelineModeBtn">calendar</button>
         <button class="action-trigger timeline-minimize" type="button" onclick="closeTimelineView()">minimize [-]</button>
       </div>
       <div class="header-actions header-actions-live">
@@ -125,15 +127,90 @@
 
   <div class="control-panel" id="controlPanel">
     <div class="panel-overview">
-      <div><h2>archive control</h2><p>upload, organize, edit, and preview the live archive from one workspace.</p></div>
+      <div><h2>archive workspace</h2><p>move through the vault, organize files, and open one tool at a time.</p></div>
       <div class="panel-overview-actions"><button type="button" onclick="persistExplorerOrder()">save order</button><button type="button" onclick="togglePanel()">close</button></div>
     </div>
     <div class="panel-tabs">
-      <button class="panel-tab active" data-tab="upload" onclick="switchPanelTab('upload')" type="button">upload</button>
+      <button class="panel-tab active" data-tab="files" onclick="switchPanelTab('files')" type="button">files</button>
+      <button class="panel-tab" data-tab="upload" onclick="switchPanelTab('upload')" type="button">add + import</button>
+      <button class="panel-tab" data-tab="rules" onclick="switchPanelTab('rules')" type="button">rules</button>
       <button class="panel-tab" data-tab="live-control" onclick="switchPanelTab('live-control')" type="button">live control</button>
       <button class="panel-tab" data-tab="stats" onclick="switchPanelTab('stats')" type="button">stats</button>
     </div>
-    <div class="panel-tab-pane active upload-pane" id="tab-upload">
+    <div class="panel-tab-pane active admin-files-pane" id="tab-files">
+      <div class="admin-file-workspace" id="adminFileWorkspace">
+        <aside class="admin-file-sidebar">
+          <div class="admin-workspace-label">places</div>
+          <nav class="admin-place-list" aria-label="archive places">
+            <button class="active" type="button" data-admin-place="folder" onclick="openAdminWorkspacePlace('folder','')" ondragover="adminWorkspaceDragOver(event)" ondrop="adminWorkspaceDrop(event,'')"><span>archive root</span><small id="adminRootCount">0</small></button>
+            <button type="button" data-admin-place="recent" onclick="openAdminWorkspacePlace('recent')"><span>recently worked on</span><small>time</small></button>
+            <button type="button" data-admin-place="loose" onclick="openAdminWorkspacePlace('loose')"><span>loose files</span><small>root</small></button>
+            <button type="button" data-admin-place="notes" onclick="openAdminWorkspacePlace('notes')"><span>notes</span><small>text</small></button>
+            <button type="button" data-admin-place="visuals" onclick="openAdminWorkspacePlace('visuals')"><span>visuals</span><small>image + video</small></button>
+            <button type="button" data-admin-place="enrichment" onclick="openAdminWorkspacePlace('enrichment')"><span>enrichment review</span><small>private drafts</small></button>
+          </nav>
+          <div class="admin-workspace-label folder-label">folders</div>
+          <input class="admin-folder-filter" id="adminFolderFilter" type="search" placeholder="filter folder names" autocomplete="off" oninput="renderAdminSidebarFolders(this.value)">
+          <div class="admin-sidebar-folders" id="adminSidebarFolders"></div>
+        </aside>
+
+        <main class="admin-file-main">
+          <div class="admin-file-toolbar">
+            <div class="admin-history-controls">
+              <button id="adminWorkspaceBack" type="button" onclick="adminWorkspaceHistory(-1)" title="Back" aria-label="Back">&lt;</button>
+              <button id="adminWorkspaceForward" type="button" onclick="adminWorkspaceHistory(1)" title="Forward" aria-label="Forward">&gt;</button>
+            </div>
+            <div class="admin-breadcrumbs" id="adminWorkspaceBreadcrumbs" aria-label="current folder"></div>
+            <label class="admin-workspace-search">
+              <span>find</span>
+              <input id="adminWorkspaceSearch" type="search" placeholder="name, note, folder, type:audio..." autocomplete="off" oninput="queueAdminWorkspaceSearch(this.value)" onkeydown="handleAdminWorkspaceSearchKey(event)">
+            </label>
+            <button class="admin-add-trigger" id="adminAddTrigger" type="button" onclick="toggleAdminAddMenu()" aria-label="Add to archive" title="Add to archive">+</button>
+            <div class="admin-add-menu" id="adminAddMenu" hidden>
+              <button type="button" onclick="openAdminCreateDialog('folder')"><strong>new folder</strong><span>inside the current location</span></button>
+              <button type="button" onclick="openAdminCreateDialog('note')"><strong>new note</strong><span>write directly into the archive</span></button>
+              <button type="button" onclick="openAdminUploadTool(false)"><strong>upload files</strong><span>audio, images, video, or text</span></button>
+              <button type="button" onclick="openAdminUploadTool(true)"><strong>BandLab import</strong><span>scan the connected backup</span></button>
+            </div>
+          </div>
+          <div class="admin-location-summary">
+            <div><small id="adminWorkspaceKicker">archive location</small><strong id="adminWorkspaceTitle">archive root</strong></div>
+            <span id="adminWorkspaceCount">0 items</span>
+          </div>
+          <div class="admin-file-columns"><button type="button" onclick="setAdminWorkspaceSort('title')">name</button><button type="button" onclick="setAdminWorkspaceSort('date')">worked on</button><button type="button" onclick="setAdminWorkspaceSort('version')">version</button><button type="button" onclick="setAdminWorkspaceSort('type')">type</button><span></span></div>
+          <div class="admin-file-list" id="adminWorkspaceList"></div>
+          <div class="admin-workspace-empty" id="adminWorkspaceEmpty" hidden>nothing is here yet.</div>
+          <div class="admin-workspace-selection" id="adminWorkspaceSelection" hidden>
+            <strong id="adminWorkspaceSelectionCount">0 selected</strong>
+            <input id="adminWorkspaceMoveDestination" type="text" list="archiveFolderOptions" placeholder="move to folder / blank = root">
+            <button type="button" onclick="moveAdminWorkspaceSelection()">move</button>
+            <button type="button" onclick="openBulkEdit()">edit metadata</button>
+            <button type="button" onclick="clearArchiveSelection()">clear</button>
+          </div>
+        </main>
+
+        <aside class="admin-file-inspector" id="adminWorkspaceInspector">
+          <div class="admin-inspector-empty"><span>select something</span><p>Artwork, notes, versions, dates, and organization controls appear here.</p></div>
+        </aside>
+      </div>
+
+      <div class="admin-create-dialog" id="adminCreateDialog" hidden>
+        <form class="admin-create-card" id="adminCreateFolderForm" onsubmit="createAdminWorkspaceFolder(event)">
+          <div class="admin-create-head"><div><small>add to archive</small><strong>new folder</strong></div><button type="button" onclick="closeAdminCreateDialog()">close</button></div>
+          <label>folder path<input id="adminCreateFolderPath" type="text" maxlength="240" placeholder="batch 4 / new song" required></label>
+          <p>The current folder is filled in automatically. Slashes create nested folders.</p>
+          <button class="primary" id="adminCreateFolderSave" type="submit">create folder</button>
+        </form>
+        <form class="admin-create-card" id="adminCreateNoteForm" onsubmit="createAdminWorkspaceNote(event)" hidden>
+          <div class="admin-create-head"><div><small>add to archive</small><strong>new note</strong></div><button type="button" onclick="closeAdminCreateDialog()">close</button></div>
+          <label>title<input id="adminCreateNoteTitle" type="text" maxlength="120" placeholder="session note" required></label>
+          <label>folder<input id="adminCreateNoteFolder" type="text" maxlength="240" list="archiveFolderOptions" placeholder="root"></label>
+          <label>note<textarea id="adminCreateNoteBody" maxlength="12000" rows="9" placeholder="write what happened..." required></textarea></label>
+          <button class="primary" id="adminCreateNoteSave" type="submit">save note</button>
+        </form>
+      </div>
+    </div>
+    <div class="panel-tab-pane upload-pane" id="tab-upload">
     <div class="panel-sect bandlab-sync-panel">
       <div class="panel-head">
         <div>
@@ -150,7 +227,9 @@
         </div>
         <div class="bandlab-source-actions">
           <button type="button" id="bandlabRescanBtn" onclick="rescanBandlabSource()" disabled>scan connected source</button>
+          <button type="button" id="bandlabCoverSyncBtn" onclick="syncBandlabCovers()">sync BandLab artwork</button>
           <div class="bandlab-source-state" id="bandlabSourceState">no source scanned yet</div>
+          <div class="bandlab-cover-state" id="bandlabCoverState">106 project covers indexed from BandLab</div>
           <div class="bandlab-source-note">Folder permission is read-only. Rescans compare revision IDs and hashes; sync uploads only the projects you select.</div>
         </div>
       </div>
@@ -279,7 +358,7 @@
       </div>
     </div>
 
-    <div class="panel-sect">
+    <div class="panel-sect upload-preview-panel">
       <h3>preview archive</h3>
       <div class="filter-grid" id="filterGrid">
         <div class="filter-chip active" data-filter-type onclick="setFilter('all')">all files</div>
@@ -293,7 +372,7 @@
       </div>
     </div>
 
-    <div class="panel-sect">
+    <div class="panel-sect upload-folders-panel">
       <h3>organize folders</h3>
       <form class="injector-form" id="folderForm">
         <input type="text" id="newFolder" placeholder="new folder path, like batch 04/demos">
@@ -301,6 +380,37 @@
       </form>
       <div class="panel-copy" style="margin-top:10px;">drag a folder above, below, or inside another folder. use the arrow controls on touch screens.</div>
     </div>
+    </div>
+    <div class="panel-tab-pane archive-rules-pane" id="tab-rules">
+      <section class="panel-sect archive-rule-builder">
+        <div class="panel-head">
+          <div><div class="panel-kicker">organizer / match + act</div><div class="panel-title">archive rules</div></div>
+          <div class="panel-copy">Preview a rule against the vault, then apply it. Saved rules can also shape future uploads and BandLab imports on this device.</div>
+        </div>
+        <input id="archiveRuleId" type="hidden">
+        <div class="archive-rule-sentence">
+          <span>when</span>
+          <select id="archiveRuleField" onchange="syncArchiveRuleMatchInput();previewArchiveRule()">
+            <option value="name">title or filename</option><option value="folder">folder</option><option value="date">worked-on date</option><option value="tag">tag / mood</option><option value="type">file type</option><option value="version">version</option>
+          </select>
+          <select id="archiveRuleOperator" onchange="previewArchiveRule()"><option value="contains">contains</option><option value="is">is exactly</option><option value="starts">starts with</option><option value="ends">ends with</option></select>
+          <input id="archiveRuleValue" type="text" maxlength="160" placeholder="batch 4" oninput="previewArchiveRule()">
+        </div>
+        <div class="archive-rule-actions">
+          <label class="archive-rule-action-toggle"><input id="archiveRuleMoveEnabled" type="checkbox" onchange="syncArchiveRuleActionState();previewArchiveRule()"><span>move matches</span></label>
+          <input id="archiveRuleFolder" type="text" maxlength="240" list="archiveFolderOptions" placeholder="destination folder" oninput="previewArchiveRule()" disabled>
+          <label class="archive-rule-action-toggle"><input id="archiveRuleNoteEnabled" type="checkbox" onchange="syncArchiveRuleActionState();previewArchiveRule()"><span>add a note</span></label>
+          <select id="archiveRuleNoteMode" onchange="previewArchiveRule()" disabled><option value="append">append to existing notes</option><option value="replace">replace existing notes</option></select>
+          <textarea id="archiveRuleNote" maxlength="12000" rows="4" placeholder="note added to everything this rule matches" oninput="previewArchiveRule()" disabled></textarea>
+        </div>
+        <label class="mini-toggle archive-rule-auto"><input id="archiveRuleAuto" type="checkbox" checked> use this rule for future uploads and imports on this device</label>
+        <div class="archive-rule-preview" id="archiveRulePreview"><strong>0 matches</strong><span>finish the sentence to preview the archive.</span></div>
+        <div class="archive-rule-buttons"><button type="button" onclick="resetArchiveRuleBuilder()">clear</button><button type="button" onclick="saveArchiveRule()">save rule</button><button class="primary" id="archiveRuleApplyBtn" type="button" onclick="applyDraftArchiveRule()">apply to matches</button></div>
+      </section>
+      <section class="panel-sect archive-saved-rules">
+        <div class="archive-saved-head"><div><div class="panel-kicker">saved on this device</div><h3>active organizer</h3></div><button type="button" onclick="runEnabledArchiveRules()">run enabled</button></div>
+        <div class="archive-rule-list" id="archiveRuleList"></div>
+      </section>
     </div>
     <div class="panel-tab-pane" id="tab-live-control">
       <div class="panel-sect live-dashboard">
@@ -479,6 +589,15 @@
       </div>
     </div>
 
+    <div class="archive-search" role="search">
+      <label class="archive-search-field" for="archiveSearchInput">
+        <span>find</span>
+        <input type="search" id="archiveSearchInput" placeholder="title, folder, version, notes, lyrics..." autocomplete="off" oninput="queueArchiveSearch(this.value)" onkeydown="handleArchiveSearchKey(event)">
+      </label>
+      <span class="archive-search-status" id="archiveSearchStatus" aria-live="polite">0 files</span>
+      <button class="archive-search-clear" id="archiveSearchClear" type="button" onclick="clearArchiveSearch()" hidden>clear</button>
+    </div>
+
     <div class="archive-selection-bar admin-only" id="archiveSelectionBar">
       <div class="archive-selection-count"><strong id="archiveSelectionCount">0</strong><span id="archiveSelectionLabel">selected</span></div>
       <input type="text" id="archiveSelectionDestination" list="archiveFolderOptions" placeholder="destination folder / blank = root">
@@ -491,11 +610,18 @@
 
     <div class="timeline-panel" id="timelinePanel">
       <div class="timeline-view-controls" aria-label="timeline view controls">
+        <div class="timeline-control-group" role="group" aria-label="timeline view">
+          <span>view</span>
+          <button class="active" data-timeline-mode="immersive" type="button" onclick="setTimelineMode('immersive')">immersive</button>
+          <button data-timeline-mode="calendar" type="button" onclick="setTimelineMode('calendar')">calendar</button>
+          <button data-timeline-mode="classic" type="button" onclick="setTimelineMode('classic')">cards</button>
+        </div>
         <div class="timeline-control-group" role="group" aria-label="timeline scale">
           <span>scale</span>
           <button class="active" data-timeline-scale="days" type="button" onclick="setTimelineScale('days')">days</button>
           <button data-timeline-scale="months" type="button" onclick="setTimelineScale('months')">months</button>
           <button data-timeline-scale="eras" type="button" onclick="setTimelineScale('eras')">eras</button>
+          <button data-timeline-scale="creative" type="button" onclick="setTimelineScale('creative')">creative eras</button>
         </div>
         <div class="timeline-control-group" role="group" aria-label="timeline file filter">
           <span>show</span>
@@ -708,12 +834,13 @@
       <!-- EXISTING BASE DIRECTORY -->
       <div class="folder-block" data-standard-folder="batch 04" draggable="true">
         <div class="folder-row" onclick="toggleFolder(this)" ondragover="handleFolderDragOver(event)" ondragleave="handleFolderDragLeave(event)" ondrop="handleFolderDrop(event)">
-          <div class="folder-row-left"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> <span>batch 04 items</span></div><span class="folder-toggle">[-]</span><div class="folder-actions admin-only"><button class="folder-select-btn" type="button" onclick="toggleFolderSelection(event,this)">select</button><div class="folder-order-actions"><button class="folder-order-btn" title="Move folder up" onclick="moveFolderStep(event,this,-1)">^</button><button class="folder-order-btn" title="Move folder down" onclick="moveFolderStep(event,this,1)">v</button></div><button class="folder-action" onclick="ungroupFolder(event, this)">ungroup</button><button class="folder-action" onclick="deleteFolder(event, this)">remove</button></div>
+          <div class="folder-row-left"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> <span>batch 04 items</span><small class="folder-note-badge">note</small></div><span class="folder-toggle">[-]</span><div class="folder-actions admin-only"><button class="folder-select-btn" type="button" onclick="toggleFolderSelection(event,this)">select</button><div class="folder-order-actions"><button class="folder-order-btn" title="Move folder up" onclick="moveFolderStep(event,this,-1)">^</button><button class="folder-order-btn" title="Move folder down" onclick="moveFolderStep(event,this,1)">v</button></div><button class="folder-action" onclick="openFolderEditor(event,this)">edit</button><button class="folder-action" onclick="ungroupFolder(event, this)">ungroup</button><button class="folder-action" onclick="deleteFolder(event, this)">remove</button></div>
         </div>
         <div class="folder-contents" data-batch-target="batch 04">
         </div>
       </div>
     </div>
+    <div class="archive-search-empty" id="archiveSearchEmpty" hidden>no archive files match that search.</div>
     <div class="empty-state" id="emptyState">no indexed assets</div>
   </section>
 </div>
@@ -745,6 +872,7 @@
         <span class="world-nav-label">explore</span>
         <button class="world-tab active" data-world-view="worlds" type="button" onclick="renderWorldsView('worlds')">song worlds<small>projects + versions</small></button>
         <button class="world-tab" data-world-view="constellation" type="button" onclick="renderWorldsView('constellation')">constellation<small>version map</small></button>
+        <button class="world-tab" data-world-view="eras" type="button" onclick="renderWorldsView('eras')">creative eras<small>artist-defined chronology</small></button>
         <button class="world-tab" data-world-view="radio" type="button" onclick="renderWorldsView('radio')">archive radio<small>continuous signal</small></button>
         <span class="world-nav-label">live</span>
         <button class="world-tab" data-world-view="premieres" type="button" onclick="renderWorldsView('premieres')">premieres<small>scheduled live rooms</small></button>
@@ -802,6 +930,29 @@
       <div class="edit-actions">
         <button class="secondary" type="button" onclick="closeViewport('editViewport')">cancel</button>
         <button type="button" onclick="saveEditedAsset()">save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="viewport-overlay" id="folderEditViewport" aria-hidden="true">
+  <div class="viewport-box folder-edit-box">
+    <div class="viewport-head"><span>edit folder</span><button class="viewport-close" type="button" onclick="closeViewport('folderEditViewport')">[x]</button></div>
+    <div class="viewport-body folder-edit-body">
+      <div class="folder-edit-context">
+        <span id="folderEditPath">archive / folder</span>
+        <strong id="folderEditCount">0 files</strong>
+      </div>
+      <form class="folder-edit-form" onsubmit="event.preventDefault(); saveFolderEditor();">
+        <label for="folderEditName"><span>folder name</span><input id="folderEditName" type="text" maxlength="64" autocomplete="off" placeholder="folder name"></label>
+        <label for="folderEditNotes"><span>folder note</span><textarea id="folderEditNotes" maxlength="12000" rows="9" placeholder="ideas, context, track list, or anything this folder should remember"></textarea></label>
+      </form>
+      <p class="folder-edit-hint">the note is saved as a searchable text file inside this folder.</p>
+      <div class="edit-actions folder-edit-actions">
+        <button class="secondary folder-note-remove" id="folderNoteRemove" type="button" onclick="removeFolderNote()" hidden>remove note</button>
+        <span class="folder-edit-action-spacer"></span>
+        <button class="secondary" type="button" onclick="closeViewport('folderEditViewport')">cancel</button>
+        <button id="folderEditSave" type="button" onclick="saveFolderEditor()">save folder</button>
       </div>
     </div>
   </div>
@@ -903,15 +1054,18 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/js/core.js"></script>
-<script src="assets/js/live.js"></script>
-<script src="assets/js/stats.js"></script>
-<script src="assets/js/timeline.js"></script>
-<script src="assets/js/bandlab-sync.js"></script>
-<script src="assets/js/archive.js"></script>
-<script src="assets/js/player.js"></script>
-<script src="assets/js/worlds.js"></script>
-<script src="assets/js/bootstrap.js"></script>
+<script src="assets/js/core.js?v=20260718-3"></script>
+<script src="assets/js/live.js?v=20260718-3"></script>
+<script src="assets/js/stats.js?v=20260718-3"></script>
+<script src="assets/js/timeline.js?v=20260718-3"></script>
+<script src="assets/js/bandlab-sync.js?v=20260718-3"></script>
+<script src="assets/js/archive.js?v=20260718-3"></script>
+<script src="assets/js/rules.js?v=20260718-3"></script>
+<script src="assets/js/admin-workspace.js?v=20260718-3"></script>
+<script src="assets/js/player.js?v=20260718-3"></script>
+<script src="assets/js/worlds.js?v=20260718-3"></script>
+<script src="assets/js/enrichment.js?v=20260718-3"></script>
+<script src="assets/js/bootstrap.js?v=20260718-3"></script>
 
 </body>
 </html>
