@@ -1,0 +1,17 @@
+.agents/
+.codex/
+.git/
+.vercel/
+.env*
+bandlab downloading/
+tools/
+Bloxd-Menu.user.js
+supabase-setup.sql
+dist/
+scripts/split-monolith.mjs
+scripts/test-version-compaction.mjs
+scripts/test-folder-paths.mjs
+scripts/test-archive-rules.mjs
+scripts/test-admin-workspace.mjs
+scripts/validate-bandlab-covers.mjs
+scripts/validate-structure.mjs

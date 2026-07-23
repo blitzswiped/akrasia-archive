@@ -7,15 +7,15 @@
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=()">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self';">
 <title>akrasia archive</title>
-<script>try{if(localStorage.getItem('akrasia_tour_seen_v6'))document.documentElement.classList.add('intro-seen')}catch(e){}</script>
-  <link rel="stylesheet" href="assets/css/base.css?v=20260718-3">
-  <link rel="stylesheet" href="assets/css/live.css?v=20260718-3">
-  <link rel="stylesheet" href="assets/css/player.css?v=20260718-3">
-  <link rel="stylesheet" href="assets/css/archive-timeline.css?v=20260718-3">
-  <link rel="stylesheet" href="assets/css/polish-responsive.css?v=20260718-3">
-  <link rel="stylesheet" href="assets/css/intro-worlds.css?v=20260718-3">
-  <link rel="stylesheet" href="assets/css/admin-workspace.css?v=20260718-4">
-  <link rel="stylesheet" href="assets/css/enrichment.css?v=20260718-3">
+<script>try{if(localStorage.getItem('akrasia_tour_seen_v7'))document.documentElement.classList.add('intro-seen')}catch(e){}</script>
+  <link rel="stylesheet" href="assets/css/base.css?v=20260722-3">
+  <link rel="stylesheet" href="assets/css/live.css?v=20260722-3">
+  <link rel="stylesheet" href="assets/css/player.css?v=20260722-3">
+  <link rel="stylesheet" href="assets/css/archive-timeline.css?v=20260722-3">
+  <link rel="stylesheet" href="assets/css/polish-responsive.css?v=20260722-3">
+  <link rel="stylesheet" href="assets/css/intro-worlds.css?v=20260722-3">
+  <link rel="stylesheet" href="assets/css/admin-workspace.css?v=20260722-3">
+  <link rel="stylesheet" href="assets/css/enrichment.css?v=20260723-1">
 </head>
 <body data-section="archive" class="intro-active shell-loading">
 
@@ -60,12 +60,28 @@
   <div class="signal-footer"><span id="signalCounter">signal 01 / 06</span><div class="signal-progress"><i id="signalProgress"></i></div><button type="button" onclick="finishArchiveIntro(true)">enter archive</button></div>
 </div>
 
+<div class="archive-setup" id="archiveSetup" hidden aria-hidden="true">
+  <form class="archive-setup-card" onsubmit="completeArchiveSetup(event)">
+    <div class="archive-setup-kicker">one small thing before you enter live</div>
+    <h2>what should the room call you?</h2>
+    <p>This name stays locked on this device after you enter it. It is used only in live chat.</p>
+    <input id="archiveSetupName" type="text" maxlength="24" autocomplete="nickname" placeholder="your name" required>
+    <div class="archive-setup-map" aria-label="archive features">
+      <span><strong>archive</strong>browse, search, and open every revision</span>
+      <span><strong>timeline</strong>move through the dates the work was made</span>
+      <span><strong>worlds</strong>see every version and artifact around a song</span>
+      <span><strong>live</strong>enter broadcasts, chat, and shared premieres</span>
+    </div>
+    <button type="submit">enter akrasia</button>
+  </form>
+</div>
+
 <svg class="grain" width="100%" height="100%"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0"/></filter><rect width="100%" height="100%" filter="url(#noiseFilter)"/></svg>
 <div class="app-toast" id="appToast" role="status" aria-live="polite"></div>
 
 <div class="wrap">
   <div class="topbar">
-    <div class="wordmark" id="appModeLabel">akrasia <span>/ <span class="mode-word" id="appSectionLabel">archive</span></span></div>
+    <button class="wordmark" id="appModeLabel" type="button" onclick="returnToArchive()" aria-label="return to archive">akrasia <span>/ <span class="mode-word" id="appSectionLabel">archive</span></span></button>
     <div class="utility-btns">
       <button class="mobile-exit" id="mobileExitBtn" type="button" onclick="exitActiveMobileView()" aria-label="go back">back</button>
       <div class="header-actions header-actions-archive">
@@ -73,7 +89,7 @@
         <button class="action-trigger" type="button" onclick="toggleTimelineView()">timeline</button>
         <button class="action-trigger" type="button" onclick="openWorldsHub('worlds')">worlds</button>
         <button class="action-trigger" type="button" onclick="openSettings()">settings</button>
-        <div class="action-trigger admin-only" onclick="togglePanel()">organize</div>
+        <button class="action-trigger admin-only" id="archiveOrganizeToggle" type="button" onclick="toggleArchiveOrganizeMode()">organize</button>
         <div class="auth-tools">
           <input type="email" id="authEmail" placeholder="admin email" style="display:none;">
           <button class="action-trigger" id="authLogin" onclick="adminLogin()" style="display:none;">send admin link</button>
@@ -127,102 +143,45 @@
 
   <div class="control-panel" id="controlPanel">
     <div class="panel-overview">
-      <div><h2>archive workspace</h2><p>move through the vault, organize files, and open one tool at a time.</p></div>
-      <div class="panel-overview-actions"><button type="button" onclick="persistExplorerOrder()">save order</button><button type="button" onclick="togglePanel()">close</button></div>
+      <div><small>private archive tool</small><h2 id="adminToolTitle">archive intake</h2><p id="adminToolDescription">Focused tools open here without replacing the archive explorer.</p></div>
+      <div class="panel-overview-actions">
+        <button type="button" onclick="togglePanel(false)">close</button>
+      </div>
     </div>
-    <div class="panel-tabs">
-      <button class="panel-tab active" data-tab="files" onclick="switchPanelTab('files')" type="button">files</button>
-      <button class="panel-tab" data-tab="upload" onclick="switchPanelTab('upload')" type="button">add + import</button>
-      <button class="panel-tab" data-tab="rules" onclick="switchPanelTab('rules')" type="button">rules</button>
-      <button class="panel-tab" data-tab="live-control" onclick="switchPanelTab('live-control')" type="button">live control</button>
-      <button class="panel-tab" data-tab="stats" onclick="switchPanelTab('stats')" type="button">stats</button>
-    </div>
-    <div class="panel-tab-pane active admin-files-pane" id="tab-files">
-      <div class="admin-file-workspace" id="adminFileWorkspace">
-        <aside class="admin-file-sidebar">
-          <div class="admin-workspace-label">places</div>
-          <nav class="admin-place-list" aria-label="archive places">
-            <button class="active" type="button" data-admin-place="folder" onclick="openAdminWorkspacePlace('folder','')" ondragover="adminWorkspaceDragOver(event)" ondrop="adminWorkspaceDrop(event,'')"><span>archive root</span><small id="adminRootCount">0</small></button>
-            <button type="button" data-admin-place="recent" onclick="openAdminWorkspacePlace('recent')"><span>recently worked on</span><small>time</small></button>
-            <button type="button" data-admin-place="loose" onclick="openAdminWorkspacePlace('loose')"><span>loose files</span><small>root</small></button>
-            <button type="button" data-admin-place="notes" onclick="openAdminWorkspacePlace('notes')"><span>notes</span><small>text</small></button>
-            <button type="button" data-admin-place="visuals" onclick="openAdminWorkspacePlace('visuals')"><span>visuals</span><small>image + video</small></button>
-            <button type="button" data-admin-place="enrichment" onclick="openAdminWorkspacePlace('enrichment')"><span>enrichment review</span><small>private drafts</small></button>
-          </nav>
-          <div class="admin-workspace-label folder-label">folders</div>
-          <input class="admin-folder-filter" id="adminFolderFilter" type="search" placeholder="filter folder names" autocomplete="off" oninput="renderAdminSidebarFolders(this.value)">
-          <div class="admin-sidebar-folders" id="adminSidebarFolders"></div>
-        </aside>
-
+    <div class="panel-tab-pane admin-review-pane" id="tab-review">
+      <div class="admin-file-workspace enrichment-mode" id="adminFileWorkspace">
         <main class="admin-file-main">
-          <div class="admin-file-toolbar">
-            <div class="admin-history-controls">
-              <button id="adminWorkspaceBack" type="button" onclick="adminWorkspaceHistory(-1)" title="Back" aria-label="Back">&lt;</button>
-              <button id="adminWorkspaceForward" type="button" onclick="adminWorkspaceHistory(1)" title="Forward" aria-label="Forward">&gt;</button>
-            </div>
-            <div class="admin-breadcrumbs" id="adminWorkspaceBreadcrumbs" aria-label="current folder"></div>
-            <label class="admin-workspace-search">
-              <span>find</span>
-              <input id="adminWorkspaceSearch" type="search" placeholder="name, note, folder, type:audio..." autocomplete="off" oninput="queueAdminWorkspaceSearch(this.value)" onkeydown="handleAdminWorkspaceSearchKey(event)">
-            </label>
-            <button class="admin-add-trigger" id="adminAddTrigger" type="button" onclick="toggleAdminAddMenu()" aria-label="Add to archive" title="Add to archive">+</button>
-            <div class="admin-add-menu" id="adminAddMenu" hidden>
-              <button type="button" onclick="openAdminCreateDialog('folder')"><strong>new folder</strong><span>inside the current location</span></button>
-              <button type="button" onclick="openAdminCreateDialog('note')"><strong>new note</strong><span>write directly into the archive</span></button>
-              <button type="button" onclick="openAdminUploadTool(false)"><strong>upload files</strong><span>audio, images, video, or text</span></button>
-              <button type="button" onclick="openAdminUploadTool(true)"><strong>BandLab import</strong><span>scan the connected backup</span></button>
-            </div>
-          </div>
-          <div class="admin-location-summary">
-            <div><small id="adminWorkspaceKicker">archive location</small><strong id="adminWorkspaceTitle">archive root</strong></div>
-            <span id="adminWorkspaceCount">0 items</span>
-          </div>
-          <div class="admin-file-columns"><button type="button" onclick="setAdminWorkspaceSort('title')">name</button><button type="button" onclick="setAdminWorkspaceSort('date')">worked on</button><button type="button" onclick="setAdminWorkspaceSort('version')">version</button><button type="button" onclick="setAdminWorkspaceSort('type')">type</button><span></span></div>
+          <div class="admin-location-summary"><div><small id="adminWorkspaceKicker">private analysis</small><strong id="adminWorkspaceTitle">enrichment review</strong></div><span id="adminWorkspaceCount">loading</span></div>
           <div class="admin-file-list" id="adminWorkspaceList"></div>
-          <div class="admin-workspace-empty" id="adminWorkspaceEmpty" hidden>nothing is here yet.</div>
-          <div class="admin-workspace-selection" id="adminWorkspaceSelection" hidden>
-            <strong id="adminWorkspaceSelectionCount">0 selected</strong>
-            <input id="adminWorkspaceMoveDestination" type="text" list="archiveFolderOptions" placeholder="move to folder / blank = root">
-            <button type="button" onclick="moveAdminWorkspaceSelection()">move</button>
-            <button type="button" onclick="openBulkEdit()">edit metadata</button>
-            <button type="button" onclick="clearArchiveSelection()">clear</button>
-          </div>
+          <div class="admin-workspace-empty" id="adminWorkspaceEmpty" hidden></div>
+          <div class="admin-workspace-selection" id="adminWorkspaceSelection" hidden><strong id="adminWorkspaceSelectionCount">0 selected</strong></div>
         </main>
-
-        <aside class="admin-file-inspector" id="adminWorkspaceInspector">
-          <div class="admin-inspector-empty"><span>select something</span><p>Artwork, notes, versions, dates, and organization controls appear here.</p></div>
-        </aside>
-      </div>
-
-      <div class="admin-create-dialog" id="adminCreateDialog" hidden>
-        <form class="admin-create-card" id="adminCreateFolderForm" onsubmit="createAdminWorkspaceFolder(event)">
-          <div class="admin-create-head"><div><small>add to archive</small><strong>new folder</strong></div><button type="button" onclick="closeAdminCreateDialog()">close</button></div>
-          <label>folder path<input id="adminCreateFolderPath" type="text" maxlength="240" placeholder="batch 4 / new song" required></label>
-          <p>The current folder is filled in automatically. Slashes create nested folders.</p>
-          <button class="primary" id="adminCreateFolderSave" type="submit">create folder</button>
-        </form>
-        <form class="admin-create-card" id="adminCreateNoteForm" onsubmit="createAdminWorkspaceNote(event)" hidden>
-          <div class="admin-create-head"><div><small>add to archive</small><strong>new note</strong></div><button type="button" onclick="closeAdminCreateDialog()">close</button></div>
-          <label>title<input id="adminCreateNoteTitle" type="text" maxlength="120" placeholder="session note" required></label>
-          <label>folder<input id="adminCreateNoteFolder" type="text" maxlength="240" list="archiveFolderOptions" placeholder="root"></label>
-          <label>note<textarea id="adminCreateNoteBody" maxlength="12000" rows="9" placeholder="write what happened..." required></textarea></label>
-          <button class="primary" id="adminCreateNoteSave" type="submit">save note</button>
-        </form>
+        <aside class="admin-file-inspector" id="adminWorkspaceInspector"><div class="admin-inspector-empty"><span>select a suggestion</span><p>Lyrics, tags, metadata, evidence, and acceptance controls appear here.</p></div></aside>
       </div>
     </div>
-    <div class="panel-tab-pane upload-pane" id="tab-upload">
+    <div class="panel-tab-pane upload-pane vault-intake" id="tab-upload" data-intake-mode="files">
+    <div class="vault-intake-head">
+      <div><small>add to the current archive</small><h2>bring something in</h2><p>Choose the source, place it, and stop there unless more detail matters.</p></div>
+      <div class="vault-intake-head-actions">
+        <div class="vault-intake-switch" role="tablist" aria-label="intake source">
+          <button class="active" data-intake-mode-button="files" type="button" onclick="setVaultIntakeMode('files')">files</button>
+          <button data-intake-mode-button="bandlab" type="button" onclick="setVaultIntakeMode('bandlab')">BandLab backup</button>
+        </div>
+        <button type="button" onclick="closeAdminUploadTool()">close</button>
+      </div>
+    </div>
     <div class="panel-sect bandlab-sync-panel">
       <div class="panel-head">
         <div>
-          <div class="panel-kicker">source / bandlab backup</div>
-          <div class="panel-title">resolve the vault</div>
+          <div class="panel-kicker">connected source</div>
+          <div class="panel-title">BandLab backup</div>
         </div>
-        <div class="panel-copy">Choose the backup folder once. Akrasia receives read-only access, scans the manifests locally, and waits for confirmation before uploading anything.</div>
+        <div class="panel-copy">Read the local manifests, review what changed, then choose exactly what enters Akrasia.</div>
       </div>
       <div class="bandlab-source-grid">
         <div class="bandlab-folder-picker">
-          <div><strong>select the backup folder</strong><span>Choose BandLab Backup or the folder containing it. The first pass only reads manifests and builds a preview.</span></div>
-          <button type="button" id="bandlabChooseBtn" onclick="openBandlabFolderPicker()">select folder</button>
+          <div><strong>connect the backup</strong><span>The first scan is read-only. Nothing uploads until you confirm the plan.</span></div>
+          <button type="button" id="bandlabChooseBtn" onclick="openBandlabFolderPicker()">choose folder</button>
           <input type="file" id="bandlabFolderInput" webkitdirectory directory multiple hidden>
         </div>
         <div class="bandlab-source-actions">
@@ -253,7 +212,9 @@
         </div>
         <div class="bandlab-projects" id="bandlabProjects"></div>
         <div class="bandlab-plan-actions">
+          <button class="primary" type="button" id="bandlabAnalysisSyncBtn" onclick="runBandlabSync({ analysisOnly:true })">import analysis only</button>
           <button class="primary" type="button" id="bandlabSyncBtn" onclick="runBandlabSync()">sync new + changed</button>
+          <button type="button" id="bandlabUndoRecentBtn" onclick="undoRecentBandlabAdditions()">undo recent additions</button>
           <button type="button" onclick="toggleAllBandlabProjects(false)">select none</button>
           <button class="danger" type="button" id="bandlabCancelBtn" onclick="cancelBandlabSync()" disabled>stop after current file</button>
         </div>
@@ -264,16 +225,16 @@
       </div>
     </div>
     <div class="panel-sect primary-panel">
-      <div class="panel-head">
+      <div class="panel-head vault-direct-intro">
         <div>
-          <div class="panel-kicker">01 / add media</div>
-          <div class="panel-title">index files</div>
+          <div class="panel-kicker">new archive material</div>
+          <div class="panel-title">files</div>
         </div>
-        <div class="panel-copy">Select multiple files, place them, describe them, then publish them together.</div>
+        <div class="panel-copy">The filename can carry the first draft of the identity. Open details only when you need to override it.</div>
       </div>
       <form class="injector-form dual" id="injectForm">
         <div class="field-group">
-          <div class="field-group-title">01 / upload <span>files</span></div>
+          <div class="field-group-title">choose <span>files</span></div>
           <div class="file-drop">
             <div class="label-mini">core file(s)</div>
             <input type="file" id="injFile" multiple required>
@@ -283,7 +244,7 @@
         </div>
 
         <div class="field-group">
-          <div class="field-group-title">02 / organize <span>where + when</span></div>
+          <div class="field-group-title">place <span>where + when</span></div>
           <select id="injBatch" class="full-width" required>
             <!-- populated dynamically via js -->
           </select>
@@ -293,22 +254,24 @@
           <input type="time" id="injTime" title="asset time">
         </div>
 
-        <div class="field-group">
-          <div class="field-group-title">03 / describe <span>identity</span></div>
-          <input type="text" id="injTitle" class="span-2" placeholder="display title / batch prefix">
-          <input type="text" id="injVer" placeholder="version (e.g. v2)" required>
+        <button class="vault-intake-details-toggle" type="button" onclick="toggleVaultIntakeDetails()" aria-expanded="false">add details</button>
+
+        <div class="field-group intake-advanced">
+          <div class="field-group-title">identity <span>optional overrides</span></div>
+          <input type="text" id="injTitle" class="span-2" placeholder="display title / blank uses filename">
+          <input type="text" id="injVer" placeholder="version" value="v1" required>
           <select id="injType" onchange="toggleCoverInput()">
             <option value="audio">asset: audio</option>
             <option value="text">asset: text</option>
             <option value="image">asset: image</option>
             <option value="video">asset: video</option>
           </select>
-          <input type="text" id="injMood" class="span-3" placeholder="custom tag / mood" required>
+          <input type="text" id="injMood" class="span-3" placeholder="mood" value="raw" required>
           <input type="color" id="injMoodColor" value="#ffffff" title="mood color">
         </div>
 
-        <div class="field-group">
-          <div class="field-group-title">04 / attach <span>notes + links</span></div>
+        <div class="field-group intake-advanced">
+          <div class="field-group-title">context <span>notes + lyrics + links</span></div>
           <textarea id="injNotes" class="full" rows="3" placeholder="notes (optional)"></textarea>
           <textarea id="injLyrics" class="full" rows="4" placeholder="synced lyrics: [0:12] main line || [adlib] background line&#10;[0:18] [effect] echoed vocal&#10;[0:28] ... for instrumental dots"></textarea>
           <input type="url" id="injSpotify" class="span-2" placeholder="spotify link (optional)">
@@ -317,8 +280,8 @@
           <input type="url" id="injSoundcloud" class="span-2" placeholder="soundcloud / dsp link (optional)">
         </div>
 
-        <div class="field-group">
-          <div class="field-group-title">05 / world <span>project relationships</span></div>
+        <div class="field-group intake-advanced">
+          <div class="field-group-title">song relationship <span>usually automatic</span></div>
           <input type="text" id="injProject" class="span-2" placeholder="project key (groups song world)">
           <select id="injRole">
             <option value="version">role: song version</option>
@@ -340,45 +303,8 @@
           <div class="upload-progress-label"><span id="uploadProgressText">preparing upload</span><span id="uploadProgressPct">0%</span></div>
           <div class="upload-progress-track"><div class="upload-progress-fill" id="uploadProgressFill"></div></div>
         </div>
-        <button type="button" onclick="handleFileInject()">index selected file(s)</button>
+        <button class="vault-intake-submit" type="button" onclick="handleFileInject()">add to archive</button>
       </form>
-    </div>
-
-    <div class="panel-sect quick-stack">
-      <h3>upload shortcuts</h3>
-      <div class="quick-row">
-        <button class="mini-btn" type="button" onclick="quickMood('raw','#d8d8d8')">raw</button>
-        <button class="mini-btn" type="button" onclick="quickMood('ambient','#8fb7ff')">ambient</button>
-        <button class="mini-btn" type="button" onclick="quickMood('aggressive','#ff4f4f')">aggressive</button>
-      </div>
-      <div class="quick-row">
-        <button class="mini-btn" type="button" onclick="setAssetDateToday()">today</button>
-        <button class="mini-btn" type="button" onclick="setAssetTimeNow()">now</button>
-        <button class="mini-btn" type="button" onclick="clearUploadForm()">clear form</button>
-      </div>
-    </div>
-
-    <div class="panel-sect upload-preview-panel">
-      <h3>preview archive</h3>
-      <div class="filter-grid" id="filterGrid">
-        <div class="filter-chip active" data-filter-type onclick="setFilter('all')">all files</div>
-        <div class="filter-chip" data-filter-type onclick="setFilter('audio')">type: audio</div>
-        <div class="filter-chip" data-filter-type onclick="setFilter('text')">type: text</div>
-        <div class="filter-chip" data-filter-type onclick="setFilter('image')">type: image</div>
-        <div class="filter-chip" data-filter-type onclick="setFilter('video')">type: video</div>
-        <div class="filter-chip" data-mood-color="#8fb7ff" style="--chip-color:#8fb7ff" onclick="setFilter('ambient')">ambient</div>
-        <div class="filter-chip" data-mood-color="#ff4f4f" style="--chip-color:#ff4f4f" onclick="setFilter('aggressive')">aggressive</div>
-        <div class="filter-chip" data-mood-color="#d8d8d8" style="--chip-color:#d8d8d8" onclick="setFilter('raw')">raw</div>
-      </div>
-    </div>
-
-    <div class="panel-sect upload-folders-panel">
-      <h3>organize folders</h3>
-      <form class="injector-form" id="folderForm">
-        <input type="text" id="newFolder" placeholder="new folder path, like batch 04/demos">
-        <button type="button" onclick="handleFolderCreate()">new folder</button>
-      </form>
-      <div class="panel-copy" style="margin-top:10px;">drag a folder above, below, or inside another folder. use the arrow controls on touch screens.</div>
     </div>
     </div>
     <div class="panel-tab-pane archive-rules-pane" id="tab-rules">
@@ -411,148 +337,6 @@
         <div class="archive-saved-head"><div><div class="panel-kicker">saved on this device</div><h3>active organizer</h3></div><button type="button" onclick="runEnabledArchiveRules()">run enabled</button></div>
         <div class="archive-rule-list" id="archiveRuleList"></div>
       </section>
-    </div>
-    <div class="panel-tab-pane" id="tab-live-control">
-      <div class="panel-sect live-dashboard">
-        <div class="panel-head">
-          <div>
-            <div class="panel-kicker">live control</div>
-            <div class="panel-title">control room</div>
-          </div>
-          <div class="panel-copy">current broadcast, queue, countdown, announcements, moderation, and stats without the wall of knobs.</div>
-        </div>
-        <div class="live-dashboard-grid">
-          <section class="live-dash-section live-rehearsal-panel">
-            <div class="live-rehearsal-copy">
-              <strong>private set rehearsal</strong>
-              <span>Run the real queue, countdown, scenes, transitions, and media locally. No rehearsal state is published to the audience or Supabase.</span>
-              <div class="live-rehearsal-last">no rehearsal completed yet</div>
-            </div>
-            <div class="live-rehearsal-actions">
-              <span class="live-rehearsal-status">ready</span>
-              <button class="mini-btn" data-rehearsal-toggle type="button" onclick="toggleLiveRehearsal()">rehearse set</button>
-              <button class="mini-btn" data-rehearsal-reset type="button" onclick="resetLiveRehearsal()" disabled>restart set</button>
-            </div>
-          </section>
-          <section class="live-dash-section">
-            <h3>current broadcast</h3>
-        <div class="live-status compact">
-          <div class="live-stat">state<strong id="dashLiveStateText">offline</strong></div>
-          <div class="live-stat">type<strong id="dashLiveTypeText">none</strong></div>
-          <div class="live-stat">viewers<strong id="dashViewerCount">0</strong></div>
-          <div class="live-stat">source<strong id="dashLiveSourceText">archive</strong></div>
-        </div>
-            <div class="live-control-stack compact-stack">
-              <select id="liveAssetSelectDash"></select>
-              <div class="quick-row">
-                <button class="mini-btn" type="button" onclick="goLiveWithSelection('liveAssetSelectDash')">start selected</button>
-                <button class="mini-btn" type="button" onclick="addSelectedArchiveToLiveQueue('liveAssetSelectDash')">queue selected</button>
-                <button class="mini-btn" type="button" onclick="stopLiveRoom()">stop broadcast</button>
-              </div>
-              <input type="text" id="liveCustomTitle" placeholder="quick title override">
-              <textarea id="liveCustomNotes" rows="2" placeholder="quick live notes"></textarea>
-              <input type="file" id="liveCustomCover" accept="image/*">
-              <input type="color" id="liveCustomMoodColor" value="#ffffff" title="live accent color">
-            </div>
-          </section>
-          <section class="live-dash-section">
-            <h3>queue</h3>
-            <div class="quick-row">
-              <button class="mini-btn" type="button" onclick="startLiveQueue()">start</button>
-              <button class="mini-btn" type="button" onclick="pauseLiveQueue()">pause</button>
-              <button class="mini-btn" type="button" onclick="resumeLiveQueue()">resume</button>
-              <button class="mini-btn" type="button" onclick="prevLiveQueueItem()">back</button>
-              <button class="mini-btn" type="button" onclick="nextLiveQueueItem()">next</button>
-              <button class="mini-btn" type="button" onclick="clearLiveQueue()">clear</button>
-            </div>
-            <div class="quick-row">
-              <input type="text" id="liveFolderQueueInput" placeholder="folder path">
-              <button class="mini-btn" type="button" onclick="addFolderToLiveQueue()">add folder</button>
-            </div>
-            <div class="quick-row">
-              <label class="mini-toggle"><input type="checkbox" id="liveAutoplayToggle" checked> autoplay</label>
-              <label class="mini-toggle"><input type="checkbox" id="liveFolderAutoplayToggle" checked> folder autoplay</label>
-              <input type="number" id="liveImageDuration" min="3" max="120" value="12" placeholder="image seconds">
-            </div>
-            <div class="live-queue-list" id="liveQueueList"></div>
-          </section>
-          <section class="live-dash-section">
-            <h3>countdown</h3>
-            <input type="datetime-local" id="liveCountdownInputDash">
-            <select id="liveCountdownAction">
-              <option value="room">after countdown: show live room</option>
-              <option value="selected">after countdown: start selected item</option>
-              <option value="queue">after countdown: start queue</option>
-            </select>
-            <label class="mini-toggle"><input type="checkbox" id="liveCountdownAutoStart"> auto-start at zero</label>
-            <div class="quick-row">
-              <button class="mini-btn" type="button" onclick="setLiveCountdown('liveCountdownInputDash')">set countdown</button>
-              <button class="mini-btn" type="button" onclick="clearLiveCountdown()">clear</button>
-            </div>
-          </section>
-          <section class="live-dash-section">
-            <h3>announcements</h3>
-            <textarea id="liveAnnounceInputDash" rows="2" placeholder="major room update" maxlength="200"></textarea>
-            <div class="quick-row">
-              <button class="mini-btn" type="button" onclick="sendAnnouncement(false,'liveAnnounceInputDash')">send</button>
-              <button class="mini-btn" type="button" onclick="sendAnnouncement(true,'liveAnnounceInputDash')">pin</button>
-              <button class="mini-btn" type="button" onclick="sendAnnouncement('major','liveAnnounceInputDash')">major</button>
-              <button class="mini-btn" type="button" onclick="dismissAnnouncement()">clear</button>
-            </div>
-          </section>
-          <section class="live-dash-section">
-            <h3>director mode</h3>
-            <div class="quick-row">
-              <button class="mini-btn" type="button" onclick="setLiveScene('stage')">stage</button>
-              <button class="mini-btn" type="button" onclick="setLiveScene('cover')">cover</button>
-              <button class="mini-btn" type="button" onclick="setLiveScene('lyrics')">lyrics</button>
-              <button class="mini-btn" type="button" onclick="setLiveScene('archive')">archive</button>
-              <button class="mini-btn" type="button" onclick="setLiveScene('blackout')">blackout</button>
-              <button class="mini-btn" type="button" onclick="setLiveScene('credits')">credits</button>
-            </div>
-            <input type="datetime-local" id="livePremiereInputDash">
-            <div class="quick-row">
-              <button class="mini-btn" type="button" onclick="scheduleLivePremiere('livePremiereInputDash')">schedule current queue</button>
-              <button class="mini-btn" type="button" onclick="openWorldsHub('premieres')">premieres</button>
-            </div>
-          </section>
-          <section class="live-dash-section private-live-section">
-            <h3>private live items</h3>
-            <input type="file" id="livePrivateFileInput" accept="audio/*,video/*,image/*">
-            <input type="file" id="livePrivateCoverInput" accept="image/*">
-            <input type="text" id="livePrivateTitleInput" placeholder="private item title">
-            <textarea id="livePrivateNotesInput" rows="2" placeholder="private item notes"></textarea>
-            <input type="text" id="livePrivateFolderInput" placeholder="private folder / collection">
-            <div class="quick-row">
-              <button class="mini-btn" type="button" onclick="savePrivateLiveItem()">preload</button>
-              <button class="mini-btn" type="button" onclick="addPrivateLiveItemToQueue('privateLiveItemSelect')">queue private</button>
-            </div>
-            <select id="privateLiveItemSelect"></select>
-          </section>
-          <section class="live-dash-section">
-            <h3>live-only now</h3>
-            <input type="file" id="liveFileInputDash" accept="audio/*,video/*,image/*">
-            <input type="text" id="liveTitleInputDash" placeholder="live title">
-            <button class="mini-btn" type="button" onclick="goLiveWithFile('liveFileInputDash','liveTitleInputDash')">broadcast file</button>
-          </section>
-        </div>
-      </div>
-      <div class="panel-sect live-admin-chat">
-        <h3>chat moderation</h3>
-        <div class="quick-row">
-          <select id="timeoutLength">
-            <option value="1">1 min</option>
-            <option value="5">5 min</option>
-            <option value="10" selected>10 min</option>
-            <option value="30">30 min</option>
-            <option value="60">1 hour</option>
-            <option value="1440">24 hours</option>
-          </select>
-          <button class="mini-btn" type="button" onclick="loadBannedUsers()">refresh bans</button>
-        </div>
-        <div class="admin-chat-feed" id="adminChatFeed"></div>
-        <div class="admin-chat-feed banned-feed" id="bannedUsersFeed"></div>
-      </div>
     </div>
     <div class="panel-tab-pane" id="tab-stats">
       <div class="panel-sect stats-panel">
@@ -598,6 +382,30 @@
       <button class="archive-search-clear" id="archiveSearchClear" type="button" onclick="clearArchiveSearch()" hidden>clear</button>
     </div>
 
+    <div class="archive-organizer admin-only" id="archiveOrganizer" aria-label="archive organization controls">
+      <div class="archive-organizer-main">
+        <button class="archive-add-button" id="adminAddTrigger" type="button" onclick="toggleAdminAddMenu()" aria-label="add to archive">+</button>
+        <div class="admin-add-menu archive-add-menu" id="adminAddMenu" hidden>
+          <button type="button" onclick="openAdminCreateDialog('folder')"><strong>new folder</strong><span>create a location in this archive</span></button>
+          <button type="button" onclick="openAdminCreateDialog('note')"><strong>new note</strong><span>write a text file into the archive</span></button>
+          <button type="button" onclick="openAdminUploadTool(false)"><strong>upload files</strong><span>audio, image, video, or text</span></button>
+          <button type="button" onclick="openAdminUploadTool(true)"><strong>BandLab + AI import</strong><span>scan revisions, covers, and analysis sidecars</span></button>
+        </div>
+        <div class="archive-smart-views" role="group" aria-label="organize views">
+          <button class="active" type="button" data-archive-view="all" onclick="setArchiveSmartView('all')">all</button>
+          <button type="button" data-archive-view="loose" onclick="setArchiveSmartView('loose')">unfiled</button>
+          <button type="button" data-archive-view="notes" onclick="setArchiveSmartView('notes')">notes</button>
+          <button type="button" data-archive-view="visuals" onclick="setArchiveSmartView('visuals')">visuals</button>
+        </div>
+      </div>
+      <div class="archive-organizer-tools">
+        <button type="button" onclick="openAdminReviewTool('review')">AI review <span id="adminReviewCount"></span></button>
+        <button type="button" onclick="openAdminReviewTool('eras')">eras</button>
+        <button type="button" onclick="openAdminAdvancedTool('rules')">rules</button>
+        <button type="button" onclick="openAdminAdvancedTool('stats')">stats</button>
+      </div>
+    </div>
+
     <div class="archive-selection-bar admin-only" id="archiveSelectionBar">
       <div class="archive-selection-count"><strong id="archiveSelectionCount">0</strong><span id="archiveSelectionLabel">selected</span></div>
       <input type="text" id="archiveSelectionDestination" list="archiveFolderOptions" placeholder="destination folder / blank = root">
@@ -608,28 +416,27 @@
     </div>
     <datalist id="archiveFolderOptions"></datalist>
 
+    <div class="admin-create-dialog" id="adminCreateDialog" hidden>
+      <form class="admin-create-card" id="adminCreateFolderForm" onsubmit="createAdminWorkspaceFolder(event)">
+        <div class="admin-create-head"><div><small>add to archive</small><strong>new folder</strong></div><button type="button" onclick="closeAdminCreateDialog()">close</button></div>
+        <label>folder path<input id="adminCreateFolderPath" type="text" maxlength="240" placeholder="batch 4 / new song" required></label>
+        <p>Slashes create nested folders. The original files and BandLab identities are never renamed.</p>
+        <button class="primary" id="adminCreateFolderSave" type="submit">create folder</button>
+      </form>
+      <form class="admin-create-card" id="adminCreateNoteForm" onsubmit="createAdminWorkspaceNote(event)" hidden>
+        <div class="admin-create-head"><div><small>add to archive</small><strong>new note</strong></div><button type="button" onclick="closeAdminCreateDialog()">close</button></div>
+        <label>title<input id="adminCreateNoteTitle" type="text" maxlength="120" placeholder="session note" required></label>
+        <label>folder<input id="adminCreateNoteFolder" type="text" maxlength="240" list="archiveFolderOptions" placeholder="root"></label>
+        <label>note<textarea id="adminCreateNoteBody" maxlength="12000" rows="9" placeholder="write what happened..." required></textarea></label>
+        <button class="primary" id="adminCreateNoteSave" type="submit">save note</button>
+      </form>
+    </div>
+
     <div class="timeline-panel" id="timelinePanel">
       <div class="timeline-view-controls" aria-label="timeline view controls">
-        <div class="timeline-control-group" role="group" aria-label="timeline view">
-          <span>view</span>
-          <button class="active" data-timeline-mode="immersive" type="button" onclick="setTimelineMode('immersive')">immersive</button>
-          <button data-timeline-mode="calendar" type="button" onclick="setTimelineMode('calendar')">calendar</button>
-          <button data-timeline-mode="classic" type="button" onclick="setTimelineMode('classic')">cards</button>
-        </div>
-        <div class="timeline-control-group" role="group" aria-label="timeline scale">
-          <span>scale</span>
-          <button class="active" data-timeline-scale="days" type="button" onclick="setTimelineScale('days')">days</button>
-          <button data-timeline-scale="months" type="button" onclick="setTimelineScale('months')">months</button>
-          <button data-timeline-scale="eras" type="button" onclick="setTimelineScale('eras')">eras</button>
-          <button data-timeline-scale="creative" type="button" onclick="setTimelineScale('creative')">creative eras</button>
-        </div>
-        <div class="timeline-control-group" role="group" aria-label="timeline file filter">
-          <span>show</span>
-          <button class="active" data-timeline-filter="all" type="button" onclick="setTimelineAssetFilter('all')">all</button>
-          <button data-timeline-filter="audio" type="button" onclick="setTimelineAssetFilter('audio')">audio</button>
-          <button data-timeline-filter="visual" type="button" onclick="setTimelineAssetFilter('visual')">visual</button>
-          <button data-timeline-filter="notes" type="button" onclick="setTimelineAssetFilter('notes')">notes</button>
-        </div>
+        <label class="timeline-control-field"><span>view</span><select id="timelineModeSelect" onchange="setTimelineMode(this.value)"><option value="immersive">immersive</option><option value="calendar">calendar</option><option value="classic">cards</option></select></label>
+        <label class="timeline-control-field"><span>scale</span><select id="timelineScaleSelect" onchange="setTimelineScale(this.value)"><option value="days">sessions</option><option value="months">months</option><option value="eras">years</option><option value="creative">creative eras</option></select></label>
+        <label class="timeline-control-field"><span>show</span><select id="timelineFilterSelect" onchange="setTimelineAssetFilter(this.value)"><option value="all">everything</option><option value="audio">audio</option><option value="visual">visuals</option><option value="notes">notes</option></select></label>
       </div>
       <div class="timeline-track" id="timelineTrack"></div>
     </div>
@@ -680,10 +487,15 @@
         <div class="live-admin-drawer admin-only" id="liveAdminDrawer" aria-hidden="true">
           <div class="live-admin-drawer-head">
             <strong>control room</strong>
+            <div class="live-control-tabs" aria-label="control room view">
+              <button class="active" type="button" data-live-control-tab="set" onclick="setLiveControlView('set')">set</button>
+              <button type="button" data-live-control-tab="details" onclick="setLiveControlView('details')">details</button>
+              <button type="button" data-live-control-tab="room" onclick="setLiveControlView('room')">room</button>
+            </div>
             <button type="button" onclick="toggleLiveAdminDrawer(false)">close</button>
           </div>
-          <div class="live-admin-drawer-grid">
-            <section class="live-rehearsal-compact">
+          <div class="live-admin-drawer-grid" data-control-view="set">
+            <section class="live-rehearsal-compact" data-control-section="set">
               <h3>private rehearsal</h3>
               <div class="live-rehearsal-copy">
                 <span>Audience, chat, realtime, and cloud writes stay disconnected.</span>
@@ -695,7 +507,7 @@
                 <button class="mini-btn" data-rehearsal-reset type="button" onclick="resetLiveRehearsal()" disabled>restart</button>
               </div>
             </section>
-            <section>
+            <section data-control-section="set">
               <h3>current</h3>
               <div class="live-status compact">
                 <div class="live-stat">state<strong id="liveDrawerState">offline</strong></div>
@@ -708,7 +520,7 @@
                 <button class="mini-btn" type="button" onclick="stopLiveRoom()">stop</button>
               </div>
             </section>
-            <section>
+            <section data-control-section="set">
               <h3>queue</h3>
               <div class="quick-row">
                 <button class="mini-btn" type="button" onclick="startLiveQueue()">start queue</button>
@@ -724,7 +536,7 @@
               </div>
               <div class="live-queue-list compact" id="liveQueueListInline"></div>
             </section>
-            <section>
+            <section data-control-section="details">
               <h3>quick edit</h3>
               <input type="text" id="liveInlineTitle" placeholder="live title">
               <textarea id="liveInlineNotes" rows="2" placeholder="live notes"></textarea>
@@ -734,7 +546,7 @@
                 <label class="mini-toggle"><input type="checkbox" id="liveInlineAutoStart"> countdown auto-start</label>
               </div>
             </section>
-            <section>
+            <section data-control-section="details">
               <h3>countdown</h3>
               <input type="datetime-local" id="liveCountdownInputInline">
               <select id="liveCountdownActionInline">
@@ -747,7 +559,7 @@
                 <button class="mini-btn" type="button" onclick="clearLiveCountdown()">clear</button>
               </div>
             </section>
-            <section>
+            <section data-control-section="room">
               <h3>announcements</h3>
               <textarea id="liveAnnounceInputInline" rows="2" placeholder="major room update"></textarea>
               <div class="quick-row">
@@ -756,7 +568,7 @@
                 <button class="mini-btn" type="button" onclick="sendAnnouncement('major','liveAnnounceInputInline')">major</button>
               </div>
             </section>
-            <section>
+            <section data-control-section="room">
               <h3>director + premiere</h3>
               <div class="quick-row">
                 <button class="mini-btn" type="button" onclick="setLiveScene('stage')">stage</button>
@@ -769,7 +581,7 @@
               <input type="datetime-local" id="livePremiereInputInline">
               <button class="mini-btn" type="button" onclick="scheduleLivePremiere('livePremiereInputInline')">schedule current queue</button>
             </section>
-            <section>
+            <section data-control-section="details">
               <h3>private live queue</h3>
               <input type="file" id="livePrivateFileInputInline" accept="audio/*,video/*,image/*">
               <input type="file" id="livePrivateCoverInputInline" accept="image/*">
@@ -834,7 +646,7 @@
       <!-- EXISTING BASE DIRECTORY -->
       <div class="folder-block" data-standard-folder="batch 04" draggable="true">
         <div class="folder-row" onclick="toggleFolder(this)" ondragover="handleFolderDragOver(event)" ondragleave="handleFolderDragLeave(event)" ondrop="handleFolderDrop(event)">
-          <div class="folder-row-left"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> <span>batch 04 items</span><small class="folder-note-badge">note</small></div><span class="folder-toggle">[-]</span><div class="folder-actions admin-only"><button class="folder-select-btn" type="button" onclick="toggleFolderSelection(event,this)">select</button><div class="folder-order-actions"><button class="folder-order-btn" title="Move folder up" onclick="moveFolderStep(event,this,-1)">^</button><button class="folder-order-btn" title="Move folder down" onclick="moveFolderStep(event,this,1)">v</button></div><button class="folder-action" onclick="openFolderEditor(event,this)">edit</button><button class="folder-action" onclick="ungroupFolder(event, this)">ungroup</button><button class="folder-action" onclick="deleteFolder(event, this)">remove</button></div>
+          <div class="folder-row-left"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> <span>batch 04 items</span><small class="folder-note-badge">note</small></div><span class="folder-toggle">[-]</span><div class="folder-actions admin-only"><button class="folder-select-btn" type="button" onclick="toggleFolderSelection(event,this)">select</button><details class="folder-menu" onclick="event.stopPropagation()"><summary aria-label="more folder actions">...</summary><div class="folder-menu-popover"><button type="button" onclick="moveFolderStep(event,this,-1)">move up</button><button type="button" onclick="moveFolderStep(event,this,1)">move down</button><button type="button" onclick="openFolderEditor(event,this)">edit folder</button><button type="button" onclick="ungroupFolder(event,this)">ungroup</button><button type="button" onclick="deleteFolder(event,this)">remove</button></div></details></div>
         </div>
         <div class="folder-contents" data-batch-target="batch 04">
         </div>
@@ -868,19 +680,6 @@
 <div class="worlds-viewport viewport-overlay" id="worldsViewport" aria-hidden="true">
   <div class="worlds-shell">
     <div class="worlds-layout">
-      <nav class="worlds-nav" id="worldsNav" aria-label="archive worlds">
-        <span class="world-nav-label">explore</span>
-        <button class="world-tab active" data-world-view="worlds" type="button" onclick="renderWorldsView('worlds')">song worlds<small>projects + versions</small></button>
-        <button class="world-tab" data-world-view="constellation" type="button" onclick="renderWorldsView('constellation')">constellation<small>version map</small></button>
-        <button class="world-tab" data-world-view="eras" type="button" onclick="renderWorldsView('eras')">creative eras<small>artist-defined chronology</small></button>
-        <button class="world-tab" data-world-view="radio" type="button" onclick="renderWorldsView('radio')">archive radio<small>continuous signal</small></button>
-        <span class="world-nav-label">live</span>
-        <button class="world-tab" data-world-view="premieres" type="button" onclick="renderWorldsView('premieres')">premieres<small>scheduled live rooms</small></button>
-        <span class="world-nav-label">record</span>
-        <button class="world-tab" data-world-view="history" type="button" onclick="renderWorldsView('history')">listening history<small>resume a signal</small></button>
-        <button class="world-tab" data-world-view="stats" type="button" onclick="renderWorldsView('stats')">play stats<small>every file counted</small></button>
-        <button class="world-tab" data-world-view="changelog" type="button" onclick="renderWorldsView('changelog')">archive changes<small>what moved</small></button>
-      </nav>
       <main class="worlds-body" id="worldsBody"></main>
     </div>
   </div>
@@ -1054,18 +853,18 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/js/core.js?v=20260718-3"></script>
-<script src="assets/js/live.js?v=20260718-3"></script>
-<script src="assets/js/stats.js?v=20260718-3"></script>
-<script src="assets/js/timeline.js?v=20260718-3"></script>
-<script src="assets/js/bandlab-sync.js?v=20260718-3"></script>
-<script src="assets/js/archive.js?v=20260718-3"></script>
-<script src="assets/js/rules.js?v=20260718-3"></script>
-<script src="assets/js/admin-workspace.js?v=20260718-3"></script>
-<script src="assets/js/player.js?v=20260718-3"></script>
-<script src="assets/js/worlds.js?v=20260718-3"></script>
-<script src="assets/js/enrichment.js?v=20260718-3"></script>
-<script src="assets/js/bootstrap.js?v=20260718-3"></script>
+<script src="assets/js/core.js?v=20260722-3"></script>
+<script src="assets/js/live.js?v=20260722-3"></script>
+<script src="assets/js/stats.js?v=20260722-3"></script>
+<script src="assets/js/timeline.js?v=20260722-3"></script>
+<script src="assets/js/bandlab-sync.js?v=20260722-3"></script>
+<script src="assets/js/archive.js?v=20260722-3"></script>
+<script src="assets/js/rules.js?v=20260722-3"></script>
+<script src="assets/js/admin-workspace.js?v=20260722-3"></script>
+<script src="assets/js/player.js?v=20260722-3"></script>
+<script src="assets/js/worlds.js?v=20260722-3"></script>
+  <script src="assets/js/enrichment.js?v=20260723-1"></script>
+<script src="assets/js/bootstrap.js?v=20260722-3"></script>
 
 </body>
 </html>

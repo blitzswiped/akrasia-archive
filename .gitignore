@@ -1,0 +1,14 @@
+.vercel
+.env*
+dist/
+tools/catalog-enrichment/.venv/
+tools/catalog-enrichment/.venv-separation/
+tools/catalog-enrichment/setup-*.log
+**/akrasia-analysis.json
+**/Analysis/
+**/akrasia_analyzer.sqlite*
+**/akrasia-benchmark.json
+**/akrasia-era-training.json
+bandlab downloading/BandLab Backup/akrasia_analysis_catalog.json
+bandlab downloading/BandLab Backup/akrasia_analysis_errors.log
+bandlab downloading/BandLab Backup/akrasia_analysis_state.json
