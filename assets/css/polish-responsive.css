@@ -294,6 +294,7 @@
   .fs-player.lyrics-focus .lyrics-focus-line[data-lane="bg"]{justify-content:flex-end}
   .lyrics-focus-word{
     --word-progress:0;
+    --word-speed-scale:1;
     position:relative;
     display:inline-block;
     color:transparent;
@@ -305,9 +306,10 @@
     transition:filter .22s ease;
   }
   .lyrics-focus-group.active .lyrics-focus-word{
-    animation:lyricWordDrift var(--word-duration) ease-in-out calc(var(--word-order) * -90ms) infinite alternate;
+    animation:lyricWordDrift calc(var(--word-duration) * var(--word-speed-scale)) ease-in-out calc(var(--word-order) * -90ms) infinite alternate;
     will-change:transform;
   }
+  .lyrics-focus-group.active .lyrics-focus-word[data-word-speed="0"]{animation:none!important}
   .lyrics-focus-group.active .lyrics-focus-word.is-current{
     filter:drop-shadow(0 0 12px rgba(255,255,255,.58)) drop-shadow(0 0 24px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),.72));
   }
@@ -334,7 +336,7 @@
   }
   .fs-player.lyrics-focus .lyrics-focus-group.active .lyrics-focus-line[data-speed="still"]{animation:lyricLineArrive .4s var(--motion-ease) both!important}
   .fs-player.lyrics-focus .lyrics-focus-group.active .lyrics-focus-line .lyrics-focus-word{
-    animation:lyricWordDrift calc(var(--word-duration) * var(--lyric-motion-rate)) ease-in-out calc(var(--word-order) * -90ms) infinite alternate;
+    animation:lyricWordDrift calc(var(--word-duration) * var(--lyric-motion-rate) * var(--word-speed-scale)) ease-in-out calc(var(--word-order) * -90ms) infinite alternate;
     will-change:auto;
   }
   .fs-player.lyrics-focus .lyrics-focus-group.active .lyrics-focus-line[data-speed="still"] .lyrics-focus-word{animation:none!important}
@@ -352,7 +354,7 @@
     .fs-player.lyrics-focus .lyrics-focus-lines{-webkit-mask-image:linear-gradient(to bottom,transparent 0,rgba(0,0,0,.12) 72px,#000 142px,#000 calc(100% - 70px),transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,rgba(0,0,0,.12) 72px,#000 142px,#000 calc(100% - 70px),transparent 100%)}
     .fs-player.lyrics-focus .lyrics-ambient img{filter:blur(34px) saturate(.32) brightness(.44);opacity:.5;animation-duration:18s}
     .fs-player.lyrics-focus .lyrics-ambient::after{filter:blur(12px);mix-blend-mode:normal;opacity:.72;animation-duration:16s}
-    .fs-player.lyrics-focus .lyrics-focus-group.active .lyrics-focus-line .lyrics-focus-word{animation-duration:calc(var(--word-duration) * var(--lyric-motion-rate) * 1.2)}
+    .fs-player.lyrics-focus .lyrics-focus-group.active .lyrics-focus-line .lyrics-focus-word{animation-duration:calc(var(--word-duration) * var(--lyric-motion-rate) * var(--word-speed-scale) * 1.2)}
   }
   @media(prefers-reduced-motion:reduce){
     .fs-player.lyrics-focus .lyrics-focus-lines{scroll-behavior:auto}

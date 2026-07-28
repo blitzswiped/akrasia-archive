@@ -126,7 +126,7 @@
       <div class="lyrics-card">
         ${renderLyricsHtml(parseSyncedLyrics(row.getAttribute('data-lyrics') || ''))}
         <div class="lyrics-actions admin-only">
-          <textarea class="lyrics-edit-box" id="lyricsQuickEdit" placeholder="[0:12] main line || [adlib] background line&#10;[0:28] ...">${escapeHtml(row.getAttribute('data-lyrics') || '')}</textarea>
+          <textarea class="lyrics-edit-box" id="lyricsQuickEdit" placeholder="[0:12] I [word:.5x]need [word:2x]this now&#10;[0:28] ...">${escapeHtml(row.getAttribute('data-lyrics') || '')}</textarea>
           <button class="mini-btn" type="button" onclick="saveLyricsFromPlayer()">save lyrics</button>
         </div>
       </div>
@@ -196,6 +196,50 @@
     return 'slow';
   }
 
+  function normalizeLyricWordSpeed(value) {
+    var normalized = String(value ?? '').trim().toLowerCase();
+    if(['still','hold','0','0x'].includes(normalized)) return 0;
+    var numeric = Number.parseFloat(normalized.replace(/x$/,''));
+    if(!Number.isFinite(numeric)) return 1;
+    return Math.round(Math.max(.35,Math.min(3,numeric)) * 100) / 100;
+  }
+
+  function lyricWordSpeedLabel(value) {
+    var speed = normalizeLyricWordSpeed(value);
+    if(speed === 0) return 'still';
+    return `${String(speed).replace(/\.0+$/,'')}x`;
+  }
+
+  function parseLyricWordSpeeds(value) {
+    var words = [];
+    var pendingSpeed = 1;
+    String(value || '').trim().split(/\s+/).filter(Boolean).forEach(token => {
+      var word = token;
+      var marker = word.match(/^\[(?:word|ws|word-speed)\s*:\s*(still|hold|(?:\d+(?:\.\d+)?|\.\d+)x?)\](.*)$/i);
+      if(marker) {
+        pendingSpeed = normalizeLyricWordSpeed(marker[1]);
+        word = marker[2];
+      }
+      if(!word) return;
+      words.push({ text:word,speed:pendingSpeed });
+      pendingSpeed = 1;
+    });
+    return {
+      text:words.map(word => word.text).join(' '),
+      words
+    };
+  }
+
+  function serializeLyricWordSpeeds(value,wordSettings) {
+    var parsed = parseLyricWordSpeeds(value);
+    var settings = Array.isArray(wordSettings) ? wordSettings : parsed.words;
+    return parsed.words.map((word,index) => {
+      var speed = normalizeLyricWordSpeed(settings[index]?.speed ?? word.speed);
+      var marker = speed === 1 ? '' : `[word:${lyricWordSpeedLabel(speed)}]`;
+      return `${marker}${word.text}`;
+    }).join(' ');
+  }
+
   function parseLyricDirectives(value,defaultLane) {
     var raw = String(value || '').trim();
     var lane = defaultLane || 'main';
@@ -240,6 +284,9 @@
         var directives = parseLyricDirectives(raw,splitIndex ? 'adlib' : 'main');
         raw = directives.text;
         if(!raw) return;
+        var wordTiming = parseLyricWordSpeeds(raw);
+        raw = wordTiming.text;
+        if(!raw) return;
         var isPause = /^(\.{3,}|pause|instrumental)$/i.test(raw);
         entries.push({
           time,
@@ -247,6 +294,7 @@
           lane:directives.lane,
           glow:directives.glow,
           speed:directives.speed,
+          words:isPause ? [] : wordTiming.words,
           isPause
         });
       });
@@ -273,7 +321,9 @@
   }
 
   function lyricFocusLineHtml(line,groupIndex,lineIndex) {
-    var words = String(line.text || '').trim().split(/\s+/).filter(Boolean);
+    var words = Array.isArray(line.words) && line.words.length
+      ? line.words.map(word => ({ text:String(word.text || ''),speed:normalizeLyricWordSpeed(word.speed) })).filter(word => word.text)
+      : parseLyricWordSpeeds(line.text).words;
     if(!words.length) return '';
     var glow = normalizeLyricGlow(line.glow,line.lane);
     var speed = normalizeLyricSpeed(line.speed);
@@ -282,7 +332,10 @@
     var available = next ? Math.max(.7,next.time - group.time - .08) : Math.max(1.4,Math.min(6,words.length * .42));
     var speedScale = { still:1,slow:1,normal:.86,fast:.68 }[speed] || 1;
     var duration = Math.max(.35,Math.min(available,Math.max(1.2,Math.min(6,words.length * .42))) * speedScale);
-    var weights = words.map(word => Math.max(.72,Math.min(1.65,String(word).replace(/[^\p{L}\p{N}]/gu,'').length / 4 || .72)));
+    var weights = words.map(word => {
+      var base = Math.max(.72,Math.min(1.65,String(word.text).replace(/[^\p{L}\p{N}]/gu,'').length / 4 || .72));
+      return base / (word.speed > 0 ? word.speed : 1);
+    });
     var weightTotal = weights.reduce((sum,value) => sum + value,0) || 1;
     var elapsed = 0;
     var markup = words.map((word,index) => {
@@ -291,7 +344,8 @@
       var end = group.time + duration * (elapsed / weightTotal);
       var floatX = ((index + lineIndex * 2) % 5 - 2) * 2;
       var floatY = -6 - ((index + lineIndex) % 3) * 3;
-      return `<span class="lyrics-focus-word" data-word-start="${start.toFixed(3)}" data-word-end="${end.toFixed(3)}" style="--word-order:${index};--word-float-x:${floatX}px;--word-float-y:${floatY}px;--word-duration:${(2.6 + index % 4 * .34).toFixed(2)}s">${escapeHtml(word)}</span>`;
+      var motionScale = word.speed > 0 ? 1 / word.speed : 1;
+      return `<span class="lyrics-focus-word" data-word-start="${start.toFixed(3)}" data-word-end="${end.toFixed(3)}" data-word-speed="${word.speed}" style="--word-order:${index};--word-float-x:${floatX}px;--word-float-y:${floatY}px;--word-duration:${(2.6 + index % 4 * .34).toFixed(2)}s;--word-speed-scale:${motionScale.toFixed(3)}">${escapeHtml(word.text)}</span>`;
     }).join('');
     return `<span class="lyrics-focus-line" data-lane="${escapeAttr(line.lane)}" data-glow="${escapeAttr(glow)}" data-speed="${escapeAttr(speed)}">${markup}</span>`;
   }

@@ -857,6 +857,10 @@
       lane:entry.lane || 'main',
       glow:normalizeLyricGlow(entry.glow,entry.lane || 'main'),
       speed:normalizeLyricSpeed(entry.speed),
+      words:Array.isArray(entry.words) ? entry.words.map(word => ({
+        text:cleanSingleLine(word.text,120),
+        speed:normalizeLyricWordSpeed(word.speed)
+      })).filter(word => word.text) : [],
       text:entry.isPause ? '...' : entry.text
     }));
   }
@@ -899,7 +903,9 @@
 
   function serializeEnrichmentDraftLines(lines) {
     return cleanSyncedLyrics((lines || []).map(line => {
-      var text = line.isPause || line.text === '...' ? '...' : cleanSingleLine(line.text,500);
+      var text = line.isPause || line.text === '...'
+        ? '...'
+        : serializeLyricWordSpeeds(cleanSingleLine(line.text,500),line.words);
       if(!text) return '';
       var lane = ['main','lead','adlib','bg','effect'].includes(line.lane) ? line.lane : 'main';
       var glow = normalizeLyricGlow(line.glow,lane);
@@ -977,6 +983,7 @@
       var combinedCount = currentWords.length + nextWords.length;
       if(combinedCount <= 16) {
         current.text = cleanSingleLine(`${current.text} ${next.text}`,500);
+        current.words = [...(current.words || []),...(next.words || [])];
         lines.splice(index + 1,1);
         merges++;
         index = Math.max(-1,index - 1);
@@ -995,6 +1002,8 @@
       var originalNextCount = nextWords.length;
       current.text = cleanSingleLine(`${current.text} ${nextWords.slice(0,moveCount).join(' ')}`,500);
       next.text = cleanSingleLine(nextWords.slice(moveCount).join(' '),500);
+      current.words = [...(current.words || []),...(next.words || []).slice(0,moveCount)];
+      next.words = (next.words || []).slice(moveCount);
       next.time = enrichmentShiftedLineTime(next,payload,moveCount,originalNextCount);
       shifts++;
     }
@@ -1047,6 +1056,7 @@
     enrichmentLineBreakUndoDraft = serializeEnrichmentDraftLines(lines);
     enrichmentLineBreakUndoSuggestionId = enrichmentSelectedSuggestionId;
     current.text = cleanSingleLine(`${current.text} ${next.text}`,500);
+    current.words = [...(current.words || []),...(next.words || [])];
     lines.splice(index + 1,1);
     enrichmentEditorDraft = serializeEnrichmentDraftLines(lines);
     saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
@@ -1113,6 +1123,133 @@
     next.querySelector('button')?.click();
   }
 
+  var ENRICHMENT_WORD_SPEED_PRESETS = [
+    { value:0,label:'still' },
+    { value:.5,label:'.5x' },
+    { value:.75,label:'.75x' },
+    { value:1,label:'1x' },
+    { value:1.25,label:'1.25x' },
+    { value:1.5,label:'1.5x' },
+    { value:2,label:'2x' }
+  ];
+
+  function enrichmentLineWordSettings(line) {
+    var parsed = parseLyricWordSpeeds(line?.text || '');
+    var stored = Array.isArray(line?.words) ? line.words : [];
+    return parsed.words.map((word,index) => ({
+      text:word.text,
+      speed:normalizeLyricWordSpeed(stored[index]?.speed ?? word.speed)
+    }));
+  }
+
+  function enrichmentWordSpeedControlHtml(word,index) {
+    var speed = normalizeLyricWordSpeed(word?.speed);
+    var options = ENRICHMENT_WORD_SPEED_PRESETS.map(option =>
+      `<option value="${option.value}"${Math.abs(option.value - speed) < .01 ? ' selected' : ''}>${option.label}</option>`
+    ).join('');
+    return `<label class="enrichment-word-speed"><span>${escapeHtml(word?.text || '')}</span><select data-lyric-word-speed data-word-index="${index}" aria-label="motion speed for ${escapeAttr(word?.text || `word ${index + 1}`)}" onchange="updateEnrichmentWordTimingSummary(this);scheduleEnrichmentDraftCapture()">${options}</select></label>`;
+  }
+
+  function enrichmentWordTimingHtml(line) {
+    if(line?.text === '...') return '';
+    var words = enrichmentLineWordSettings(line);
+    if(!words.length) return '';
+    var changed = words.filter(word => normalizeLyricWordSpeed(word.speed) !== 1).length;
+    return `<details class="enrichment-word-timing${changed ? ' has-custom' : ''}" data-word-settings="${escapeAttr(JSON.stringify(words))}" ontoggle="hydrateEnrichmentWordTiming(this)">
+      <summary><span>word timing</span><small data-word-timing-count>${changed ? `${changed} changed` : 'all 1x'}</small></summary>
+      <div class="enrichment-word-timing-grid"></div>
+      <div class="enrichment-word-timing-foot"><span>slower values linger; faster values move and fill sooner.</span><button type="button" onclick="resetEnrichmentWordTiming(this)">reset words</button></div>
+    </details>`;
+  }
+
+  function enrichmentWordSettingsFromDetails(details) {
+    try {
+      var words = JSON.parse(details?.getAttribute?.('data-word-settings') || '[]');
+      return Array.isArray(words) ? words.map(word => ({
+        text:cleanSingleLine(word?.text,120),
+        speed:normalizeLyricWordSpeed(word?.speed)
+      })).filter(word => word.text) : [];
+    } catch(error) {
+      return [];
+    }
+  }
+
+  function setEnrichmentWordSettings(details,words) {
+    if(!details) return;
+    details.setAttribute('data-word-settings',JSON.stringify((words || []).map(word => ({
+      text:cleanSingleLine(word?.text,120),
+      speed:normalizeLyricWordSpeed(word?.speed)
+    })).filter(word => word.text)));
+  }
+
+  function hydrateEnrichmentWordTiming(details) {
+    if(!details?.open) return;
+    var grid = details.querySelector('.enrichment-word-timing-grid');
+    if(!grid || grid.getAttribute('data-ready') === 'true') return;
+    var words = enrichmentWordSettingsFromDetails(details);
+    grid.innerHTML = words.map(enrichmentWordSpeedControlHtml).join('');
+    grid.setAttribute('data-ready','true');
+  }
+
+  function updateEnrichmentWordTimingSummary(control) {
+    var details = control?.closest?.('.enrichment-word-timing');
+    if(!details) return;
+    var controls = Array.from(details.querySelectorAll('[data-lyric-word-speed]'));
+    var words = controls.length
+      ? controls.map(select => ({
+          text:cleanSingleLine(select.closest('.enrichment-word-speed')?.querySelector('span')?.textContent,120),
+          speed:normalizeLyricWordSpeed(select.value)
+        }))
+      : enrichmentWordSettingsFromDetails(details);
+    if(controls.length) setEnrichmentWordSettings(details,words);
+    var changed = words.filter(word => normalizeLyricWordSpeed(word.speed) !== 1).length;
+    var count = details.querySelector('[data-word-timing-count]');
+    if(count) count.textContent = changed ? `${changed} changed` : 'all 1x';
+    details.classList.toggle('has-custom',Boolean(changed));
+  }
+
+  function resetEnrichmentWordTiming(button) {
+    var details = button?.closest?.('.enrichment-word-timing');
+    if(!details) return;
+    details.querySelectorAll('[data-lyric-word-speed]').forEach(select => { select.value = '1'; });
+    var words = enrichmentWordSettingsFromDetails(details).map(word => ({ text:word.text,speed:1 }));
+    setEnrichmentWordSettings(details,words);
+    updateEnrichmentWordTimingSummary(details);
+    scheduleEnrichmentDraftCapture();
+  }
+
+  function syncEnrichmentWordTiming(textarea) {
+    var row = textarea?.closest?.('[data-enrichment-lyric-row]');
+    var details = row?.querySelector?.('.enrichment-word-timing');
+    if(!row || !details) return;
+    updateEnrichmentWordTimingSummary(details);
+    var previous = enrichmentWordSettingsFromDetails(details).map(word => ({
+      text:cleanSingleLine(word.text,120).toLowerCase(),
+      speed:normalizeLyricWordSpeed(word.speed)
+    }));
+    var buckets = new Map();
+    previous.forEach(word => {
+      if(!buckets.has(word.text)) buckets.set(word.text,[]);
+      buckets.get(word.text).push(word.speed);
+    });
+    var parsed = parseLyricWordSpeeds(textarea.value);
+    var words = parsed.words.map(word => {
+      var key = cleanSingleLine(word.text,120).toLowerCase();
+      var matching = buckets.get(key);
+      return {
+        text:word.text,
+        speed:normalizeLyricWordSpeed(word.speed) !== 1
+          ? word.speed
+          : (matching?.length ? matching.shift() : word.speed)
+      };
+    });
+    var grid = details.querySelector('.enrichment-word-timing-grid');
+    setEnrichmentWordSettings(details,words);
+    if(grid?.getAttribute('data-ready') === 'true') grid.innerHTML = words.map(enrichmentWordSpeedControlHtml).join('');
+    details.hidden = !words.length;
+    updateEnrichmentWordTimingSummary(details);
+  }
+
   function enrichmentLyricsInspectorHtml(suggestion,row) {
     if(enrichmentEditorDraftInitializedFor !== suggestion.id) {
       var recovered = enrichmentLocalDraft(suggestion.id);
@@ -1134,10 +1271,11 @@
       <input data-lyric-time type="text" inputmode="decimal" value="${escapeAttr(enrichmentTimeText(line.time))}" aria-label="line timestamp" oninput="scheduleEnrichmentDraftCapture()">
       <select data-lyric-lane aria-label="vocal lane" onchange="scheduleEnrichmentDraftCapture()">${['main','lead','adlib','bg','effect'].map(lane => `<option value="${lane}"${lane === line.lane ? ' selected' : ''}>${lane}</option>`).join('')}</select>
       <span class="enrichment-lyric-certainty" title="${escapeAttr(certaintyTitle)}"${evidence.unsure ? '' : ' aria-hidden="true"'}>${evidence.unsure ? escapeHtml(certaintyText) : ''}</span>
-      <textarea data-lyric-text rows="1" maxlength="500" aria-label="lyric text" oninput="resizeEnrichmentLyricTextarea(this);scheduleEnrichmentDraftCapture()">${escapeHtml(line.text)}</textarea>
+      <textarea data-lyric-text rows="1" maxlength="500" aria-label="lyric text" oninput="resizeEnrichmentLyricTextarea(this);syncEnrichmentWordTiming(this);scheduleEnrichmentDraftCapture()">${escapeHtml(line.text)}</textarea>
       <div class="enrichment-line-effects" aria-label="line appearance">
         <label><span>glow</span><select data-lyric-glow aria-label="line glow" onchange="scheduleEnrichmentDraftCapture()">${['off','soft','normal','high'].map(value => `<option value="${value}"${value === glow ? ' selected' : ''}>${value}</option>`).join('')}</select></label>
         <label><span>speed</span><select data-lyric-speed aria-label="line motion speed" onchange="scheduleEnrichmentDraftCapture()">${['still','slow','normal','fast'].map(value => `<option value="${value}"${value === speed ? ' selected' : ''}>${value}</option>`).join('')}</select></label>
+        ${enrichmentWordTimingHtml(line)}
       </div>
       <button type="button" onclick="removeEnrichmentLyricLine(${index})" aria-label="remove line">x</button>
     </div>`;
@@ -1169,13 +1307,23 @@
   function collectEnrichmentLyricsEditor() {
     var rows = Array.from(document.querySelectorAll('[data-enrichment-lyric-row]'));
     if(!rows.length) return cleanSyncedLyrics(enrichmentEditorDraft);
-    return serializeEnrichmentDraftLines(rows.map(row => ({
-      time:parseLyricTime(row.querySelector('[data-lyric-time]')?.value),
-      lane:row.querySelector('[data-lyric-lane]')?.value || 'main',
-      glow:row.querySelector('[data-lyric-glow]')?.value || 'soft',
-      speed:row.querySelector('[data-lyric-speed]')?.value || 'slow',
-      text:cleanSingleLine(row.querySelector('[data-lyric-text]')?.value,500)
-    })).filter(line => line.time !== null && line.text));
+    return serializeEnrichmentDraftLines(rows.map(row => {
+      var text = cleanSingleLine(row.querySelector('[data-lyric-text]')?.value,500);
+      var parsedWords = parseLyricWordSpeeds(text).words;
+      var controls = Array.from(row.querySelectorAll('[data-lyric-word-speed]'));
+      var storedWords = enrichmentWordSettingsFromDetails(row.querySelector('.enrichment-word-timing'));
+      return {
+        time:parseLyricTime(row.querySelector('[data-lyric-time]')?.value),
+        lane:row.querySelector('[data-lyric-lane]')?.value || 'main',
+        glow:row.querySelector('[data-lyric-glow]')?.value || 'soft',
+        speed:row.querySelector('[data-lyric-speed]')?.value || 'slow',
+        words:parsedWords.map((word,index) => ({
+          text:word.text,
+          speed:normalizeLyricWordSpeed(controls[index]?.value ?? storedWords[index]?.speed ?? word.speed)
+        })),
+        text:parsedWords.map(word => word.text).join(' ')
+      };
+    }).filter(line => line.time !== null && line.text));
   }
 
   function applyRawEnrichmentLyrics() {

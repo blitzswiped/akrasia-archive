@@ -49,10 +49,45 @@ const { parseSyncedLyrics:parsePlayerSyncedLyrics } = new Function(`
 `)();
 assert.deepEqual(
   parsePlayerSyncedLyrics('[0:07.20] [adlib] [glow:high] [speed:fast] still here'),
-  [{ time:7.2,text:'still here',lane:'adlib',glow:'high',speed:'fast',isPause:false }]
+  [{
+    time:7.2,text:'still here',lane:'adlib',glow:'high',speed:'fast',
+    words:[{ text:'still',speed:1 },{ text:'here',speed:1 }],
+    isPause:false
+  }]
 );
 assert.equal(parsePlayerSyncedLyrics('[0:08.00] ordinary line')[0].glow,'soft');
 assert.equal(parsePlayerSyncedLyrics('[0:08.00] ordinary line')[0].speed,'slow');
+assert.deepEqual(
+  parsePlayerSyncedLyrics('[0:09.00] I [word:.5x]need [word:2x]this still')[0].words,
+  [
+    { text:'I',speed:1 },
+    { text:'need',speed:.5 },
+    { text:'this',speed:2 },
+    { text:'still',speed:1 }
+  ]
+);
+const lyricFocusStart = playerSource.indexOf('  function lyricFocusLineHtml');
+const lyricFocusEnd = playerSource.indexOf('  var lyricCenterFrame');
+assert.ok(lyricFocusStart >= 0 && lyricFocusEnd > lyricFocusStart);
+const lyricFocusBlock = playerSource.slice(lyricFocusStart,lyricFocusEnd);
+const wordTimingMarkup = new Function(`
+  function cleanSingleLine(value,maxLength){return String(value||'').replace(/[\\r\\n\\t]+/g,' ').trim().slice(0,maxLength||500)}
+  function cleanSyncedLyrics(value){return String(value==null?'':value).replace(/\\r\\n?/g,'\\n').trim().slice(0,40000)}
+  function escapeHtml(value){return String(value||'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
+  function escapeAttr(value){return escapeHtml(value)}
+  ${playerLyricsBlock}
+  var activeLyricGroups = [{ time:9,lines:[] },{ time:13,lines:[] }];
+  ${lyricFocusBlock}
+  return lyricFocusLineHtml({
+    text:'I need this still',lane:'main',glow:'soft',speed:'slow',
+    words:[{text:'I',speed:1},{text:'need',speed:.5},{text:'this',speed:2},{text:'still',speed:1}]
+  },0,0);
+`)();
+const renderedWordWindows = Array.from(wordTimingMarkup.matchAll(/data-word-start="([0-9.]+)" data-word-end="([0-9.]+)" data-word-speed="([0-9.]+)"/g))
+  .map(match => ({ duration:Number(match[2]) - Number(match[1]),speed:Number(match[3]) }));
+assert.equal(renderedWordWindows.length,4);
+assert.ok(renderedWordWindows.find(word => word.speed === .5).duration > renderedWordWindows.find(word => word.speed === 2).duration * 3);
+assert.doesNotMatch(wordTimingMarkup,/\[word:/);
 const compatibilityWrites = [];
 globalThis.__enrichmentTestSupabase = {
   from(table) {
@@ -77,16 +112,14 @@ const enrichmentHelpers = `
   var supabaseClient = globalThis.__enrichmentTestSupabase;
   function cleanSingleLine(value,maxLength){return String(value||'').replace(/[\\r\\n\\t]+/g,' ').trim().slice(0,maxLength||500)}
   function cleanSyncedLyrics(value){return String(value==null?'':value).replace(/\\r\\n?/g,'\\n').replace(/[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]/g,'').trim().slice(0,40000)}
+  function escapeHtml(value){return String(value||'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
+  function escapeAttr(value){return escapeHtml(value).replace(/\`/g,'&#96;')}
   function cleanSourceToken(value,maxLength){return String(value||'').replace(/[^a-z0-9._:-]+/gi,'-').replace(/^-+|-+$/g,'').slice(0,maxLength||180)}
   function stableSourceHash(value){let h=2166136261;for(const c of String(value||'')){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0).toString(16).padStart(8,'0')}
-  function parseLyricTime(value){const m=String(value||'').trim().match(/^(?:(\\d+):)?(\\d{1,2})(?:[.:](\\d{1,3}))?$/);if(!m)return null;return Number(m[1]||0)*60+Number(m[2]||0)+(m[3]?Number('0.'+m[3].padEnd(3,'0').slice(0,3)):0)}
-  function normalizeLyricGlow(value,lane){let normalized=String(value||'').trim().toLowerCase();if(normalized==='none')normalized='off';if(normalized==='medium')normalized='normal';if(['off','soft','normal','high'].includes(normalized))return normalized;return lane==='effect'?'normal':'soft'}
-  function normalizeLyricSpeed(value){let normalized=String(value||'').trim().toLowerCase();if(normalized==='none')normalized='still';if(['still','slow','normal','fast'].includes(normalized))return normalized;return 'slow'}
-  function parseLyricDirectives(value,defaultLane){let raw=String(value||'').trim();let lane=defaultLane||'main';let glow='';let speed='';for(let index=0;index<8;index++){const match=raw.match(/^\\[([^\\]]+)\\]\\s*/);if(!match)break;const directive=match[1].trim().toLowerCase();if(['adlib','bg','background','lead','main','effect'].includes(directive)){lane=directive==='background'?'bg':directive}else if(/^glow\\s*:/.test(directive)){glow=directive.split(':').slice(1).join(':').trim()}else if(/^(?:speed|motion)\\s*:/.test(directive)){speed=directive.split(':').slice(1).join(':').trim()}else{break}raw=raw.slice(match[0].length).trim()}return{text:raw,lane,glow:normalizeLyricGlow(glow,lane),speed:normalizeLyricSpeed(speed)}}
-  function parseSyncedLyrics(text){const out=[];cleanSyncedLyrics(text).split('\\n').forEach(line=>{const m=line.trim().match(/^\\[([^\\]]+)\\]\\s*(.+)$/);if(!m)return;const time=parseLyricTime(m[1]);const parts=m[2].split(/\\s*\\|\\|\\s*/);parts.forEach((part,splitIndex)=>{const directives=parseLyricDirectives(part,splitIndex?'adlib':'main');if(!directives.text)return;const isPause=/^(\\.{3,}|pause|instrumental)$/i.test(directives.text);out.push({time,text:isPause?'...':directives.text,lane:directives.lane,glow:directives.glow,speed:directives.speed,isPause})})});return out}
+  ${playerLyricsBlock}
 `;
-const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility } = new Function(
-  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility };`
+const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility } = new Function(
+  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility };`
 )();
 
 const lyrics = privateLyricsPayload({
@@ -159,12 +192,27 @@ const cappedSegmentRepair = repairEnrichmentLyricBreaksResult(
 assert.equal(cappedSegmentRepair.shifts,1);
 assert.match(cappedSegmentRepair.text,/hunting them down for so/);
 const styledLines = enrichmentDraftLines('[0:07.20] [adlib] [glow:off] [speed:fast] still here');
-assert.deepEqual(styledLines,[{ time:7.2,lane:'adlib',glow:'off',speed:'fast',text:'still here' }]);
+assert.deepEqual(styledLines,[{
+  time:7.2,lane:'adlib',glow:'off',speed:'fast',
+  words:[{ text:'still',speed:1 },{ text:'here',speed:1 }],
+  text:'still here'
+}]);
 assert.equal(serializeEnrichmentDraftLines(styledLines),'[0:07.20] [adlib] [glow:off] [speed:fast] still here');
 assert.equal(
   serializeEnrichmentDraftLines(enrichmentDraftLines('[0:08.00] ordinary line')),
   '[0:08.00] ordinary line'
 );
+const wordTimedLines = enrichmentDraftLines('[0:09.00] I [word:.5x]need [word:2x]this still');
+assert.equal(
+  serializeEnrichmentDraftLines(wordTimedLines),
+  '[0:09.00] I [word:0.5x]need [word:2x]this still'
+);
+assert.equal(wordTimedLines[0].text,'I need this still');
+const wordTimingControls = enrichmentWordTimingHtml(wordTimedLines[0]);
+assert.match(wordTimingControls,/word timing/);
+assert.match(wordTimingControls,/2 changed/);
+assert.match(wordTimingControls,/data-word-settings=/);
+assert.equal((wordTimingControls.match(/data-lyric-word-speed/g) || []).length,0);
 assert.equal(privateAudioMetadataPayload({ estimatedBpm:900 }).estimatedBpm,null);
 assert.equal(privateAudioMetadataPayload({ energyScore:.72 }).energyScore,.72);
 assert.equal(privateTagSuggestions([{ value:'late-night',category:'time-of-day',confidence:.7 }]).length,1);
