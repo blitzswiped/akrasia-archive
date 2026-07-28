@@ -38,11 +38,14 @@ assert.throws(() => cleanBandlabAnalysisRevision({ revisionId:'x',revisionNumber
 const enrichmentSource = fs.readFileSync(new URL('../assets/js/enrichment.js', import.meta.url),'utf8');
 const enrichmentHelpers = `
   function cleanSingleLine(value,maxLength){return String(value||'').replace(/[\\r\\n\\t]+/g,' ').trim().slice(0,maxLength||500)}
+  function cleanSyncedLyrics(value){return String(value==null?'':value).replace(/\\r\\n?/g,'\\n').replace(/[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]/g,'').trim().slice(0,40000)}
   function cleanSourceToken(value,maxLength){return String(value||'').replace(/[^a-z0-9._:-]+/gi,'-').replace(/^-+|-+$/g,'').slice(0,maxLength||180)}
   function stableSourceHash(value){let h=2166136261;for(const c of String(value||'')){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0).toString(16).padStart(8,'0')}
+  function parseLyricTime(value){const m=String(value||'').trim().match(/^(?:(\\d+):)?(\\d{1,2})(?:[.:](\\d{1,3}))?$/);if(!m)return null;return Number(m[1]||0)*60+Number(m[2]||0)+(m[3]?Number('0.'+m[3].padEnd(3,'0').slice(0,3)):0)}
+  function parseSyncedLyrics(text){const out=[];cleanSyncedLyrics(text).split('\\n').forEach(line=>{const m=line.trim().match(/^\\[([^\\]]+)\\]\\s*(.+)$/);if(!m)return;const time=parseLyricTime(m[1]);let lyric=m[2];let lane='main';const laneMatch=lyric.match(/^\\[(adlib|bg|background|lead|main|effect)\\]\\s*(.*)$/i);if(laneMatch){lane=laneMatch[1].toLowerCase()==='background'?'bg':laneMatch[1].toLowerCase();lyric=laneMatch[2]}out.push({time,text:lyric,lane,isPause:lyric==='...'})});return out}
 `;
-const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords } = new Function(
-  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords };`
+const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks } = new Function(
+  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks };`
 )();
 
 const lyrics = privateLyricsPayload({
@@ -52,6 +55,11 @@ const lyrics = privateLyricsPayload({
 });
 assert.equal(lyrics.segments[0].words[0].text,'hello');
 assert.equal(lyrics.format,'akrasia-synced-text');
+assert.equal(privateLyricsPayload({ syncedText:'[0:01.00] hel\u0000lo' }).syncedText,'[0:01.00] hello');
+assert.equal(
+  repairEnrichmentLyricBreaks('[0:01.00] this is a template and.\n[0:02.00] i was saying.'),
+  '[0:01.00] this is a template and i was saying'
+);
 assert.equal(privateAudioMetadataPayload({ estimatedBpm:900 }).estimatedBpm,null);
 assert.equal(privateAudioMetadataPayload({ energyScore:.72 }).energyScore,.72);
 assert.equal(privateTagSuggestions([{ value:'late-night',category:'time-of-day',confidence:.7 }]).length,1);
@@ -93,5 +101,7 @@ const archiveSource = fs.readFileSync(new URL('../assets/js/archive.js', import.
 assert.match(archiveSource,/hydrateArchiveEnrichmentRows === 'function'/);
 assert.match(enrichmentSource,/data-analysis-status/);
 assert.match(enrichmentSource,/data-lyrics-review/);
+assert.match(enrichmentSource,/ENRICHMENT_SUGGESTION_SUMMARY_COLUMNS/);
+assert.match(enrichmentSource,/assignEraToFolder/);
 
 console.log('enrichment contract tests passed');

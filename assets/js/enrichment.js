@@ -1,6 +1,6 @@
   // ---- CATALOG ENRICHMENT -------------------------------------------------
   var archiveEnrichment = {
-    ready:false, loading:false, schemaMissing:false, error:'', waiters:[],
+    ready:false, loading:false, schemaMissing:false, error:'', refreshError:'', waiters:[],
     suggestions:[], tags:[], aliases:[], assetTags:[], metadata:[], eras:[], assetEras:[],
     suggestionsByAsset:new Map(), suggestionsById:new Map(), tagsById:new Map(), assetTagsByAsset:new Map(),
     aliasesByTag:new Map(), metadataByAsset:new Map(), erasById:new Map(), assetErasByAsset:new Map()
@@ -13,11 +13,19 @@
   var enrichmentSelectedSuggestionId = '';
   var enrichmentBulkSelection = new Set();
   var enrichmentEditorDraft = '';
+  var enrichmentEditorDraftInitializedFor = '';
   var enrichmentReviewLimit = 80;
   var enrichmentRowsByAsset = new Map();
+  var enrichmentPayloadPromises = new Map();
+  var enrichmentDraftSaveTimer = 0;
+  var enrichmentEraGuesses = [];
+  var ENRICHMENT_REVIEW_STATE_KEY = 'akrasia-enrichment-review-state-v2';
+  var ENRICHMENT_DRAFTS_KEY = 'akrasia-enrichment-local-drafts-v1';
+  var ENRICHMENT_SUGGESTION_SUMMARY_COLUMNS = 'id,asset_id,kind,confidence,evidence,model_name,model_version,source_revision_id,source_sha256,cache_key,status,review_note,reviewed_at,reviewed_by,created_at,updated_at';
   var ENRICHMENT_TAG_CATEGORIES = ['mood','vibe','genre','subgenre','lyrical-theme','production-style','vocal-style','instrumentation','listening-situation','time-of-day','weather-season','energy','narrative-tone','completion-state','release-state'];
 
   function emptyArchiveEnrichment() {
+    archiveEnrichment.ready = false;
     archiveEnrichment.suggestions = [];
     archiveEnrichment.tags = [];
     archiveEnrichment.aliases = [];
@@ -33,6 +41,85 @@
     archiveEnrichment.metadataByAsset = new Map();
     archiveEnrichment.erasById = new Map();
     archiveEnrichment.assetErasByAsset = new Map();
+  }
+
+  function readEnrichmentLocalDrafts() {
+    try {
+      var value = JSON.parse(localStorage.getItem(ENRICHMENT_DRAFTS_KEY) || '{}');
+      return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    } catch(error) {
+      return {};
+    }
+  }
+
+  function enrichmentLocalDraft(id) {
+    var entry = readEnrichmentLocalDrafts()[id];
+    return entry && typeof entry.text === 'string' ? cleanSyncedLyrics(entry.text) : null;
+  }
+
+  function saveEnrichmentLocalDraft(id,text) {
+    if(!id) return;
+    var drafts = readEnrichmentLocalDrafts();
+    drafts[id] = { text:cleanSyncedLyrics(text),updatedAt:Date.now() };
+    var trimmed = Object.entries(drafts)
+      .sort((a,b) => Number(b[1]?.updatedAt || 0) - Number(a[1]?.updatedAt || 0))
+      .slice(0,12);
+    try { localStorage.setItem(ENRICHMENT_DRAFTS_KEY,JSON.stringify(Object.fromEntries(trimmed))); } catch(error) {}
+  }
+
+  function removeEnrichmentLocalDraft(id) {
+    if(!id) return;
+    var drafts = readEnrichmentLocalDrafts();
+    if(!Object.prototype.hasOwnProperty.call(drafts,id)) return;
+    delete drafts[id];
+    try { localStorage.setItem(ENRICHMENT_DRAFTS_KEY,JSON.stringify(drafts)); } catch(error) {}
+  }
+
+  function persistEnrichmentReviewState() {
+    var state = {
+      tab:enrichmentWorkspaceTab,status:enrichmentReviewStatus,kind:enrichmentReviewKind,
+      signal:enrichmentReviewSignal,confidence:enrichmentReviewConfidence,
+      selectedId:enrichmentSelectedSuggestionId,limit:enrichmentReviewLimit
+    };
+    try { localStorage.setItem(ENRICHMENT_REVIEW_STATE_KEY,JSON.stringify(state)); } catch(error) {}
+  }
+
+  function restoreEnrichmentReviewState() {
+    try {
+      var state = JSON.parse(localStorage.getItem(ENRICHMENT_REVIEW_STATE_KEY) || '{}');
+      if(['review','eras','tags'].includes(state.tab)) enrichmentWorkspaceTab = state.tab;
+      if(['pending','draft','needs_review','stale','rejected','accepted','all'].includes(state.status)) enrichmentReviewStatus = state.status;
+      if(['all','lyrics','tags','audio_metadata','era'].includes(state.kind)) enrichmentReviewKind = state.kind;
+      if(['all','unsure','missing-cover','failed','ready'].includes(state.signal)) enrichmentReviewSignal = state.signal;
+      enrichmentReviewConfidence = Math.max(0,Math.min(1,Number(state.confidence) || 0));
+      enrichmentSelectedSuggestionId = cleanSingleLine(state.selectedId,80);
+      enrichmentReviewLimit = Math.max(80,Math.min(2000,Number(state.limit) || 80));
+    } catch(error) {}
+  }
+
+  function scheduleEnrichmentDraftCapture() {
+    window.clearTimeout(enrichmentDraftSaveTimer);
+    enrichmentDraftSaveTimer = window.setTimeout(function(){
+      if(!enrichmentSelectedSuggestionId) return;
+      enrichmentEditorDraft = cleanSyncedLyrics(collectEnrichmentLyricsEditor());
+      saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
+    },420);
+  }
+
+  function flushEnrichmentDraftCapture() {
+    window.clearTimeout(enrichmentDraftSaveTimer);
+    if(!enrichmentSelectedSuggestionId || !document.querySelector('[data-enrichment-lyric-row]')) return;
+    enrichmentEditorDraft = cleanSyncedLyrics(collectEnrichmentLyricsEditor());
+    enrichmentEditorDraftInitializedFor = enrichmentSelectedSuggestionId;
+    saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
+  }
+
+  function captureEnrichmentRawDraft(value) {
+    enrichmentEditorDraft = String(value == null ? '' : value);
+    window.clearTimeout(enrichmentDraftSaveTimer);
+    enrichmentDraftSaveTimer = window.setTimeout(function(){
+      if(enrichmentSelectedSuggestionId) saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
+    },420);
   }
 
   function groupEnrichmentBy(list, key) {
@@ -66,13 +153,20 @@
   async function loadArchiveEnrichmentData(options) {
     options = options || {};
     if(!supabaseClient) return archiveEnrichment;
+    if(archiveEnrichment.ready && !options.force) {
+      hydrateArchiveEnrichmentRows();
+      return archiveEnrichment;
+    }
     if(archiveEnrichment.loading) {
       await new Promise(resolve => archiveEnrichment.waiters.push(resolve));
       hydrateArchiveEnrichmentRows();
       return archiveEnrichment;
     }
+    var hadReadyData = archiveEnrichment.ready;
+    var cachedSuggestions = archiveEnrichment.suggestionsById;
     archiveEnrichment.loading = true;
     archiveEnrichment.error = '';
+    archiveEnrichment.refreshError = '';
     try {
       var names = ['tags','aliases','assetTags','metadata','eras','assetEras'];
       var requests = [
@@ -85,19 +179,28 @@
       ];
       if(isAdmin) {
         names.push('suggestions');
-        requests.push(supabaseClient.from('archive_enrichment_suggestions').select('*').order('updated_at',{ ascending:false }).limit(5000));
+        requests.push(supabaseClient.from('archive_enrichment_suggestions').select(ENRICHMENT_SUGGESTION_SUMMARY_COLUMNS).order('updated_at',{ ascending:false }).limit(5000));
       }
       var results = await Promise.all(requests);
       var firstError = results.find(result => result.error)?.error;
       if(firstError) {
         archiveEnrichment.schemaMissing = enrichmentErrorIsMissingSchema(firstError);
-        archiveEnrichment.error = archiveEnrichment.schemaMissing ? 'Run the enrichment section in supabase-setup.sql.' : firstError.message;
-        emptyArchiveEnrichment();
+        var message = archiveEnrichment.schemaMissing ? 'Run the enrichment section in supabase-setup.sql.' : firstError.message;
+        if(hadReadyData) archiveEnrichment.refreshError = message;
+        else {
+          archiveEnrichment.error = message;
+          emptyArchiveEnrichment();
+        }
         hydrateArchiveEnrichmentRows();
         return archiveEnrichment;
       }
       emptyArchiveEnrichment();
       names.forEach((name,index) => archiveEnrichment[name] = results[index].data || []);
+      archiveEnrichment.suggestions = archiveEnrichment.suggestions.map(summary => {
+        var cached = cachedSuggestions.get(summary.id);
+        if(cached?._payloadLoaded) return Object.assign({},summary,{ payload:cached.payload,_payloadLoaded:true });
+        return Object.assign({},summary,{ payload:null,_payloadLoaded:false });
+      });
       await hydrateEraSignedCovers(archiveEnrichment.eras);
       archiveEnrichment.tagsById = new Map(archiveEnrichment.tags.map(tag => [tag.id,tag]));
       archiveEnrichment.aliasesByTag = groupEnrichmentBy(archiveEnrichment.aliases,'tag_id');
@@ -111,19 +214,56 @@
       archiveEnrichment.schemaMissing = false;
       hydrateArchiveEnrichmentRows();
       timelineNeedsBuild = true;
-      if(adminWorkspaceMode === 'enrichment' && adminWorkspaceIsOpen()) renderAdminWorkspace();
-      if(document.getElementById('worldsViewport')?.classList.contains('active') && ['worlds','eras'].includes(worldsCurrentView)) renderWorldsView(worldsCurrentView);
       return archiveEnrichment;
     } catch(error) {
-      archiveEnrichment.error = cleanSingleLine(error.message || 'enrichment load failed',240);
+      var message = cleanSingleLine(error.message || 'enrichment load failed',240);
       archiveEnrichment.schemaMissing = enrichmentErrorIsMissingSchema(error);
-      emptyArchiveEnrichment();
+      if(hadReadyData) archiveEnrichment.refreshError = message;
+      else {
+        archiveEnrichment.error = message;
+        emptyArchiveEnrichment();
+      }
       hydrateArchiveEnrichmentRows();
       return archiveEnrichment;
     } finally {
       archiveEnrichment.loading = false;
       archiveEnrichment.waiters.splice(0).forEach(resolve => resolve());
+      if(adminWorkspaceMode === 'enrichment' && adminWorkspaceIsOpen()) renderAdminWorkspace();
+      if(document.getElementById('worldsViewport')?.classList.contains('active') && ['worlds','eras'].includes(worldsCurrentView)) renderWorldsView(worldsCurrentView);
     }
+  }
+
+  async function ensureEnrichmentSuggestionPayload(id) {
+    var suggestion = enrichmentSuggestionById(id);
+    if(!suggestion || suggestion._payloadLoaded) return suggestion;
+    if(enrichmentPayloadPromises.has(id)) return enrichmentPayloadPromises.get(id);
+    var promise = (async function(){
+      suggestion._payloadLoading = true;
+      suggestion._payloadError = '';
+      var result = await supabaseClient.from('archive_enrichment_suggestions').select('*').eq('id',id).single();
+      suggestion._payloadLoading = false;
+      if(result.error) {
+        suggestion._payloadError = cleanSingleLine(result.error.message || 'private suggestion could not be loaded',240);
+        throw result.error;
+      }
+      Object.assign(suggestion,result.data || {},{ _payloadLoaded:true,_payloadLoading:false,_payloadError:'' });
+      return suggestion;
+    })().finally(() => enrichmentPayloadPromises.delete(id));
+    enrichmentPayloadPromises.set(id,promise);
+    return promise;
+  }
+
+  async function ensureEnrichmentSuggestionPayloads(items) {
+    var missing = (items || []).filter(item => item && !item._payloadLoaded).map(item => item.id);
+    for(var offset=0; offset<missing.length; offset+=100) {
+      var result = await supabaseClient.from('archive_enrichment_suggestions').select('*').in('id',missing.slice(offset,offset+100));
+      if(result.error) throw result.error;
+      (result.data || []).forEach(value => {
+        var suggestion = enrichmentSuggestionById(value.id);
+        if(suggestion) Object.assign(suggestion,value,{ _payloadLoaded:true,_payloadLoading:false,_payloadError:'' });
+      });
+    }
+    return items;
   }
 
   function acceptedTagsForRow(row) {
@@ -333,8 +473,8 @@
     var evidence = suggestion?.evidence || {};
     if(Array.isArray(payload.warnings) && payload.warnings[0]) return payload.warnings[0];
     if(evidence.explanation) return evidence.explanation;
-    if(suggestion.kind === 'lyrics') return `${Array.isArray(payload.segments) ? payload.segments.length : parseSyncedLyrics(payload.syncedText || '').length} timed vocal lines`;
-    if(suggestion.kind === 'tags') return `${(payload.suggestions || []).length} controlled tag suggestions`;
+    if(suggestion.kind === 'lyrics') return suggestion._payloadLoaded ? `${Array.isArray(payload.segments) ? payload.segments.length : parseSyncedLyrics(payload.syncedText || '').length} timed vocal lines` : 'timed lyric draft / open to review';
+    if(suggestion.kind === 'tags') return suggestion._payloadLoaded ? `${(payload.suggestions || []).length} controlled tag suggestions` : 'controlled tag suggestions / open to review';
     if(suggestion.kind === 'audio_metadata') return 'measured and estimated audio properties';
     if(suggestion.kind === 'era') return 'creative-era evidence awaiting an artist decision';
     return 'local analysis suggestion';
@@ -357,6 +497,7 @@
 
   function enrichmentSuggestionHasUncertainty(item) {
     if(item?.kind !== 'lyrics') return false;
+    if(!item._payloadLoaded) return ['pending','draft','needs_review'].includes(item.status);
     var payload = item.payload || {};
     return /\[unclear\]/i.test(payload.syncedText || '') || (payload.segments || []).some(segment => segment?.unclear || Number(segment?.confidence) < .55 || (segment?.words || []).some(word => word?.unclear || Number(word?.probability) < .45));
   }
@@ -386,10 +527,10 @@
     workspace.classList.add('enrichment-mode');
     document.getElementById('adminWorkspaceTitle').textContent = enrichmentWorkspaceTab === 'review' ? 'enrichment review' : (enrichmentWorkspaceTab === 'eras' ? 'creative eras' : 'tag library');
     document.getElementById('adminWorkspaceKicker').textContent = 'private analysis / accepted metadata stays separate';
-    document.getElementById('adminWorkspaceCount').textContent = archiveEnrichment.loading ? 'loading' : (archiveEnrichment.error ? 'setup required' : `${archiveEnrichment.suggestions.length} suggestions / ${archiveEnrichment.metadata.length} accepted analyses`);
+    document.getElementById('adminWorkspaceCount').textContent = archiveEnrichment.loading && !archiveEnrichment.ready ? 'loading' : (archiveEnrichment.error ? 'setup required' : `${archiveEnrichment.suggestions.length} suggestions / ${archiveEnrichment.metadata.length} accepted analyses${archiveEnrichment.loading ? ' / refreshing' : ''}`);
     document.getElementById('adminWorkspaceEmpty').hidden = true;
     document.getElementById('adminWorkspaceSelection').hidden = true;
-    if(archiveEnrichment.loading) {
+    if(archiveEnrichment.loading && !archiveEnrichment.ready) {
       list.innerHTML = '<div class="enrichment-loading"><i></i><span>resolving private suggestions and accepted catalog metadata...</span></div>';
       return;
     }
@@ -407,9 +548,15 @@
 
   function setEnrichmentWorkspaceTab(tab) {
     if(!['review','eras','tags'].includes(tab)) return;
+    if(enrichmentSelectedSuggestionId && document.querySelector('[data-enrichment-lyric-row]')) {
+      enrichmentEditorDraft = cleanSyncedLyrics(collectEnrichmentLyricsEditor());
+      saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
+    }
     enrichmentWorkspaceTab = tab;
     enrichmentSelectedSuggestionId = '';
+    enrichmentEditorDraftInitializedFor = '';
     enrichmentBulkSelection.clear();
+    persistEnrichmentReviewState();
     renderAdminWorkspace();
   }
 
@@ -419,11 +566,13 @@
     if(kind === 'confidence') enrichmentReviewConfidence = Math.max(0,Math.min(1,Number(value) || 0));
     if(kind === 'signal') enrichmentReviewSignal = ['all','unsure','missing-cover','failed','ready'].includes(value) ? value : 'all';
     enrichmentReviewLimit = 80;
+    persistEnrichmentReviewState();
     renderAdminWorkspace();
   }
 
   function showMoreEnrichmentReviews() {
     enrichmentReviewLimit += 80;
+    persistEnrichmentReviewState();
     renderAdminWorkspace();
   }
 
@@ -482,16 +631,44 @@
     return `${signalBar}${toolbar}${bulk}<div class="enrichment-review-list">${cards || empty}</div>${more}`;
   }
 
-  function selectEnrichmentSuggestion(id) {
+  async function selectEnrichmentSuggestion(id) {
+    if(enrichmentSelectedSuggestionId && document.querySelector('[data-enrichment-lyric-row]')) {
+      enrichmentEditorDraft = cleanSyncedLyrics(collectEnrichmentLyricsEditor());
+      saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
+    }
     enrichmentSelectedSuggestionId = id;
-    enrichmentEditorDraft = '';
+    var recoveredDraft = enrichmentLocalDraft(id);
+    enrichmentEditorDraft = recoveredDraft === null ? '' : recoveredDraft;
+    enrichmentEditorDraftInitializedFor = recoveredDraft === null ? '' : id;
+    persistEnrichmentReviewState();
     renderAdminWorkspace();
     document.getElementById('adminFileWorkspace')?.classList.add('has-selection');
+    try {
+      var suggestion = await ensureEnrichmentSuggestionPayload(id);
+      if(enrichmentSelectedSuggestionId !== id) return;
+      if(enrichmentEditorDraftInitializedFor !== id && suggestion?.kind === 'lyrics') {
+        enrichmentEditorDraft = initialEnrichmentLyricsDraft(suggestion);
+        enrichmentEditorDraftInitializedFor = id;
+      }
+      renderAdminWorkspace();
+      document.getElementById('adminFileWorkspace')?.classList.add('has-selection');
+    } catch(error) {
+      if(enrichmentSelectedSuggestionId === id) {
+        renderEnrichmentInspector();
+        showAppNotice(cleanSingleLine(error.message || 'Private suggestion could not be loaded.',240),'error');
+      }
+    }
   }
 
   function closeEnrichmentInspector() {
+    if(enrichmentSelectedSuggestionId && document.querySelector('[data-enrichment-lyric-row]')) {
+      enrichmentEditorDraft = cleanSyncedLyrics(collectEnrichmentLyricsEditor());
+      saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
+    }
     enrichmentSelectedSuggestionId = '';
     enrichmentEditorDraft = '';
+    enrichmentEditorDraftInitializedFor = '';
+    persistEnrichmentReviewState();
     document.getElementById('adminFileWorkspace')?.classList.remove('has-selection','enrichment-lyrics-open');
     renderAdminWorkspace();
   }
@@ -526,6 +703,8 @@
     if(!items.length) return showAppNotice('Select tag suggestions at 65% confidence or higher. Lyrics and eras always require direct review.','error');
     if(!confirm(`accept reviewed tags from ${items.length} suggestion(s)? no lyrics, eras, or moods will be auto-applied.`)) return;
     var failures = [];
+    try { await ensureEnrichmentSuggestionPayloads(items); }
+    catch(error) { return showAppNotice(cleanSingleLine(error.message || 'Could not load selected private suggestions.',240),'error'); }
     for(var item of items) {
       var tags = Array.isArray(item.payload?.suggestions) ? item.payload.suggestions.filter(tag => Number(tag.confidence || 0) >= .65) : [];
       var result = await supabaseClient.rpc('accept_archive_tags',{ p_suggestion_id:item.id,p_tags:tags,p_apply_mood:false,p_primary_mood:null });
@@ -544,6 +723,8 @@
     if(!safe.length) return showAppNotice('Select high-confidence tags or technical metadata. Lyrics and eras always need direct review.','error');
     if(!confirm(`Accept safe metadata from ${safe.length} suggestion(s)? Lyrics, eras, and the old mood field will not change.`)) return;
     var failures = [];
+    try { await ensureEnrichmentSuggestionPayloads(safe); }
+    catch(error) { return showAppNotice(cleanSingleLine(error.message || 'Could not load selected private suggestions.',240),'error'); }
     for(var item of safe) {
       var result;
       if(item.kind === 'tags') {
@@ -567,20 +748,46 @@
     if(enrichmentWorkspaceTab !== 'review' || !enrichmentSelectedSuggestionId) {
       target.innerHTML = `<div class="admin-inspector-empty enrichment-inspector-empty"><span>${enrichmentWorkspaceTab === 'review' ? 'select a private suggestion' : enrichmentWorkspaceTab === 'eras' ? 'creative-era tools' : 'controlled vocabulary'}</span><p>${enrichmentWorkspaceTab === 'review' ? 'Drafts stay private until you edit and accept them.' : enrichmentWorkspaceTab === 'eras' ? 'Era edits and assignments happen in the main workspace.' : 'Create, merge, alias, and hide tags without fragmenting search.'}</p></div>`;
       workspace?.classList.remove('has-selection','enrichment-lyrics-open');
+      document.body.classList.remove('enrichment-reviewing-lyrics');
       return;
     }
     var suggestion = enrichmentSuggestionById(enrichmentSelectedSuggestionId);
     if(!suggestion) return closeEnrichmentInspector();
+    workspace?.classList.add('has-selection');
     workspace?.classList.toggle('enrichment-lyrics-open',suggestion.kind === 'lyrics');
+    document.body.classList.toggle('enrichment-reviewing-lyrics',suggestion.kind === 'lyrics');
     var row = enrichmentRowForSuggestion(suggestion);
     var head = `<div class="admin-inspector-head"><small>${escapeHtml(suggestion.kind.replace('_',' '))} / ${escapeHtml(suggestion.status.replace('_',' '))}</small><button type="button" onclick="closeEnrichmentInspector()">close</button></div>
       <div class="enrichment-inspector-title"><h3>${escapeHtml(row?.getAttribute('data-title') || 'missing revision')}</h3><p>${escapeHtml(`${row?.getAttribute('data-sub') || 'archive'} / ${row?.getAttribute('data-ver') || suggestion.source_revision_id || 'revision'}`)}</p><div><span>${Math.round(enrichmentSuggestionConfidence(suggestion) * 100)}% confidence</span><span>${escapeHtml(suggestion.model_name || 'local')}</span><span>${escapeHtml(suggestion.status)}</span></div></div>`;
+    if(!suggestion._payloadLoaded) {
+      target.innerHTML = head + `<div class="enrichment-loading compact"><i></i><span>${escapeHtml(suggestion._payloadError || 'opening this private suggestion...')}</span>${suggestion._payloadError ? `<button type="button" onclick="retryEnrichmentSuggestionPayload('${escapeAttr(suggestion.id)}')">retry</button>` : ''}</div>`;
+      if(!suggestion._payloadLoading && !suggestion._payloadError) {
+        ensureEnrichmentSuggestionPayload(suggestion.id).then(value => {
+          if(enrichmentSelectedSuggestionId !== value.id) return;
+          if(value.kind === 'lyrics' && enrichmentEditorDraftInitializedFor !== value.id) {
+            var recovered = enrichmentLocalDraft(value.id);
+            enrichmentEditorDraft = recovered === null ? initialEnrichmentLyricsDraft(value) : recovered;
+            enrichmentEditorDraftInitializedFor = value.id;
+          }
+          renderEnrichmentInspector();
+          window.setTimeout(drawEnrichmentReviewWaveform,0);
+        }).catch(() => renderEnrichmentInspector());
+      }
+      return;
+    }
     var body = suggestion.kind === 'lyrics' ? enrichmentLyricsInspectorHtml(suggestion,row)
       : suggestion.kind === 'tags' ? enrichmentTagsInspectorHtml(suggestion,row)
       : suggestion.kind === 'audio_metadata' ? enrichmentAudioInspectorHtml(suggestion,row)
       : enrichmentEraSuggestionInspectorHtml(suggestion,row);
     target.innerHTML = head + body + enrichmentInspectorActionsHtml(suggestion,row);
     if(suggestion.kind === 'lyrics') window.requestAnimationFrame(resizeAllEnrichmentLyricTextareas);
+  }
+
+  function retryEnrichmentSuggestionPayload(id) {
+    var suggestion = enrichmentSuggestionById(id);
+    if(!suggestion) return;
+    suggestion._payloadError = '';
+    renderEnrichmentInspector();
   }
 
   function enrichmentInspectorActionsHtml(suggestion,row) {
@@ -663,6 +870,68 @@
     return { unsure,confidence:Number.isFinite(confidence) ? confidence : null,words };
   }
 
+  function serializeEnrichmentDraftLines(lines) {
+    return cleanSyncedLyrics((lines || []).map(line => {
+      var text = line.isPause || line.text === '...' ? '...' : cleanSingleLine(line.text,500);
+      if(!text) return '';
+      var lane = ['main','lead','adlib','bg','effect'].includes(line.lane) ? line.lane : 'main';
+      return `[${enrichmentTimeText(line.time)}] ${lane === 'main' ? '' : `[${lane}] `}${text}`;
+    }).filter(Boolean).join('\n'));
+  }
+
+  function repairEnrichmentLyricBreaks(text) {
+    var lines = enrichmentDraftLines(cleanSyncedLyrics(text));
+    if(!lines.length) return cleanSyncedLyrics(text);
+    var vocalLines = lines.filter(line => line.text !== '...');
+    var periodRatio = vocalLines.length ? vocalLines.filter(line => /\.$/.test(line.text) && !/\.{3,}$/.test(line.text)).length / vocalLines.length : 0;
+    if(periodRatio >= .58) vocalLines.forEach(line => { line.text = line.text.replace(/\.$/,''); });
+    var repaired = [];
+    lines.forEach(line => {
+      line.isPause = line.text === '...';
+      var previous = repaired[repaired.length - 1];
+      if(!previous || previous.isPause || line.isPause || previous.lane !== line.lane) {
+        repaired.push(line);
+        return;
+      }
+      var gap = Number(line.time || 0) - Number(previous.time || 0);
+      var combinedWords = `${previous.text} ${line.text}`.trim().split(/\s+/).length;
+      var connective = /\b(and|but|or|because|cause|so|that|when|while|if|to|of|for|with|like|from|as|a|an|the)$/i.test(previous.text);
+      var clearlyIncomplete = !/[.!?…]$/.test(previous.text) && /^(?:[a-z]|\(|'|"|\[)/.test(line.text) && previous.text.split(/\s+/).length <= 7;
+      if(gap >= 0 && gap <= 3.4 && combinedWords <= 18 && (connective || (gap <= 1.25 && clearlyIncomplete))) {
+        previous.text = cleanSingleLine(`${previous.text} ${line.text}`,500);
+      } else {
+        repaired.push(line);
+      }
+    });
+    return serializeEnrichmentDraftLines(repaired);
+  }
+
+  function initialEnrichmentLyricsDraft(suggestion) {
+    var text = cleanSyncedLyrics(suggestion?.payload?.syncedText || '');
+    if(['pending','needs_review'].includes(suggestion?.status)) return repairEnrichmentLyricBreaks(text);
+    return text;
+  }
+
+  function cleanEnrichmentLyricBreaks() {
+    enrichmentEditorDraft = repairEnrichmentLyricBreaks(collectEnrichmentLyricsEditor());
+    saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
+    renderEnrichmentInspector();
+    showAppNotice('AI punctuation and clearly broken line wraps cleaned. Review the timing before accepting.');
+  }
+
+  function toggleEnrichmentReviewPlayback(id) {
+    var suggestion = enrichmentSuggestionById(id);
+    var row = enrichmentRowForSuggestion(suggestion);
+    var activeRow = audioQueue[queueIndex];
+    if(!row || !activeRow || canonicalRow(activeRow) !== canonicalRow(row)) {
+      playEnrichmentSuggestion(id);
+      return;
+    }
+    if(!currentAudio) return;
+    if(currentAudio.paused) currentAudio.play().catch(() => {});
+    else currentAudio.pause();
+  }
+
   function focusNextUnsureLyric() {
     var rows = Array.from(document.querySelectorAll('.enrichment-lyric-edit-row.is-unsure'));
     if(!rows.length) return showAppNotice('No unsure lyric lines in this draft.');
@@ -675,7 +944,11 @@
   }
 
   function enrichmentLyricsInspectorHtml(suggestion,row) {
-    if(!enrichmentEditorDraft) enrichmentEditorDraft = String(suggestion.payload?.syncedText || '');
+    if(enrichmentEditorDraftInitializedFor !== suggestion.id) {
+      var recovered = enrichmentLocalDraft(suggestion.id);
+      enrichmentEditorDraft = recovered === null ? initialEnrichmentLyricsDraft(suggestion) : recovered;
+      enrichmentEditorDraftInitializedFor = suggestion.id;
+    }
     var lines = enrichmentDraftLines(enrichmentEditorDraft);
     var accepted = row?.getAttribute('data-lyrics') || '';
     var unsureCount = 0;
@@ -686,10 +959,10 @@
       var certaintyTitle = evidence.words.length ? `Unsure words: ${evidence.words.join(', ')}` : 'Low-confidence transcription. Listen and correct this line.';
       return `<div class="enrichment-lyric-edit-row${evidence.unsure ? ' is-unsure' : ''}" data-enrichment-lyric-row${evidence.unsure ? ' data-unsure="true"' : ''}>
       <button type="button" onclick="seekEnrichmentLyric('${escapeAttr(suggestion.id)}',${Number(line.time).toFixed(3)})" title="seek to this line">${escapeHtml(enrichmentTimeText(line.time))}</button>
-      <input type="text" inputmode="decimal" value="${escapeAttr(enrichmentTimeText(line.time))}" aria-label="line timestamp">
-      <select aria-label="vocal lane">${['main','lead','adlib','bg','effect'].map(lane => `<option value="${lane}"${lane === line.lane ? ' selected' : ''}>${lane}</option>`).join('')}</select>
+      <input type="text" inputmode="decimal" value="${escapeAttr(enrichmentTimeText(line.time))}" aria-label="line timestamp" oninput="scheduleEnrichmentDraftCapture()">
+      <select aria-label="vocal lane" onchange="scheduleEnrichmentDraftCapture()">${['main','lead','adlib','bg','effect'].map(lane => `<option value="${lane}"${lane === line.lane ? ' selected' : ''}>${lane}</option>`).join('')}</select>
       <span class="enrichment-lyric-certainty" title="${escapeAttr(certaintyTitle)}"${evidence.unsure ? '' : ' aria-hidden="true"'}>${evidence.unsure ? escapeHtml(certaintyText) : ''}</span>
-      <textarea rows="1" maxlength="500" aria-label="lyric text" oninput="resizeEnrichmentLyricTextarea(this)">${escapeHtml(line.text)}</textarea>
+      <textarea rows="1" maxlength="500" aria-label="lyric text" oninput="resizeEnrichmentLyricTextarea(this);scheduleEnrichmentDraftCapture()">${escapeHtml(line.text)}</textarea>
       <button type="button" onclick="removeEnrichmentLyricLine(${index})" aria-label="remove line">x</button>
     </div>`;
     }).join('');
@@ -697,13 +970,13 @@
     return `<div class="enrichment-lyrics-editor">
       <div class="enrichment-editor-dock">
         <div class="enrichment-wave"><canvas id="enrichmentWaveform"></canvas><span>click a timestamp to seek / the real player remains the audio source</span></div>
-        <div class="enrichment-editor-tools"><button class="enrichment-unsure-jump" type="button" onclick="focusNextUnsureLyric()"${unsureCount ? '' : ' disabled'}>next unsure / ${unsureCount}</button><button type="button" onclick="addEnrichmentLyricLine('main',false)">+ lead line</button><button type="button" onclick="addEnrichmentLyricLine('adlib',false)">+ adlib</button><button type="button" onclick="addEnrichmentLyricLine('main',true)">+ instrumental pause</button><button type="button" onclick="previewEnrichmentLyrics('${escapeAttr(suggestion.id)}')">preview in lyrics mode</button></div>
+        <div class="enrichment-editor-tools"><button class="enrichment-review-play" type="button" onclick="toggleEnrichmentReviewPlayback('${escapeAttr(suggestion.id)}')">play / pause</button><button class="enrichment-unsure-jump" type="button" onclick="focusNextUnsureLyric()"${unsureCount ? '' : ' disabled'}>next unsure / ${unsureCount}</button><button type="button" onclick="cleanEnrichmentLyricBreaks()">clean line breaks</button><button type="button" onclick="addEnrichmentLyricLine('main',false)">+ lead line</button><button type="button" onclick="addEnrichmentLyricLine('adlib',false)">+ adlib</button><button type="button" onclick="addEnrichmentLyricLine('main',true)">+ instrumental pause</button><button type="button" onclick="previewEnrichmentLyrics('${escapeAttr(suggestion.id)}')">preview in lyrics mode</button></div>
       </div>
       <div class="enrichment-lyric-column-head" aria-hidden="true"><span>seek</span><span>timestamp</span><span>lane</span><span>confidence</span><span>lyric</span><span>remove</span></div>
       <div class="enrichment-lyric-rows">${lineHtml || '<div class="enrichment-empty compact">The model returned no timed vocal lines. Add a line or mark the revision instrumental.</div>'}</div>
-      <details class="enrichment-raw-draft"><summary>edit Akrasia synced text directly</summary><textarea id="enrichmentLyricsRaw" rows="10" oninput="enrichmentEditorDraft=this.value">${escapeHtml(enrichmentEditorDraft)}</textarea><button type="button" onclick="applyRawEnrichmentLyrics()">apply raw edit</button></details>
+      <details class="enrichment-raw-draft"><summary>edit Akrasia synced text directly</summary><textarea id="enrichmentLyricsRaw" rows="10" oninput="captureEnrichmentRawDraft(this.value)">${escapeHtml(enrichmentEditorDraft)}</textarea><button type="button" onclick="applyRawEnrichmentLyrics()">apply raw edit</button></details>
       ${comparison}
-      <div class="enrichment-editor-commit"><button type="button" onclick="saveEnrichmentLyricsDraft('${escapeAttr(suggestion.id)}')">save private draft</button><button class="primary" type="button" onclick="acceptEnrichmentLyrics('${escapeAttr(suggestion.id)}')">accept edited lyrics</button></div>
+      <div class="enrichment-editor-commit"><span>local recovery stays on while you edit</span><button type="button" onclick="saveEnrichmentLyricsDraft('${escapeAttr(suggestion.id)}')">save private draft</button><button class="primary" type="button" onclick="acceptEnrichmentLyrics('${escapeAttr(suggestion.id)}')">accept edited lyrics</button></div>
     </div>`;
   }
 
@@ -719,8 +992,8 @@
 
   function collectEnrichmentLyricsEditor() {
     var rows = Array.from(document.querySelectorAll('[data-enrichment-lyric-row]'));
-    if(!rows.length) return enrichmentEditorDraft;
-    return rows.map(row => {
+    if(!rows.length) return cleanSyncedLyrics(enrichmentEditorDraft);
+    return cleanSyncedLyrics(rows.map(row => {
       var inputs = row.querySelectorAll('input,select,textarea');
       var time = parseLyricTime(inputs[0]?.value);
       var lane = inputs[1]?.value || 'main';
@@ -728,19 +1001,21 @@
       if(time === null || !text) return '';
       var lanePrefix = lane === 'main' ? '' : `[${lane}] `;
       return `[${enrichmentTimeText(time)}] ${lanePrefix}${text}`;
-    }).filter(Boolean).join('\n');
+    }).filter(Boolean).join('\n'));
   }
 
   function applyRawEnrichmentLyrics() {
-    enrichmentEditorDraft = document.getElementById('enrichmentLyricsRaw')?.value || enrichmentEditorDraft;
+    enrichmentEditorDraft = cleanSyncedLyrics(document.getElementById('enrichmentLyricsRaw')?.value || enrichmentEditorDraft);
+    saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
     renderEnrichmentInspector();
     window.setTimeout(drawEnrichmentReviewWaveform,0);
   }
 
   function addEnrichmentLyricLine(lane,pause) {
-    enrichmentEditorDraft = collectEnrichmentLyricsEditor();
+    enrichmentEditorDraft = cleanSyncedLyrics(collectEnrichmentLyricsEditor());
     var time = currentAudio && Number.isFinite(currentAudio.currentTime) ? currentAudio.currentTime : 0;
     enrichmentEditorDraft += `${enrichmentEditorDraft ? '\n' : ''}[${enrichmentTimeText(time)}] ${pause ? '...' : lane === 'main' ? 'new line' : `[${lane}] new line`}`;
+    saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
     renderEnrichmentInspector();
     document.querySelector('.enrichment-lyric-edit-row:last-child textarea')?.focus();
   }
@@ -748,7 +1023,8 @@
   function removeEnrichmentLyricLine(index) {
     var lines = enrichmentDraftLines(collectEnrichmentLyricsEditor());
     lines.splice(index,1);
-    enrichmentEditorDraft = lines.map(line => `[${enrichmentTimeText(line.time)}] ${line.lane === 'main' ? '' : `[${line.lane}] `}${line.text}`).join('\n');
+    enrichmentEditorDraft = serializeEnrichmentDraftLines(lines);
+    saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
     renderEnrichmentInspector();
   }
 
@@ -778,12 +1054,17 @@
 
   async function saveEnrichmentLyricsDraft(id) {
     if(!requireAdmin()) return;
-    var suggestion = enrichmentSuggestionById(id);
+    var suggestion;
+    try { suggestion = await ensureEnrichmentSuggestionPayload(id); }
+    catch(error) { return showAppNotice(cleanSingleLine(error.message || 'Private suggestion could not be loaded.',240),'error'); }
     if(!suggestion) return;
-    enrichmentEditorDraft = collectEnrichmentLyricsEditor();
+    enrichmentEditorDraft = cleanSyncedLyrics(collectEnrichmentLyricsEditor());
     var payload = Object.assign({},suggestion.payload || {},{ syncedText:enrichmentEditorDraft,format:'akrasia-synced-text' });
     var result = await supabaseClient.rpc('review_archive_enrichment',{ p_suggestion_id:id,p_status:'draft',p_payload:payload,p_note:'edited in Akrasia' });
     if(result.error) return showAppNotice(result.error.message,'error');
+    suggestion.payload = payload;
+    suggestion._payloadLoaded = true;
+    removeEnrichmentLocalDraft(id);
     await loadArchiveEnrichmentData({ force:true });
     enrichmentSelectedSuggestionId = id;
     enrichmentEditorDraft = payload.syncedText;
@@ -795,7 +1076,8 @@
     var suggestion = enrichmentSuggestionById(id);
     var row = enrichmentRowForSuggestion(suggestion);
     if(!row) return;
-    enrichmentEditorDraft = collectEnrichmentLyricsEditor();
+    enrichmentEditorDraft = cleanSyncedLyrics(collectEnrichmentLyricsEditor());
+    saveEnrichmentLocalDraft(id,enrichmentEditorDraft);
     playEnrichmentSuggestion(id);
     var original = row.getAttribute('data-lyrics') || '';
     row.setAttribute('data-lyrics',enrichmentEditorDraft);
@@ -806,10 +1088,12 @@
 
   async function acceptEnrichmentLyrics(id) {
     if(!requireAdmin()) return;
-    var suggestion = enrichmentSuggestionById(id);
+    var suggestion;
+    try { suggestion = await ensureEnrichmentSuggestionPayload(id); }
+    catch(error) { return showAppNotice(cleanSingleLine(error.message || 'Private suggestion could not be loaded.',240),'error'); }
     var row = enrichmentRowForSuggestion(suggestion);
     if(!suggestion || !row) return;
-    enrichmentEditorDraft = collectEnrichmentLyricsEditor();
+    enrichmentEditorDraft = cleanSyncedLyrics(collectEnrichmentLyricsEditor());
     if(!parseSyncedLyrics(enrichmentEditorDraft).length && !confirm('This draft has no valid timed lyric lines. Accept it as an empty transcript?')) return;
     var accepted = row.getAttribute('data-lyrics') || '';
     var replace = Boolean(accepted && accepted !== enrichmentEditorDraft);
@@ -817,6 +1101,7 @@
     var result = await supabaseClient.rpc('accept_archive_lyrics',{ p_suggestion_id:id,p_synced_text:enrichmentEditorDraft,p_replace_existing:replace });
     if(result.error) return showAppNotice(result.error.message,'error');
     row.setAttribute('data-lyrics',enrichmentEditorDraft);
+    removeEnrichmentLocalDraft(id);
     archiveSearchIndex.delete(row);
     await loadArchiveEnrichmentData({ force:true });
     enrichmentSelectedSuggestionId = id;
@@ -841,7 +1126,9 @@
 
   async function acceptEnrichmentTags(id) {
     if(!requireAdmin()) return;
-    var suggestion = enrichmentSuggestionById(id);
+    var suggestion;
+    try { suggestion = await ensureEnrichmentSuggestionPayload(id); }
+    catch(error) { return showAppNotice(cleanSingleLine(error.message || 'Private suggestion could not be loaded.',240),'error'); }
     if(!suggestion) return;
     var all = enrichmentTagSuggestions(suggestion);
     var selected = Array.from(document.querySelectorAll('[data-enrichment-tag-index]:checked')).map(input => {
@@ -879,7 +1166,9 @@
 
   async function acceptEnrichmentAudioMetadata(id) {
     if(!requireAdmin()) return;
-    var suggestion = enrichmentSuggestionById(id);
+    var suggestion;
+    try { suggestion = await ensureEnrichmentSuggestionPayload(id); }
+    catch(error) { return showAppNotice(cleanSingleLine(error.message || 'Private suggestion could not be loaded.',240),'error'); }
     if(!suggestion) return;
     var values = privateAudioMetadataPayload(suggestion.payload);
     document.querySelectorAll('[data-enrichment-audio]').forEach(input => {
@@ -908,6 +1197,8 @@
 
   async function acceptEnrichmentEra(id) {
     if(!requireAdmin()) return;
+    try { await ensureEnrichmentSuggestionPayload(id); }
+    catch(error) { return showAppNotice(cleanSingleLine(error.message || 'Private suggestion could not be loaded.',240),'error'); }
     var eraId = document.getElementById('enrichmentSuggestionEra')?.value;
     var relationship = document.getElementById('enrichmentSuggestionEraRelationship')?.value || 'primary';
     if(!eraId) return showAppNotice('Choose an artist-defined era first.','error');
@@ -1012,12 +1303,122 @@
     }
   }
 
+  function archiveEraGuessDate(row) {
+    var value = String(row?.getAttribute('data-asset-date') || row?.getAttribute('data-date') || '').match(/\d{4}-\d{2}-\d{2}/);
+    return value ? value[0] : '';
+  }
+
+  function archiveEraGuessDateLabel(value,monthOnly) {
+    if(!value) return 'undated';
+    try {
+      var date = new Date(`${monthOnly ? value + '-15' : value}T12:00:00`);
+      return new Intl.DateTimeFormat(undefined,monthOnly ? { month:'long',year:'numeric' } : { month:'long',day:'numeric',year:'numeric' }).format(date);
+    } catch(error) {
+      return value;
+    }
+  }
+
+  function deriveArchiveEraGuesses() {
+    var rows = baseRows().filter(row => row.getAttribute('data-type') === 'audio' && row.getAttribute('data-id'));
+    var candidates = [];
+    var batchGroups = new Map();
+    var dayGroups = new Map();
+    var monthGroups = new Map();
+    rows.forEach(row => {
+      var source = [row.getAttribute('data-title'),row.getAttribute('data-name'),row.getAttribute('data-sub'),row.getAttribute('data-project-key')].filter(Boolean).join(' ');
+      var batch = source.match(/(?:^|[\s/_-])batch[\s_-]*([a-z0-9]+)/i);
+      if(batch) {
+        var token = cleanSingleLine(batch[1],30).toLowerCase();
+        if(token) {
+          if(!batchGroups.has(token)) batchGroups.set(token,[]);
+          batchGroups.get(token).push(row);
+        }
+      }
+      var date = archiveEraGuessDate(row);
+      if(!date) return;
+      if(!dayGroups.has(date)) dayGroups.set(date,[]);
+      dayGroups.get(date).push(row);
+      var month = date.slice(0,7);
+      if(!monthGroups.has(month)) monthGroups.set(month,[]);
+      monthGroups.get(month).push(row);
+    });
+    batchGroups.forEach((group,token) => {
+      var unique = Array.from(new Set(group));
+      if(unique.length < 3) return;
+      var dates = unique.map(archiveEraGuessDate).filter(Boolean).sort();
+      candidates.push({
+        id:`batch:${token}`,type:'title pattern',name:`batch ${token}`,rows:unique,
+        startDate:dates[0] || '',endDate:dates[dates.length - 1] || '',
+        confidence:Math.min(.96,.72 + unique.length / 100),
+        evidence:`"${`batch ${token}`}" repeats across ${unique.length} audio revisions`
+      });
+    });
+    dayGroups.forEach((group,date) => {
+      var worlds = new Set(group.map(projectKeyForRow).filter(Boolean));
+      if(group.length < 4 || worlds.size < 2) return;
+      candidates.push({
+        id:`day:${date}`,type:'dense session',name:`${archiveEraGuessDateLabel(date,false)} sessions`,rows:group,
+        startDate:date,endDate:date,confidence:Math.min(.9,.62 + worlds.size * .035 + group.length * .008),
+        evidence:`${group.length} revisions from ${worlds.size} Song Worlds were worked on this day`
+      });
+    });
+    monthGroups.forEach((group,month) => {
+      var worlds = new Set(group.map(projectKeyForRow).filter(Boolean));
+      if(group.length < 14 || worlds.size < 5) return;
+      candidates.push({
+        id:`month:${month}`,type:'date cluster',name:`${archiveEraGuessDateLabel(month,true)} cluster`,rows:group,
+        startDate:`${month}-01`,endDate:group.map(archiveEraGuessDate).filter(Boolean).sort().at(-1) || `${month}-01`,
+        confidence:Math.min(.84,.56 + worlds.size * .018 + group.length * .004),
+        evidence:`${group.length} revisions across ${worlds.size} Song Worlds cluster in this month`
+      });
+    });
+    var existingNames = new Set(archiveEnrichment.eras.map(era => String(era.name || '').trim().toLowerCase()));
+    var existingRanges = new Set(archiveEnrichment.eras.map(era => `${era.start_date || ''}|${era.end_date || ''}`));
+    return candidates
+      .filter(candidate => !existingNames.has(candidate.name.toLowerCase()) && !existingRanges.has(`${candidate.startDate}|${candidate.endDate}`))
+      .sort((a,b) => b.confidence - a.confidence || b.rows.length - a.rows.length)
+      .slice(0,12);
+  }
+
+  function enrichmentEraGuessesHtml() {
+    enrichmentEraGuesses = deriveArchiveEraGuesses();
+    if(!enrichmentEraGuesses.length) return `<section class="era-guesses"><div class="era-editor-head"><strong>archive guesses</strong><span>no strong unconfirmed date or title clusters right now</span></div></section>`;
+    return `<section class="era-guesses"><div class="era-editor-head"><strong>archive guesses</strong><span>private patterns / nothing changes until you confirm</span></div><div class="era-guess-grid">${enrichmentEraGuesses.map(guess => `<article class="era-guess-card"><small>${escapeHtml(guess.type)} / ${Math.round(guess.confidence * 100)}%</small><strong>${escapeHtml(guess.name)}</strong><p>${escapeHtml(guess.evidence)}</p><span>${guess.rows.length} revisions / ${escapeHtml(guess.startDate || 'open')} to ${escapeHtml(guess.endDate || 'open')}</span><button type="button" onclick="createEraFromArchiveGuess('${escapeAttr(guess.id)}')">review + create</button></article>`).join('')}</div></section>`;
+  }
+
+  async function createEraFromArchiveGuess(id) {
+    if(!requireAdmin()) return;
+    var guess = enrichmentEraGuesses.find(item => item.id === id) || deriveArchiveEraGuesses().find(item => item.id === id);
+    if(!guess) return showAppNotice('That archive pattern is no longer available.','error');
+    var name = cleanSingleLine(prompt('Name this creative era:',guess.name) || '',100);
+    if(!name) return;
+    if(!confirm(`Create "${name}" as a private era and assign ${guess.rows.length} matching audio revisions? You can edit every assignment afterward.`)) return;
+    var payload = {
+      name,slug:'',description:`Archive-assisted suggestion. ${guess.evidence}. Confirmed from the private era review.`,
+      start_date:guess.startDate || null,end_date:guess.endDate || null,accent_color:'#ffffff',
+      visibility:'private',display_order:archiveEnrichment.eras.length ? Math.max(...archiveEnrichment.eras.map(era => Number(era.display_order || 0))) + 1 : 0
+    };
+    var result = await supabaseClient.from('archive_eras').insert(payload).select().single();
+    if(result.error) return showAppNotice(result.error.message,'error');
+    try {
+      var count = await assignEraToRows(guess.rows,result.data.id,'primary');
+      await loadArchiveEnrichmentData({ force:true });
+      renderAdminWorkspace();
+      showAppNotice(`${name} created privately with ${count} confirmed revisions.`);
+    } catch(error) {
+      await loadArchiveEnrichmentData({ force:true });
+      renderAdminWorkspace();
+      showAppNotice(`The era was created, but its files were not assigned: ${cleanSingleLine(error.message,180)}`,'error');
+    }
+  }
+
   function enrichmentEraManagerHtml() {
     var assignedIds = new Set(archiveEnrichment.assetEras.filter(item => item.review_status === 'confirmed').map(item => item.asset_id));
     var unassigned = baseRows().filter(row => row.getAttribute('data-type') === 'audio' && row.getAttribute('data-id') && !assignedIds.has(row.getAttribute('data-id')));
     var conflicts = baseRows().filter(row => (archiveEnrichment.assetErasByAsset.get(row.getAttribute('data-id')) || []).filter(item => item.relationship === 'primary' && item.review_status === 'confirmed').length > 1);
     var selectionCount = selectedArchiveRows().length;
     var worldOptions = worldGroups().map(group => `<option value="${escapeAttr(group.key)}">${escapeHtml(group.title)} / ${group.rows.length} files</option>`).join('');
+    var folderOptions = adminFolderPaths().map(path => `<option value="${escapeAttr(path)}">${escapeHtml(path)} / ${adminDescendantRows(path).length} files</option>`).join('');
     var eraOptions = archiveEnrichment.eras.map(era => `<option value="${escapeAttr(era.id)}">${escapeHtml(era.name)}</option>`).join('');
     var cards = archiveEnrichment.eras.map((era,index) => {
       var count = archiveEnrichment.assetEras.filter(item => item.era_id === era.id && item.review_status === 'confirmed').length;
@@ -1030,9 +1431,10 @@
     }).join('');
     var unassignedRows = unassigned.slice(0,24).map(row => `<button type="button" onclick="openEraUnassignedRow('${escapeAttr(adminRowKey(row))}')"><strong>${escapeHtml(row.getAttribute('data-title'))}</strong><span>${escapeHtml(row.getAttribute('data-ver'))} / ${escapeHtml(row.getAttribute('data-asset-date') || 'undated')}</span></button>`).join('');
     return `<div class="era-manager">
-      <section class="era-manager-intro"><div><small>artist-defined chronology</small><h3>creative eras organize meaning, not files.</h3><p>Assignments never move, duplicate, or rename the canonical archive revision. Different versions in one Song World can belong to different eras.</p><button type="button" onclick="exportArchiveEraTraining()">teach the private analyzer from confirmed eras</button></div><div><span>eras<strong>${archiveEnrichment.eras.length}</strong></span><span>unassigned audio<strong>${unassigned.length}</strong></span><span>conflicts<strong>${conflicts.length}</strong></span></div></section>
+      <section class="era-manager-intro"><div><small>artist-defined chronology + archive-assisted guesses</small><h3>creative eras organize meaning, not files.</h3><p>Akrasia can propose private eras from dense work dates and repeated title patterns such as batches. You still decide what becomes real, and no original file moves.</p><button type="button" onclick="exportArchiveEraTraining()">teach the private analyzer from confirmed eras</button></div><div><span>eras<strong>${archiveEnrichment.eras.length}</strong></span><span>unassigned audio<strong>${unassigned.length}</strong></span><span>conflicts<strong>${conflicts.length}</strong></span></div></section>
+      ${enrichmentEraGuessesHtml()}
       <section class="era-editor" id="eraEditor"><input type="hidden" id="eraEditId"><div class="era-editor-head"><strong>define an era</strong><button type="button" onclick="resetArchiveEraEditor()">clear</button></div><div class="era-editor-grid"><label><span>name</span><input id="eraName" maxlength="100" placeholder="artist-defined era name"></label><label><span>visibility</span><select id="eraVisibility"><option value="public">public</option><option value="private">private</option><option value="hidden">hidden</option></select></label><label><span>start date / optional</span><input id="eraStartDate" type="date"></label><label><span>end date / optional</span><input id="eraEndDate" type="date"></label><label><span>accent</span><input id="eraAccent" type="color" value="#ffffff"></label><label><span>cover / optional</span><input id="eraCoverFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label><label class="era-description"><span>what changed in this era</span><textarea id="eraDescription" maxlength="4000" rows="4"></textarea></label></div><button class="primary" type="button" onclick="saveArchiveEra()">save era</button></section>
-      <section class="era-assignment"><div class="era-editor-head"><strong>assign without moving files</strong><span>${selectionCount} archive files currently selected</span></div><div class="era-assignment-controls"><select id="eraAssignEra"><option value="">choose era</option>${eraOptions}</select><select id="eraAssignRelationship"><option value="primary">primary</option><option value="secondary">secondary</option></select><button type="button" onclick="assignEraToArchiveSelection()"${selectionCount ? '' : ' disabled'}>assign selection</button><button type="button" onclick="removeEraFromArchiveSelection()"${selectionCount ? '' : ' disabled'}>remove from selection</button></div><div class="era-world-assignment"><select id="eraAssignWorld"><option value="">choose Song World</option>${worldOptions}</select><button type="button" onclick="assignEraToWorld()">assign every revision in world</button></div></section>
+      <section class="era-assignment"><div class="era-editor-head"><strong>assign without moving files</strong><span>${selectionCount} archive files currently selected</span></div><div class="era-assignment-controls"><select id="eraAssignEra"><option value="">choose era</option>${eraOptions}</select><select id="eraAssignRelationship"><option value="primary">primary</option><option value="secondary">secondary</option></select><button type="button" onclick="assignEraToArchiveSelection()"${selectionCount ? '' : ' disabled'}>assign selection</button><button type="button" onclick="removeEraFromArchiveSelection()"${selectionCount ? '' : ' disabled'}>remove from selection</button></div><div class="era-world-assignment"><select id="eraAssignWorld"><option value="">choose Song World</option>${worldOptions}</select><button type="button" onclick="assignEraToWorld()">assign every revision in world</button></div><div class="era-folder-assignment"><select id="eraAssignFolder"><option value="">choose archive folder</option>${folderOptions}</select><button type="button" onclick="assignEraToFolder()">assign folder contents</button></div></section>
       <section class="era-manager-list"><div class="era-editor-head"><strong>defined eras</strong><span>drag-free order controls preserve a stable chronology</span></div>${cards || '<div class="enrichment-empty">No eras are hard-coded. Define the first one when you are ready.</div>'}</section>
       <details class="era-unassigned"><summary>unassigned audio / ${unassigned.length}</summary><div>${unassignedRows || '<span>Every audio revision has an era.</span>'}</div></details>
     </div>`;
@@ -1163,6 +1565,23 @@
     } catch(error) { showAppNotice(error.message,'error'); }
   }
 
+  async function assignEraToFolder() {
+    if(!requireAdmin()) return;
+    var eraId = document.getElementById('eraAssignEra')?.value;
+    var relationship = document.getElementById('eraAssignRelationship')?.value || 'primary';
+    var path = normalizeFolderPath(document.getElementById('eraAssignFolder')?.value || '');
+    if(!eraId || !path) return showAppNotice('Choose an era and an archive folder.','error');
+    var rows = adminDescendantRows(path);
+    if(!rows.length) return showAppNotice('That folder has no indexed files.','error');
+    if(!confirm(`Assign the ${rows.length} current files inside "${path}" to this era? The folder and files stay where they are.`)) return;
+    try {
+      var count = await assignEraToRows(rows,eraId,relationship);
+      await loadArchiveEnrichmentData({ force:true });
+      renderAdminWorkspace();
+      showAppNotice(`${count} files from ${folderDisplayName(path)} assigned.`);
+    } catch(error) { showAppNotice(error.message,'error'); }
+  }
+
   async function removeEraFromArchiveSelection() {
     if(!requireAdmin()) return;
     var eraId = document.getElementById('eraAssignEra')?.value;
@@ -1259,7 +1678,19 @@
   }
 
   function initArchiveEnrichment() {
+    restoreEnrichmentReviewState();
     document.addEventListener('keydown',handleEnrichmentReviewKeys);
+    document.addEventListener('visibilitychange',function(){ if(document.hidden) flushEnrichmentDraftCapture(); });
+    window.addEventListener('pagehide',flushEnrichmentDraftCapture);
+    window.addEventListener('storage',function(event){
+      if(event.key !== ENRICHMENT_DRAFTS_KEY || !enrichmentSelectedSuggestionId) return;
+      if(document.hasFocus() && document.activeElement?.closest?.('.enrichment-lyrics-editor')) return;
+      var recovered = enrichmentLocalDraft(enrichmentSelectedSuggestionId);
+      if(recovered === null) return;
+      enrichmentEditorDraft = recovered;
+      enrichmentEditorDraftInitializedFor = enrichmentSelectedSuggestionId;
+      if(adminWorkspaceMode === 'enrichment' && adminWorkspaceIsOpen()) renderEnrichmentInspector();
+    });
     if(supabaseClient) loadArchiveEnrichmentData();
   }
 
@@ -1364,7 +1795,7 @@
       };
     }) : [];
     var payload = {
-      syncedText:String(value.syncedText || '').slice(0,40000),format:'akrasia-synced-text',
+      syncedText:cleanSyncedLyrics(value.syncedText || ''),format:'akrasia-synced-text',
       detectedLanguage:cleanSingleLine(value.detectedLanguage,24),languageProbability:boundedAnalysisNumber(value.languageProbability,0,1),
       vocalInstrumentalStatus:cleanSingleLine(value.vocalInstrumentalStatus,32),
       instrumentalSections:Array.isArray(value.instrumentalSections) ? value.instrumentalSections.slice(0,500).map(section => ({ start:boundedAnalysisNumber(section.start,0,86400),end:boundedAnalysisNumber(section.end,0,86400) })) : [],

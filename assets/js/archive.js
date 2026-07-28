@@ -189,6 +189,18 @@
     return String(value || '').replace(/\r/g, '').replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '').replace(/<\/?script\b[^>]*>/gi, '').trim().slice(0, maxLength || 12000);
   }
 
+  function cleanSyncedLyrics(value) {
+    return String(value == null ? '' : value)
+      .replace(/\r\n?/g, '\n')
+      .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '')
+      .split('\n')
+      .slice(0, 1500)
+      .map(line => line.replace(/[ \t]+$/g, ''))
+      .join('\n')
+      .trim()
+      .slice(0, 40000);
+  }
+
   function parseCreditsText(value) {
     return cleanMultiline(value, 6000).split('\n').map(line => {
       var parts = line.split(':');
@@ -2449,7 +2461,7 @@
       mood: cleanSingleLine(document.getElementById('editMood').value.toLowerCase(), 32) || 'raw',
       moodColor: safeHexColor(document.getElementById('editMoodColor').value),
       notes: cleanMultiline(document.getElementById('editNotes').value, 12000),
-      lyrics: cleanMultiline(document.getElementById('editLyrics').value, 40000),
+      lyrics: cleanSyncedLyrics(document.getElementById('editLyrics').value),
       worldMeta: {
         projectKey: cleanSingleLine(document.getElementById('editProject').value, 100).toLowerCase(),
         role: safeWorldRole(document.getElementById('editRole').value),

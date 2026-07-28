@@ -427,7 +427,7 @@
     });
   }
   function resizeCanvas() {
-    var scale = isCompactVisual ? 0.55 : 1;
+    var scale = isCompactVisual ? 0.38 : 0.82;
     canvas.width = Math.max(1, Math.floor(canvas.clientWidth * scale));
     canvas.height = Math.max(1, Math.floor(canvas.clientHeight * scale));
   }
@@ -454,7 +454,7 @@
 
   function applyReactiveCssFrame(pulse, rgb, frameTime, force) {
     var now = frameTime || performance.now();
-    if(!force && now - reactiveCssLastFrame < 48) return;
+    if(!force && now - reactiveCssLastFrame < (isCompactVisual ? 96 : 64)) return;
     reactiveCssLastFrame = now;
     document.documentElement.style.setProperty('--reactive-pulse', Math.max(0, pulse || 0).toFixed(3));
     if(!rgb) return;
