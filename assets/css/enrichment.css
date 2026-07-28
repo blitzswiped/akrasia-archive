@@ -71,6 +71,7 @@
 .enrichment-lyric-rows{gap:8px;max-height:none;overflow:visible;padding:0}
 .enrichment-lyric-edit-row{align-items:center;padding:8px;border:1px solid var(--line-soft);border-radius:12px;background:rgba(255,255,255,.018);transition:border-color .18s,background .18s,box-shadow .18s}
 .enrichment-lyric-edit-row:focus-within{border-color:rgba(255,255,255,.58);background:rgba(255,255,255,.045);box-shadow:0 12px 38px rgba(0,0,0,.3)}
+.enrichment-lyric-edit-row.is-selected-line{border-color:rgba(255,255,255,.72);background:rgba(255,255,255,.06);box-shadow:inset 3px 0 0 #fff,0 12px 38px rgba(0,0,0,.3)}
 .enrichment-lyric-edit-row button,.enrichment-lyric-edit-row input,.enrichment-lyric-edit-row select,.enrichment-lyric-edit-row textarea{height:44px;padding:9px 10px;border-radius:9px;font-size:.61rem}
 .enrichment-lyric-edit-row textarea{min-height:44px;max-height:190px;line-height:1.5;resize:none;overflow-y:auto}
 .enrichment-lyric-edit-row>button:first-child{color:#fff;font-weight:750}

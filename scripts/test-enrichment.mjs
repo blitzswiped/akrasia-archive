@@ -65,8 +65,8 @@ const enrichmentHelpers = `
   function parseLyricTime(value){const m=String(value||'').trim().match(/^(?:(\\d+):)?(\\d{1,2})(?:[.:](\\d{1,3}))?$/);if(!m)return null;return Number(m[1]||0)*60+Number(m[2]||0)+(m[3]?Number('0.'+m[3].padEnd(3,'0').slice(0,3)):0)}
   function parseSyncedLyrics(text){const out=[];cleanSyncedLyrics(text).split('\\n').forEach(line=>{const m=line.trim().match(/^\\[([^\\]]+)\\]\\s*(.+)$/);if(!m)return;const time=parseLyricTime(m[1]);let lyric=m[2];let lane='main';const laneMatch=lyric.match(/^\\[(adlib|bg|background|lead|main|effect)\\]\\s*(.*)$/i);if(laneMatch){lane=laneMatch[1].toLowerCase()==='background'?'bg':laneMatch[1].toLowerCase();lyric=laneMatch[2]}out.push({time,text:lyric,lane,isPause:lyric==='...'})});return out}
 `;
-const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility } = new Function(
-  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility };`
+const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility } = new Function(
+  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility };`
 )();
 
 const lyrics = privateLyricsPayload({
@@ -94,6 +94,39 @@ assert.equal(
   repairEnrichmentLyricBreaks('[0:01.00] this is a template and.\n[0:02.00] i was saying.'),
   '[0:01.00] this is a template and i was saying'
 );
+const cadenceRepair = repairEnrichmentLyricBreaksResult(
+  "[0:35.34] God bless you folks cutting them matrix Get us up, I\n[0:38.74] don't know, holy the fray grinch genesis of a god what",
+  {
+    segments:[
+      { start:35.34,end:38.74,words:[] },
+      { start:38.74,end:42.06,words:[
+        { start:38.74,text:"don't" },
+        { start:39.08,text:'know,' },
+        { start:39.42,text:'holy' }
+      ] }
+    ]
+  }
+);
+assert.equal(cadenceRepair.shifts,1);
+assert.match(cadenceRepair.text,/I don't know,/);
+assert.match(cadenceRepair.text,/\[0:39\.42\] holy the fray/);
+const cappedSegmentRepair = repairEnrichmentLyricBreaksResult(
+  '[0:55.94] they killed themselves off in so many ways felt like hunting\n[0:59.98] them down for so many days man i was feeling so',
+  {
+    segments:[
+      { start:55.94,end:59.98,words:Array.from({ length:11 },(_,index) => ({ start:55.94 + index * .34,text:`w${index}` })) },
+      { start:59.98,end:62.84,words:[
+        { start:59.98,text:'them' },
+        { start:60.22,text:'down' },
+        { start:60.48,text:'for' },
+        { start:60.72,text:'so' },
+        { start:60.96,text:'many' }
+      ] }
+    ]
+  }
+);
+assert.equal(cappedSegmentRepair.shifts,1);
+assert.match(cappedSegmentRepair.text,/hunting them down for so/);
 assert.equal(privateAudioMetadataPayload({ estimatedBpm:900 }).estimatedBpm,null);
 assert.equal(privateAudioMetadataPayload({ energyScore:.72 }).energyScore,.72);
 assert.equal(privateTagSuggestions([{ value:'late-night',category:'time-of-day',confidence:.7 }]).length,1);
@@ -139,5 +172,7 @@ assert.match(enrichmentSource,/data-analysis-status/);
 assert.match(enrichmentSource,/data-lyrics-review/);
 assert.match(enrichmentSource,/ENRICHMENT_SUGGESTION_SUMMARY_COLUMNS/);
 assert.match(enrichmentSource,/assignEraToFolder/);
+assert.match(enrichmentSource,/joinFocusedEnrichmentLyricLine/);
+assert.match(enrichmentSource,/No clear automatic breaks found/);
 
 console.log('enrichment contract tests passed');

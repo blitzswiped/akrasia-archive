@@ -19,6 +19,9 @@
   var enrichmentPayloadPromises = new Map();
   var enrichmentDraftSaveTimer = 0;
   var enrichmentEraGuesses = [];
+  var enrichmentFocusedLineIndex = -1;
+  var enrichmentLineBreakUndoDraft = '';
+  var enrichmentLineBreakUndoSuggestionId = '';
   var ENRICHMENT_REVIEW_STATE_KEY = 'akrasia-enrichment-review-state-v2';
   var ENRICHMENT_DRAFTS_KEY = 'akrasia-enrichment-local-drafts-v1';
   var ENRICHMENT_SUGGESTION_SUMMARY_COLUMNS = 'id,asset_id,kind,confidence,evidence,model_name,model_version,source_revision_id,source_sha256,cache_key,status,review_note,reviewed_at,reviewed_by,created_at,updated_at';
@@ -641,6 +644,9 @@
       saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
     }
     enrichmentSelectedSuggestionId = id;
+    enrichmentFocusedLineIndex = -1;
+    enrichmentLineBreakUndoDraft = '';
+    enrichmentLineBreakUndoSuggestionId = '';
     var recoveredDraft = enrichmentLocalDraft(id);
     enrichmentEditorDraft = recoveredDraft === null ? '' : recoveredDraft;
     enrichmentEditorDraftInitializedFor = recoveredDraft === null ? '' : id;
@@ -672,6 +678,9 @@
     enrichmentSelectedSuggestionId = '';
     enrichmentEditorDraft = '';
     enrichmentEditorDraftInitializedFor = '';
+    enrichmentFocusedLineIndex = -1;
+    enrichmentLineBreakUndoDraft = '';
+    enrichmentLineBreakUndoSuggestionId = '';
     persistEnrichmentReviewState();
     document.getElementById('adminFileWorkspace')?.classList.remove('has-selection','enrichment-lyrics-open');
     renderAdminWorkspace();
@@ -883,44 +892,181 @@
     }).filter(Boolean).join('\n'));
   }
 
-  function repairEnrichmentLyricBreaks(text) {
-    var lines = enrichmentDraftLines(cleanSyncedLyrics(text));
-    if(!lines.length) return cleanSyncedLyrics(text);
-    var vocalLines = lines.filter(line => line.text !== '...');
-    var periodRatio = vocalLines.length ? vocalLines.filter(line => /\.$/.test(line.text) && !/\.{3,}$/.test(line.text)).length / vocalLines.length : 0;
-    if(periodRatio >= .58) vocalLines.forEach(line => { line.text = line.text.replace(/\.$/,''); });
-    var repaired = [];
-    lines.forEach(line => {
-      line.isPause = line.text === '...';
-      var previous = repaired[repaired.length - 1];
-      if(!previous || previous.isPause || line.isPause || previous.lane !== line.lane) {
-        repaired.push(line);
-        return;
-      }
-      var gap = Number(line.time || 0) - Number(previous.time || 0);
-      var combinedWords = `${previous.text} ${line.text}`.trim().split(/\s+/).length;
-      var connective = /\b(and|but|or|because|cause|so|that|when|while|if|to|of|for|with|like|from|as|a|an|the)$/i.test(previous.text);
-      var clearlyIncomplete = !/[.!?…]$/.test(previous.text) && /^(?:[a-z]|\(|'|"|\[)/.test(line.text) && previous.text.split(/\s+/).length <= 7;
-      if(gap >= 0 && gap <= 3.4 && combinedWords <= 18 && (connective || (gap <= 1.25 && clearlyIncomplete))) {
-        previous.text = cleanSingleLine(`${previous.text} ${line.text}`,500);
-      } else {
-        repaired.push(line);
+  function enrichmentSegmentNear(payload,time) {
+    var segments = Array.isArray(payload?.segments) ? payload.segments : [];
+    var closest = null;
+    var distance = Infinity;
+    segments.forEach(segment => {
+      var value = Math.abs(Number(segment?.start || 0) - Number(time || 0));
+      if(value < distance) {
+        closest = segment;
+        distance = value;
       }
     });
-    return serializeEnrichmentDraftLines(repaired);
+    return closest && distance <= .55 ? closest : null;
+  }
+
+  function enrichmentShiftedLineTime(line,payload,movedWords,totalWords) {
+    var segment = enrichmentSegmentNear(payload,line.time);
+    var words = Array.isArray(segment?.words) ? segment.words : [];
+    var timedWord = words[movedWords];
+    if(Number.isFinite(Number(timedWord?.start))) return Number(timedWord.start);
+    var start = Number(segment?.start);
+    var end = Number(segment?.end);
+    if(Number.isFinite(start) && Number.isFinite(end) && end > start && totalWords > 0) {
+      return start + (end - start) * Math.min(.92,movedWords / totalWords);
+    }
+    return Number(line.time || 0);
+  }
+
+  function repairEnrichmentLyricBreaksResult(text,payload) {
+    var lines = enrichmentDraftLines(cleanSyncedLyrics(text));
+    if(!lines.length) return { text:cleanSyncedLyrics(text),merges:0,shifts:0,periodsRemoved:0 };
+    var vocalLines = lines.filter(line => line.text !== '...');
+    var periodRatio = vocalLines.length ? vocalLines.filter(line => /\.$/.test(line.text) && !/\.{3,}$/.test(line.text)).length / vocalLines.length : 0;
+    var periodsRemoved = 0;
+    if(periodRatio >= .58) vocalLines.forEach(line => {
+      var cleaned = line.text.replace(/\.$/,'');
+      if(cleaned !== line.text) periodsRemoved++;
+      line.text = cleaned;
+    });
+    lines.forEach(line => { line.isPause = line.text === '...'; });
+    var merges = 0;
+    var shifts = 0;
+    var dangling = /\b(?:a|an|and|are|as|at|be|because|been|but|cause|could|did|do|does|for|from|had|has|have|he|her|him|his|how|i|if|in|is|it|its|like|my|of|on|or|our|she|should|so|some|that|the|their|them|they|this|to|was|we|were|what|when|where|which|while|who|why|will|with|would|you|your)$/i;
+    for(var index=0; index<lines.length - 1; index++) {
+      var current = lines[index];
+      var next = lines[index + 1];
+      if(current.isPause || next.isPause || current.lane !== next.lane) continue;
+      var currentWords = current.text.trim().split(/\s+/).filter(Boolean);
+      var nextWords = next.text.trim().split(/\s+/).filter(Boolean);
+      if(!currentWords.length || !nextWords.length) continue;
+      var currentSegment = enrichmentSegmentNear(payload,current.time);
+      var segmentEnd = Number(currentSegment?.end);
+      var silence = Number.isFinite(segmentEnd)
+        ? Number(next.time || 0) - segmentEnd
+        : Number(next.time || 0) - Number(current.time || 0);
+      var continuous = Number.isFinite(segmentEnd) ? silence >= -.25 && silence <= .82 : silence >= 0 && silence <= 4.8;
+      var terminal = /[.!?\u2026]$/.test(current.text);
+      var endsDangling = dangling.test(current.text);
+      var nextStartsLower = /^(?:\[unclear\]\s*)?(?:[a-z]|['"(])/.test(next.text);
+      var segmentWords = Array.isArray(currentSegment?.words) ? currentSegment.words.length : 0;
+      var hitModelWordCap = segmentWords >= 10 && segmentWords <= 12 && silence <= .2;
+      var obviouslySplit = currentWords.length <= 2 || nextWords.length <= 3 || endsDangling || hitModelWordCap || (!terminal && nextStartsLower && currentWords.length <= 8);
+      if(!continuous || terminal || !obviouslySplit) continue;
+      var combinedCount = currentWords.length + nextWords.length;
+      if(combinedCount <= 16) {
+        current.text = cleanSingleLine(`${current.text} ${next.text}`,500);
+        lines.splice(index + 1,1);
+        merges++;
+        index = Math.max(-1,index - 1);
+        continue;
+      }
+      var room = Math.max(0,16 - currentWords.length);
+      var maximumMove = Math.min(room,Math.max(0,nextWords.length - 3),4);
+      if(maximumMove < 1) continue;
+      var moveCount = 0;
+      for(var moveIndex=0; moveIndex<maximumMove; moveIndex++) {
+        moveCount = moveIndex + 1;
+        if(/[,:;.!?\u2026]$/.test(nextWords[moveIndex]) && moveCount >= 2) break;
+      }
+      if(endsDangling && moveCount < Math.min(2,maximumMove)) moveCount = Math.min(2,maximumMove);
+      if(moveCount < 1) continue;
+      var originalNextCount = nextWords.length;
+      current.text = cleanSingleLine(`${current.text} ${nextWords.slice(0,moveCount).join(' ')}`,500);
+      next.text = cleanSingleLine(nextWords.slice(moveCount).join(' '),500);
+      next.time = enrichmentShiftedLineTime(next,payload,moveCount,originalNextCount);
+      shifts++;
+    }
+    return { text:serializeEnrichmentDraftLines(lines),merges,shifts,periodsRemoved };
+  }
+
+  function repairEnrichmentLyricBreaks(text,payload) {
+    return repairEnrichmentLyricBreaksResult(text,payload).text;
   }
 
   function initialEnrichmentLyricsDraft(suggestion) {
-    var text = cleanSyncedLyrics(suggestion?.payload?.syncedText || '');
-    if(['pending','needs_review'].includes(suggestion?.status)) return repairEnrichmentLyricBreaks(text);
-    return text;
+    return cleanSyncedLyrics(suggestion?.payload?.syncedText || '');
   }
 
   function cleanEnrichmentLyricBreaks() {
-    enrichmentEditorDraft = repairEnrichmentLyricBreaks(collectEnrichmentLyricsEditor());
+    var before = cleanSyncedLyrics(collectEnrichmentLyricsEditor());
+    var suggestion = enrichmentSuggestionById(enrichmentSelectedSuggestionId);
+    var repaired = repairEnrichmentLyricBreaksResult(before,suggestion?.payload);
+    if(repaired.text === before) {
+      return showAppNotice('No clear automatic breaks found. Select a lyric row, then use join selected + next.');
+    }
+    enrichmentLineBreakUndoDraft = before;
+    enrichmentLineBreakUndoSuggestionId = enrichmentSelectedSuggestionId;
+    enrichmentEditorDraft = repaired.text;
     saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
     renderEnrichmentInspector();
-    showAppNotice('AI punctuation and clearly broken line wraps cleaned. Review the timing before accepting.');
+    window.setTimeout(resizeAllEnrichmentLyricTextareas,0);
+    var changes = repaired.merges + repaired.shifts;
+    showAppNotice(`Reflowed ${changes} broken ${changes === 1 ? 'line' : 'lines'}${repaired.periodsRemoved ? ` and removed ${repaired.periodsRemoved} automatic periods` : ''}.`);
+  }
+
+  function setEnrichmentFocusedLine(index) {
+    enrichmentFocusedLineIndex = Number(index);
+    document.querySelectorAll('[data-enrichment-lyric-row]').forEach((row,rowIndex) => {
+      row.classList.toggle('is-selected-line',rowIndex === enrichmentFocusedLineIndex);
+    });
+  }
+
+  function joinFocusedEnrichmentLyricLine() {
+    var lines = enrichmentDraftLines(collectEnrichmentLyricsEditor());
+    var index = Number(enrichmentFocusedLineIndex);
+    if(!Number.isInteger(index) || index < 0 || index >= lines.length) {
+      return showAppNotice('Select the lyric row whose text should continue into the next row.');
+    }
+    if(index >= lines.length - 1) return showAppNotice('That is already the final lyric row.');
+    var current = lines[index];
+    var next = lines[index + 1];
+    if(current.text === '...' || next.text === '...') return showAppNotice('Instrumental pauses stay as their own row.');
+    if(current.lane !== next.lane) return showAppNotice('Different vocal lanes stay separate. Change the lane first if they belong together.');
+    enrichmentLineBreakUndoDraft = serializeEnrichmentDraftLines(lines);
+    enrichmentLineBreakUndoSuggestionId = enrichmentSelectedSuggestionId;
+    current.text = cleanSingleLine(`${current.text} ${next.text}`,500);
+    lines.splice(index + 1,1);
+    enrichmentEditorDraft = serializeEnrichmentDraftLines(lines);
+    saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
+    renderEnrichmentInspector();
+    window.setTimeout(() => {
+      setEnrichmentFocusedLine(Math.min(index,lines.length - 1));
+      document.querySelectorAll('[data-enrichment-lyric-row] textarea')[Math.min(index,lines.length - 1)]?.focus();
+      resizeAllEnrichmentLyricTextareas();
+    },0);
+    showAppNotice('Joined the selected lyric with the next line.');
+  }
+
+  function undoEnrichmentLineBreakEdit() {
+    if(!enrichmentLineBreakUndoDraft || enrichmentLineBreakUndoSuggestionId !== enrichmentSelectedSuggestionId) {
+      return showAppNotice('There is no line-break change to undo.');
+    }
+    var current = cleanSyncedLyrics(collectEnrichmentLyricsEditor());
+    enrichmentEditorDraft = cleanSyncedLyrics(enrichmentLineBreakUndoDraft);
+    enrichmentLineBreakUndoDraft = current;
+    saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
+    renderEnrichmentInspector();
+    window.setTimeout(resizeAllEnrichmentLyricTextareas,0);
+    showAppNotice('Restored the previous line layout.');
+  }
+
+  function resetEnrichmentLyricsToSuggestion() {
+    var suggestion = enrichmentSuggestionById(enrichmentSelectedSuggestionId);
+    var imported = cleanSyncedLyrics(suggestion?.payload?.syncedText || '');
+    if(!imported) return showAppNotice('This suggestion has no imported transcript to restore.');
+    var current = cleanSyncedLyrics(collectEnrichmentLyricsEditor());
+    if(current === imported) return showAppNotice('The editor already matches the imported AI transcript.');
+    if(!confirm('Reset the current lyric edits to the imported AI transcript? You can undo this once.')) return;
+    enrichmentLineBreakUndoDraft = current;
+    enrichmentLineBreakUndoSuggestionId = enrichmentSelectedSuggestionId;
+    enrichmentEditorDraft = imported;
+    enrichmentFocusedLineIndex = -1;
+    saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
+    renderEnrichmentInspector();
+    window.setTimeout(resizeAllEnrichmentLyricTextareas,0);
+    showAppNotice('Restored the imported transcript. Reflow will now show exactly what it changes.');
   }
 
   function toggleEnrichmentReviewPlayback(id) {
@@ -961,7 +1107,7 @@
       if(evidence.unsure) unsureCount++;
       var certaintyText = evidence.confidence === null ? '?' : `? ${Math.round(evidence.confidence * 100)}%`;
       var certaintyTitle = evidence.words.length ? `Unsure words: ${evidence.words.join(', ')}` : 'Low-confidence transcription. Listen and correct this line.';
-      return `<div class="enrichment-lyric-edit-row${evidence.unsure ? ' is-unsure' : ''}" data-enrichment-lyric-row${evidence.unsure ? ' data-unsure="true"' : ''}>
+      return `<div class="enrichment-lyric-edit-row${evidence.unsure ? ' is-unsure' : ''}${index === enrichmentFocusedLineIndex ? ' is-selected-line' : ''}" data-enrichment-lyric-row${evidence.unsure ? ' data-unsure="true"' : ''} onclick="setEnrichmentFocusedLine(${index})">
       <button type="button" onclick="seekEnrichmentLyric('${escapeAttr(suggestion.id)}',${Number(line.time).toFixed(3)})" title="seek to this line">${escapeHtml(enrichmentTimeText(line.time))}</button>
       <input type="text" inputmode="decimal" value="${escapeAttr(enrichmentTimeText(line.time))}" aria-label="line timestamp" oninput="scheduleEnrichmentDraftCapture()">
       <select aria-label="vocal lane" onchange="scheduleEnrichmentDraftCapture()">${['main','lead','adlib','bg','effect'].map(lane => `<option value="${lane}"${lane === line.lane ? ' selected' : ''}>${lane}</option>`).join('')}</select>
@@ -974,7 +1120,7 @@
     return `<div class="enrichment-lyrics-editor">
       <div class="enrichment-editor-dock">
         <div class="enrichment-wave"><canvas id="enrichmentWaveform"></canvas><span>click a timestamp to seek / the real player remains the audio source</span></div>
-        <div class="enrichment-editor-tools"><button class="enrichment-review-play" type="button" onclick="toggleEnrichmentReviewPlayback('${escapeAttr(suggestion.id)}')">play / pause</button><button class="enrichment-unsure-jump" type="button" onclick="focusNextUnsureLyric()"${unsureCount ? '' : ' disabled'}>next unsure / ${unsureCount}</button><button type="button" onclick="cleanEnrichmentLyricBreaks()">clean line breaks</button><button type="button" onclick="addEnrichmentLyricLine('main',false)">+ lead line</button><button type="button" onclick="addEnrichmentLyricLine('adlib',false)">+ adlib</button><button type="button" onclick="addEnrichmentLyricLine('main',true)">+ instrumental pause</button><button type="button" onclick="previewEnrichmentLyrics('${escapeAttr(suggestion.id)}')">preview in lyrics mode</button></div>
+        <div class="enrichment-editor-tools"><button class="enrichment-review-play" type="button" onclick="toggleEnrichmentReviewPlayback('${escapeAttr(suggestion.id)}')">play / pause</button><button class="enrichment-unsure-jump" type="button" onclick="focusNextUnsureLyric()"${unsureCount ? '' : ' disabled'}>next unsure / ${unsureCount}</button><button type="button" onclick="cleanEnrichmentLyricBreaks()">reflow broken lines</button><button type="button" onclick="joinFocusedEnrichmentLyricLine()">join selected + next</button><button type="button" onclick="undoEnrichmentLineBreakEdit()"${enrichmentLineBreakUndoSuggestionId === suggestion.id && enrichmentLineBreakUndoDraft ? '' : ' disabled'}>undo reflow</button><button type="button" onclick="resetEnrichmentLyricsToSuggestion()">reset AI draft</button><button type="button" onclick="addEnrichmentLyricLine('main',false)">+ lead line</button><button type="button" onclick="addEnrichmentLyricLine('adlib',false)">+ adlib</button><button type="button" onclick="addEnrichmentLyricLine('main',true)">+ instrumental pause</button><button type="button" onclick="previewEnrichmentLyrics('${escapeAttr(suggestion.id)}')">preview in lyrics mode</button></div>
       </div>
       <div class="enrichment-lyric-column-head" aria-hidden="true"><span>seek</span><span>timestamp</span><span>lane</span><span>confidence</span><span>lyric</span><span>remove</span></div>
       <div class="enrichment-lyric-rows">${lineHtml || '<div class="enrichment-empty compact">The model returned no timed vocal lines. Add a line or mark the revision instrumental.</div>'}</div>
