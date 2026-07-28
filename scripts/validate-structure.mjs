@@ -37,6 +37,8 @@ const duplicateFunctions = [...new Set(functionNames.filter((name,index) => func
 check(!duplicateFunctions.length,`duplicate functions: ${duplicateFunctions.map(name => `${name} (${functions.filter(entry => entry[0] === name).map(entry => entry[1]).join(', ')})`).join('; ')}`);
 
 const live = sources.get('live.js') || '';
+const player = sources.get('player.js') || '';
+const polish = fs.readFileSync(path.join(root,'assets','css','polish-responsive.css'),'utf8');
 const saveStart = live.indexOf('async function saveLiveState');
 const saveEnd = live.indexOf('function receiveLiveState',saveStart);
 const saveBody = live.slice(saveStart,saveEnd);
@@ -56,6 +58,11 @@ check(html.includes('id="timelineModeSelect"') && html.includes('id="timelineSca
 check(!html.includes('class="worlds-nav"'),'obsolete Song Worlds mega-navigation is still present');
 check(/function setLiveControlView\(view\)/.test(live),'live control-room view switch is missing');
 check(/var LIVE_PHASES = \['offline','armed','countdown','live','paused','ended'\]/.test(live),'live phase vocabulary is missing');
+check(html.includes('id="pbCoverPlaceholder"'),'mini player artwork fallback is missing');
+check(/function syncMiniPlayerMediaMode\(type\)/.test(player),'mini player media-mode synchronization is missing');
+check(/function refreshMiniPlayerArtwork\(row, type, failedSource, token\)/.test(player),'expired mini player artwork cannot refresh');
+check(/if\(activeMediaType !== 'audio'\) return;\s*var peaks/.test(player),'visual previews can still render a fake audio waveform');
+check(/player-bar\.media-preview \.pb-center,[\s\S]*?display:none!important/.test(polish),'visual preview transport is not force-hidden');
 
 console.log(JSON.stringify({
   indexBytes:Buffer.byteLength(html),
