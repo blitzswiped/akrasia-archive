@@ -181,6 +181,49 @@
     return minutes * 60 + seconds + fraction;
   }
 
+  function normalizeLyricGlow(value,lane) {
+    var normalized = String(value || '').trim().toLowerCase();
+    if(normalized === 'none') normalized = 'off';
+    if(normalized === 'medium') normalized = 'normal';
+    if(['off','soft','normal','high'].includes(normalized)) return normalized;
+    return lane === 'effect' ? 'normal' : 'soft';
+  }
+
+  function normalizeLyricSpeed(value) {
+    var normalized = String(value || '').trim().toLowerCase();
+    if(normalized === 'none') normalized = 'still';
+    if(['still','slow','normal','fast'].includes(normalized)) return normalized;
+    return 'slow';
+  }
+
+  function parseLyricDirectives(value,defaultLane) {
+    var raw = String(value || '').trim();
+    var lane = defaultLane || 'main';
+    var glow = '';
+    var speed = '';
+    for(var index = 0; index < 8; index++) {
+      var match = raw.match(/^\[([^\]]+)\]\s*/);
+      if(!match) break;
+      var directive = match[1].trim().toLowerCase();
+      if(['adlib','bg','background','lead','main','effect'].includes(directive)) {
+        lane = directive === 'background' ? 'bg' : directive;
+      } else if(/^glow\s*:/.test(directive)) {
+        glow = directive.split(':').slice(1).join(':').trim();
+      } else if(/^(?:speed|motion)\s*:/.test(directive)) {
+        speed = directive.split(':').slice(1).join(':').trim();
+      } else {
+        break;
+      }
+      raw = raw.slice(match[0].length).trim();
+    }
+    return {
+      text:raw,
+      lane,
+      glow:normalizeLyricGlow(glow,lane),
+      speed:normalizeLyricSpeed(speed)
+    };
+  }
+
   function parseSyncedLyrics(text) {
     var entries = [];
     cleanSyncedLyrics(text).split('\n').forEach(line => {
@@ -194,14 +237,18 @@
       lyric.split(/\s*\|\|\s*/).forEach((part, splitIndex) => {
         var raw = cleanSingleLine(part, 500);
         if(!raw) return;
-        var lane = splitIndex ? 'adlib' : 'main';
-        var laneMatch = raw.match(/^\[(adlib|bg|background|lead|main|effect)\]\s*(.*)$/i);
-        if(laneMatch) {
-          lane = laneMatch[1].toLowerCase() === 'background' ? 'bg' : laneMatch[1].toLowerCase();
-          raw = laneMatch[2].trim();
-        }
+        var directives = parseLyricDirectives(raw,splitIndex ? 'adlib' : 'main');
+        raw = directives.text;
+        if(!raw) return;
         var isPause = /^(\.{3,}|pause|instrumental)$/i.test(raw);
-        entries.push({ time, text: isPause ? '...' : raw, lane, isPause });
+        entries.push({
+          time,
+          text:isPause ? '...' : raw,
+          lane:directives.lane,
+          glow:directives.glow,
+          speed:directives.speed,
+          isPause
+        });
       });
     });
     return entries.sort((a, b) => a.time - b.time);
@@ -228,10 +275,13 @@
   function lyricFocusLineHtml(line,groupIndex,lineIndex) {
     var words = String(line.text || '').trim().split(/\s+/).filter(Boolean);
     if(!words.length) return '';
+    var glow = normalizeLyricGlow(line.glow,line.lane);
+    var speed = normalizeLyricSpeed(line.speed);
     var group = activeLyricGroups[groupIndex];
     var next = activeLyricGroups[groupIndex + 1];
     var available = next ? Math.max(.7,next.time - group.time - .08) : Math.max(1.4,Math.min(6,words.length * .42));
-    var duration = Math.min(available,Math.max(1.2,Math.min(6,words.length * .42)));
+    var speedScale = { still:1,slow:1,normal:.86,fast:.68 }[speed] || 1;
+    var duration = Math.max(.35,Math.min(available,Math.max(1.2,Math.min(6,words.length * .42))) * speedScale);
     var weights = words.map(word => Math.max(.72,Math.min(1.65,String(word).replace(/[^\p{L}\p{N}]/gu,'').length / 4 || .72)));
     var weightTotal = weights.reduce((sum,value) => sum + value,0) || 1;
     var elapsed = 0;
@@ -243,7 +293,7 @@
       var floatY = -6 - ((index + lineIndex) % 3) * 3;
       return `<span class="lyrics-focus-word" data-word-start="${start.toFixed(3)}" data-word-end="${end.toFixed(3)}" style="--word-order:${index};--word-float-x:${floatX}px;--word-float-y:${floatY}px;--word-duration:${(2.6 + index % 4 * .34).toFixed(2)}s">${escapeHtml(word)}</span>`;
     }).join('');
-    return `<span class="lyrics-focus-line" data-lane="${escapeAttr(line.lane)}">${markup}</span>`;
+    return `<span class="lyrics-focus-line" data-lane="${escapeAttr(line.lane)}" data-glow="${escapeAttr(glow)}" data-speed="${escapeAttr(speed)}">${markup}</span>`;
   }
 
   var lyricCenterFrame = 0;
@@ -280,7 +330,7 @@
     lyricMotionFrame = 0;
     var fs = document.getElementById('fsPlayer');
     if(document.hidden || !fs?.classList.contains('active') || !fs.classList.contains('lyrics-focus') || !currentAudio) return;
-    var interval = isCompactVisual ? 44 : 30;
+    var interval = archiveSettings?.motion === 'off' ? 80 : (isCompactVisual ? 52 : 36);
     if(frameTime - lyricMotionLastFrame >= interval) {
       lyricMotionLastFrame = frameTime;
       updateLyricsDisplay(currentAudio.currentTime);

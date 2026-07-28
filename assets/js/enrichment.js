@@ -852,7 +852,13 @@
   }
 
   function enrichmentDraftLines(text) {
-    return parseSyncedLyrics(text).map(entry => ({ time:entry.time,lane:entry.lane || 'main',text:entry.isPause ? '...' : entry.text }));
+    return parseSyncedLyrics(text).map(entry => ({
+      time:entry.time,
+      lane:entry.lane || 'main',
+      glow:normalizeLyricGlow(entry.glow,entry.lane || 'main'),
+      speed:normalizeLyricSpeed(entry.speed),
+      text:entry.isPause ? '...' : entry.text
+    }));
   }
 
   function enrichmentLyricEvidence(payload,line) {
@@ -888,7 +894,13 @@
       var text = line.isPause || line.text === '...' ? '...' : cleanSingleLine(line.text,500);
       if(!text) return '';
       var lane = ['main','lead','adlib','bg','effect'].includes(line.lane) ? line.lane : 'main';
-      return `[${enrichmentTimeText(line.time)}] ${lane === 'main' ? '' : `[${lane}] `}${text}`;
+      var glow = normalizeLyricGlow(line.glow,lane);
+      var speed = normalizeLyricSpeed(line.speed);
+      var directives = [];
+      if(lane !== 'main') directives.push(`[${lane}]`);
+      if(glow !== normalizeLyricGlow('',lane)) directives.push(`[glow:${glow}]`);
+      if(speed !== 'slow') directives.push(`[speed:${speed}]`);
+      return `[${enrichmentTimeText(line.time)}] ${directives.length ? `${directives.join(' ')} ` : ''}${text}`;
     }).filter(Boolean).join('\n'));
   }
 
@@ -1107,12 +1119,18 @@
       if(evidence.unsure) unsureCount++;
       var certaintyText = evidence.confidence === null ? '?' : `? ${Math.round(evidence.confidence * 100)}%`;
       var certaintyTitle = evidence.words.length ? `Unsure words: ${evidence.words.join(', ')}` : 'Low-confidence transcription. Listen and correct this line.';
+      var glow = normalizeLyricGlow(line.glow,line.lane);
+      var speed = normalizeLyricSpeed(line.speed);
       return `<div class="enrichment-lyric-edit-row${evidence.unsure ? ' is-unsure' : ''}${index === enrichmentFocusedLineIndex ? ' is-selected-line' : ''}" data-enrichment-lyric-row${evidence.unsure ? ' data-unsure="true"' : ''} onclick="setEnrichmentFocusedLine(${index})">
       <button type="button" onclick="seekEnrichmentLyric('${escapeAttr(suggestion.id)}',${Number(line.time).toFixed(3)})" title="seek to this line">${escapeHtml(enrichmentTimeText(line.time))}</button>
-      <input type="text" inputmode="decimal" value="${escapeAttr(enrichmentTimeText(line.time))}" aria-label="line timestamp" oninput="scheduleEnrichmentDraftCapture()">
-      <select aria-label="vocal lane" onchange="scheduleEnrichmentDraftCapture()">${['main','lead','adlib','bg','effect'].map(lane => `<option value="${lane}"${lane === line.lane ? ' selected' : ''}>${lane}</option>`).join('')}</select>
+      <input data-lyric-time type="text" inputmode="decimal" value="${escapeAttr(enrichmentTimeText(line.time))}" aria-label="line timestamp" oninput="scheduleEnrichmentDraftCapture()">
+      <select data-lyric-lane aria-label="vocal lane" onchange="scheduleEnrichmentDraftCapture()">${['main','lead','adlib','bg','effect'].map(lane => `<option value="${lane}"${lane === line.lane ? ' selected' : ''}>${lane}</option>`).join('')}</select>
       <span class="enrichment-lyric-certainty" title="${escapeAttr(certaintyTitle)}"${evidence.unsure ? '' : ' aria-hidden="true"'}>${evidence.unsure ? escapeHtml(certaintyText) : ''}</span>
-      <textarea rows="1" maxlength="500" aria-label="lyric text" oninput="resizeEnrichmentLyricTextarea(this);scheduleEnrichmentDraftCapture()">${escapeHtml(line.text)}</textarea>
+      <textarea data-lyric-text rows="1" maxlength="500" aria-label="lyric text" oninput="resizeEnrichmentLyricTextarea(this);scheduleEnrichmentDraftCapture()">${escapeHtml(line.text)}</textarea>
+      <div class="enrichment-line-effects" aria-label="line appearance">
+        <label><span>glow</span><select data-lyric-glow aria-label="line glow" onchange="scheduleEnrichmentDraftCapture()">${['off','soft','normal','high'].map(value => `<option value="${value}"${value === glow ? ' selected' : ''}>${value}</option>`).join('')}</select></label>
+        <label><span>speed</span><select data-lyric-speed aria-label="line motion speed" onchange="scheduleEnrichmentDraftCapture()">${['still','slow','normal','fast'].map(value => `<option value="${value}"${value === speed ? ' selected' : ''}>${value}</option>`).join('')}</select></label>
+      </div>
       <button type="button" onclick="removeEnrichmentLyricLine(${index})" aria-label="remove line">x</button>
     </div>`;
     }).join('');
@@ -1122,7 +1140,7 @@
         <div class="enrichment-wave"><canvas id="enrichmentWaveform"></canvas><span>click a timestamp to seek / the real player remains the audio source</span></div>
         <div class="enrichment-editor-tools"><button class="enrichment-review-play" type="button" onclick="toggleEnrichmentReviewPlayback('${escapeAttr(suggestion.id)}')">play / pause</button><button class="enrichment-unsure-jump" type="button" onclick="focusNextUnsureLyric()"${unsureCount ? '' : ' disabled'}>next unsure / ${unsureCount}</button><button type="button" onclick="cleanEnrichmentLyricBreaks()">reflow broken lines</button><button type="button" onclick="joinFocusedEnrichmentLyricLine()">join selected + next</button><button type="button" onclick="undoEnrichmentLineBreakEdit()"${enrichmentLineBreakUndoSuggestionId === suggestion.id && enrichmentLineBreakUndoDraft ? '' : ' disabled'}>undo reflow</button><button type="button" onclick="resetEnrichmentLyricsToSuggestion()">reset AI draft</button><button type="button" onclick="addEnrichmentLyricLine('main',false)">+ lead line</button><button type="button" onclick="addEnrichmentLyricLine('adlib',false)">+ adlib</button><button type="button" onclick="addEnrichmentLyricLine('main',true)">+ instrumental pause</button><button type="button" onclick="previewEnrichmentLyrics('${escapeAttr(suggestion.id)}')">preview in lyrics mode</button></div>
       </div>
-      <div class="enrichment-lyric-column-head" aria-hidden="true"><span>seek</span><span>timestamp</span><span>lane</span><span>confidence</span><span>lyric</span><span>remove</span></div>
+      <div class="enrichment-lyric-column-head" aria-hidden="true"><span>seek</span><span>timestamp</span><span>lane</span><span>confidence</span><span>lyric</span><span>appearance</span><span>remove</span></div>
       <div class="enrichment-lyric-rows">${lineHtml || '<div class="enrichment-empty compact">The model returned no timed vocal lines. Add a line or mark the revision instrumental.</div>'}</div>
       <details class="enrichment-raw-draft"><summary>edit Akrasia synced text directly</summary><textarea id="enrichmentLyricsRaw" rows="10" oninput="captureEnrichmentRawDraft(this.value)">${escapeHtml(enrichmentEditorDraft)}</textarea><button type="button" onclick="applyRawEnrichmentLyrics()">apply raw edit</button></details>
       ${comparison}
@@ -1143,15 +1161,13 @@
   function collectEnrichmentLyricsEditor() {
     var rows = Array.from(document.querySelectorAll('[data-enrichment-lyric-row]'));
     if(!rows.length) return cleanSyncedLyrics(enrichmentEditorDraft);
-    return cleanSyncedLyrics(rows.map(row => {
-      var inputs = row.querySelectorAll('input,select,textarea');
-      var time = parseLyricTime(inputs[0]?.value);
-      var lane = inputs[1]?.value || 'main';
-      var text = cleanSingleLine(inputs[2]?.value,500);
-      if(time === null || !text) return '';
-      var lanePrefix = lane === 'main' ? '' : `[${lane}] `;
-      return `[${enrichmentTimeText(time)}] ${lanePrefix}${text}`;
-    }).filter(Boolean).join('\n'));
+    return serializeEnrichmentDraftLines(rows.map(row => ({
+      time:parseLyricTime(row.querySelector('[data-lyric-time]')?.value),
+      lane:row.querySelector('[data-lyric-lane]')?.value || 'main',
+      glow:row.querySelector('[data-lyric-glow]')?.value || 'soft',
+      speed:row.querySelector('[data-lyric-speed]')?.value || 'slow',
+      text:cleanSingleLine(row.querySelector('[data-lyric-text]')?.value,500)
+    })).filter(line => line.time !== null && line.text));
   }
 
   function applyRawEnrichmentLyrics() {
