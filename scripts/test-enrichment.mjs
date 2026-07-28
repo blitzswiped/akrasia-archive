@@ -118,8 +118,8 @@ const enrichmentHelpers = `
   function stableSourceHash(value){let h=2166136261;for(const c of String(value||'')){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0).toString(16).padStart(8,'0')}
   ${playerLyricsBlock}
 `;
-const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions } = new Function(
-  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions };`
+const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, buildEnrichmentFlowGroups, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions } = new Function(
+  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, buildEnrichmentFlowGroups, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions };`
 )();
 
 const lyrics = privateLyricsPayload({
@@ -213,6 +213,14 @@ assert.match(wordTimingControls,/word timing/);
 assert.match(wordTimingControls,/2 changed/);
 assert.match(wordTimingControls,/data-word-settings=/);
 assert.equal((wordTimingControls.match(/data-lyric-word-speed/g) || []).length,0);
+const flowGroups = buildEnrichmentFlowGroups([
+  { time:12,lane:'main',text:'lead line' },
+  { time:12.02,lane:'adlib',text:'response' },
+  { time:18,lane:'main',text:'next line' }
+]);
+assert.equal(flowGroups.length,2);
+assert.deepEqual(flowGroups[0].lines.map(line => line.lane),['main','adlib']);
+assert.deepEqual(flowGroups[0].lines.map(line => line.editorIndex),[0,1]);
 assert.equal(privateAudioMetadataPayload({ estimatedBpm:900 }).estimatedBpm,null);
 assert.equal(privateAudioMetadataPayload({ energyScore:.72 }).energyScore,.72);
 assert.equal(privateTagSuggestions([{ value:'late-night',category:'time-of-day',confidence:.7 }]).length,1);
@@ -319,12 +327,14 @@ assert.match(sql,/invalid loudness/);
 assert.match(sql,/analysis_features jsonb/);
 assert.match(sql,/invalid era cover storage path/);
 assert.match(sql,/parent_era_id uuid references public\.archive_eras\(id\) on delete set null/);
+assert.match(sql,/notes text not null default ''/);
 assert.match(sql,/archive_eras_parent_order_idx/);
 assert.match(sql,/era hierarchy cycle detected/);
 
 const eraHierarchySql = fs.readFileSync(new URL('../supabase-era-hierarchy.sql', import.meta.url),'utf8');
 assert.match(eraHierarchySql,/^begin;/);
 assert.match(eraHierarchySql,/add column if not exists parent_era_id/);
+assert.match(eraHierarchySql,/add column if not exists notes/);
 assert.match(eraHierarchySql,/with recursive era_ancestors/);
 assert.match(eraHierarchySql,/create trigger archive_era_validation/);
 assert.match(eraHierarchySql,/commit;\s*$/);
@@ -343,10 +353,18 @@ assert.match(enrichmentSource,/joinFocusedEnrichmentLyricLine/);
 assert.match(enrichmentSource,/No clear automatic breaks found/);
 assert.match(enrichmentSource,/data-lyric-glow/);
 assert.match(enrichmentSource,/data-lyric-speed/);
+assert.match(enrichmentSource,/enrichmentReviewSearch/);
+assert.match(enrichmentSource,/enrichmentLyricFlowHtml/);
+assert.match(enrichmentSource,/archiveEraJournalHtml/);
 assert.match(enrichmentSource,/prepareArchiveSubEra/);
 assert.match(enrichmentSource,/creativeEraChapterCardsHtml/);
 assert.match(enrichmentSource,/chapters inside this era/);
 assert.match(playerSource,/data-glow="\$\{escapeAttr\(glow\)\}"/);
 assert.match(playerSource,/data-speed="\$\{escapeAttr\(speed\)\}"/);
+
+const worldsSource = fs.readFileSync(new URL('../assets/js/worlds.js', import.meta.url),'utf8');
+assert.match(worldsSource,/function worldNoteEntries/);
+assert.match(worldsSource,/from the archive journal/);
+assert.match(worldsSource,/\['overview','versions','artifacts','notes','lyrics','credits'\]/);
 
 console.log('enrichment contract tests passed');

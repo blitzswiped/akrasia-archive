@@ -2,6 +2,8 @@ begin;
 
 alter table public.archive_eras
   add column if not exists parent_era_id uuid references public.archive_eras(id) on delete set null;
+alter table public.archive_eras
+  add column if not exists notes text not null default '';
 
 create index if not exists archive_eras_parent_order_idx
 on public.archive_eras(parent_era_id,display_order,name);
@@ -16,6 +18,7 @@ begin
   new.name := left(btrim(regexp_replace(coalesce(new.name,''),'[[:cntrl:]<>]','','g')),100);
   new.slug := public.archive_slug(coalesce(nullif(new.slug,''),new.name));
   new.description := left(regexp_replace(coalesce(new.description,''),'[[:cntrl:]]','','g'),4000);
+  new.notes := left(replace(coalesce(new.notes,''),E'\r',''),12000);
   new.cover_url := left(btrim(coalesce(new.cover_url,'')),2000);
   new.cover_storage_path := left(btrim(regexp_replace(coalesce(new.cover_storage_path,''),'[[:cntrl:]<>]','','g')),500);
   if char_length(new.name) not between 1 and 100 or char_length(new.slug) not between 1 and 80 then raise exception 'invalid era identity'; end if;

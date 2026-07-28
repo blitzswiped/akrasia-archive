@@ -214,8 +214,91 @@
     syncViewerExitControl();
   }
 
+  function worldReadableNoteText(row) {
+    if(!row) return '';
+    var type = row.getAttribute('data-type');
+    var role = row.getAttribute('data-asset-role');
+    if(type === 'text' || role === 'note') return String(row.getAttribute('data-text-content') || row.getAttribute('data-notes') || '').trim();
+    return String(row.getAttribute('data-notes') || '').trim();
+  }
+
+  function worldNoteEntries(group) {
+    var seen = new Set();
+    return (group?.rows || []).map(row => {
+      var text = worldReadableNoteText(row);
+      if(!text) return null;
+      var fingerprint = text.toLowerCase().replace(/\s+/g,' ').slice(0,1200);
+      if(seen.has(fingerprint)) return null;
+      seen.add(fingerprint);
+      var folderNote = typeof isFolderNoteRow === 'function' && isFolderNoteRow(row);
+      var type = row.getAttribute('data-type') || 'file';
+      var version = row.getAttribute('data-ver') || '';
+      return {
+        row,
+        key:worldRowKey(row),
+        text,
+        folderNote,
+        title:folderNote ? `${folderDisplayName(row.getAttribute('data-sub') || group.title)} journal` : (type === 'text' ? row.getAttribute('data-title') || 'archive note' : `${version || row.getAttribute('data-title') || 'song'} notes`),
+        source:folderNote ? 'song folder note' : (type === 'text' ? 'text artifact' : `${version || type} metadata note`),
+        date:row.getAttribute('data-asset-date') || '',
+        type
+      };
+    }).filter(Boolean).sort((a,b) => b.date.localeCompare(a.date));
+  }
+
   function worldArtifactRows(group) {
-    return group.rows.filter(row => row.getAttribute('data-type') !== 'audio' || ['visual','note','artifact'].includes(row.getAttribute('data-asset-role')));
+    var notes = new Set(worldNoteEntries(group).map(entry => entry.row));
+    return group.rows.filter(row => !notes.has(row) && (row.getAttribute('data-type') !== 'audio' || ['visual','artifact'].includes(row.getAttribute('data-asset-role'))));
+  }
+
+  function openWorldNoteSource(key) {
+    var row = rowByWorldKey(key);
+    if(row) openWorldAsset(key);
+  }
+
+  function editWorldNote(key) {
+    if(!requireAdmin()) return;
+    var row = rowByWorldKey(key);
+    if(!row) return;
+    if(typeof isFolderNoteRow === 'function' && isFolderNoteRow(row)) {
+      adminOpenFolderEditor(row.getAttribute('data-sub') || '');
+      return;
+    }
+    openEditAsset(row);
+  }
+
+  function editWorldFolderNote(key) {
+    if(!requireAdmin()) return;
+    var group = getWorld(key);
+    if(!group) return;
+    var note = worldNoteEntries(group).find(entry => entry.folderNote);
+    var path = note?.row?.getAttribute('data-sub') || group.audio[0]?.getAttribute('data-sub') || group.rows[0]?.getAttribute('data-sub') || '';
+    if(path && findFolderBlock(path)) {
+      adminOpenFolderEditor(path);
+      return;
+    }
+    var lead = group.audio[group.audio.length - 1] || group.rows[0];
+    if(lead) openEditAsset(lead);
+  }
+
+  function worldNoteCardHtml(entry,index,featured) {
+    var display = featured && entry.text.length > 1800 ? `${entry.text.slice(0,1800).trim()}...` : entry.text;
+    var editable = isAdmin && (entry.folderNote || entry.type !== 'text');
+    return `<article class="world-note-card${featured ? ' featured' : ''}" style="--note-index:${index}">
+      <header><small>${escapeHtml(entry.source)}${entry.date ? ` / ${escapeHtml(displayDateFromISO(entry.date))}` : ''}</small><span>${String(index + 1).padStart(2,'0')}</span></header>
+      <h3>${escapeHtml(entry.title)}</h3>
+      <div class="world-note-body">${escapeHtml(display).replace(/\n{2,}/g,'</p><p>').replace(/\n/g,'<br>').replace(/^/,'<p>').replace(/$/,'</p>')}</div>
+      <footer><button type="button" onclick="openWorldNoteSource(decodeURIComponent('${encodeURIComponent(entry.key)}'))">open source</button>${editable ? `<button type="button" onclick="editWorldNote(decodeURIComponent('${encodeURIComponent(entry.key)}'))">edit note</button>` : ''}</footer>
+    </article>`;
+  }
+
+  function worldNotesHtml(group,featured) {
+    var notes = worldNoteEntries(group);
+    if(!notes.length) return `<div class="world-empty compact">No note has been written for this Song World yet.${isAdmin ? `<br><button class="world-action" type="button" onclick="editWorldFolderNote(decodeURIComponent('${encodeURIComponent(group.key)}'))">write the first note</button>` : ''}</div>`;
+    if(featured) {
+      return `<section class="world-note-feature"><div class="world-section-head"><h3>from the archive journal</h3><span>${notes.length} note${notes.length === 1 ? '' : 's'} connected</span></div>${worldNoteCardHtml(notes[0],0,true)}<div class="world-note-feature-actions"><button class="world-action" type="button" onclick="switchSongWorldTab('notes')">read every note</button>${isAdmin ? `<button class="world-action" type="button" onclick="editWorldFolderNote(decodeURIComponent('${encodeURIComponent(group.key)}'))">edit folder note</button>` : ''}</div></section>`;
+    }
+    return `<div class="world-notes-grid">${notes.map((entry,index) => worldNoteCardHtml(entry,index,false)).join('')}</div>${isAdmin ? `<button class="world-action world-note-add" type="button" onclick="editWorldFolderNote(decodeURIComponent('${encodeURIComponent(group.key)}'))">write or edit the song folder note</button>` : ''}`;
   }
 
   function worldOverviewHtml(group, lead) {
@@ -224,6 +307,7 @@
     var latestDate = group.latestDate ? displayDateFromISO(group.latestDate) : 'undated';
     var eras = typeof acceptedErasForRow === 'function' ? acceptedErasForRow(lead) : [];
     var analysis = typeof worldEnrichmentSummaryHtml === 'function' ? worldEnrichmentSummaryHtml(group) : '';
+    var notes = worldNoteEntries(group);
     return `<div class="world-overview-grid">
       <section class="world-overview-stats" aria-label="world overview">
         <div><small>featured version</small><strong>${escapeHtml(latestVersion)}</strong></div>
@@ -233,6 +317,7 @@
         <div><small>latest change</small><strong>${escapeHtml(latestDate)}</strong></div>
       </section>
       <section class="world-section world-overview-story"><div class="world-section-head"><h3>the story</h3><span>identity + context</span></div><p>${escapeHtml(group.summary || `${group.rows.length} archive files connected across recordings, visual memory, notes, and artifacts.`)}</p></section>
+      ${notes.length || isAdmin ? worldNotesHtml(group,true) : ''}
       ${analysis ? `<details class="world-analysis-details"><summary>accepted metadata</summary>${analysis}</details>` : ''}
       <section class="world-section"><div class="world-section-head"><h3>latest signals</h3><span>${recent.length} recent files</span></div><div class="world-file-list">${recent.map((row,index) => worldFileHtml(row,index,row === lead && row.getAttribute('data-type') === 'audio' ? 'play latest' : '')).join('')}</div></section>
     </div>`;
@@ -265,14 +350,18 @@
     var credits = group.credits.length ? group.credits.map(item => `<div class="credit-item"><small>${escapeHtml(item.role)}</small><strong>${escapeHtml(item.name)}</strong></div>`).join('') : '<div class="world-empty compact">No credits added yet.</div>';
     var adminPass = isAdmin && lead && lead.getAttribute('data-storage-path') ? `<section class="world-section"><div class="world-section-head"><h3>temporary access link</h3><span>admin / signed media url</span></div><div class="access-pass"><select id="passAsset">${group.rows.filter(row => row.getAttribute('data-storage-path')).map(row => `<option value="${escapeAttr(worldRowKey(row))}">${escapeHtml(row.getAttribute('data-title'))}</option>`).join('')}</select><select id="passDuration"><option value="3600">1 hour</option><option value="21600">6 hours</option><option value="86400">24 hours</option><option value="604800">7 days</option></select><button class="world-action" type="button" onclick="createTemporaryAccessLink()">create link</button></div><div class="access-result" id="accessPassResult">The generated link expires automatically.</div></section>` : '';
     if(tab === 'versions') return `<section class="world-section"><div class="world-section-head"><h3>versions</h3><span>${group.audio.length} recorded states</span></div><div class="world-file-list">${versions}</div></section>${group.audio.length > 1 ? comparisonHtml(group) : ''}`;
-    if(tab === 'artifacts') return `<section class="world-section"><div class="world-section-head"><h3>artifacts</h3><span>${artifacts.length} visuals, notes + attached files</span></div><div class="world-file-list">${artifacts.length ? artifacts.map((row,index) => worldFileHtml(row,index)).join('') : '<div class="world-empty compact">This world has no attached artifacts yet.</div>'}</div></section>`;
+    if(tab === 'artifacts') return `<section class="world-section"><div class="world-section-head"><h3>artifacts</h3><span>${artifacts.length} visuals + attached files</span></div><div class="world-file-list">${artifacts.length ? artifacts.map((row,index) => worldFileHtml(row,index)).join('') : '<div class="world-empty compact">This world has no attached artifacts yet.</div>'}</div></section>`;
+    if(tab === 'notes') {
+      var noteCount = worldNoteEntries(group).length;
+      return `<section class="world-section world-notes-room"><div class="world-section-head"><h3>archive journal</h3><span>${noteCount} readable note${noteCount === 1 ? '' : 's'}</span></div>${worldNotesHtml(group,false)}</section>`;
+    }
     if(tab === 'lyrics') return `<section class="world-section"><div class="world-section-head"><h3>lyrics</h3><span>${worldLyricsRows(group).length} accepted revisions</span></div><div class="world-lyrics-list">${worldLyricsHtml(group)}</div></section>`;
     if(tab === 'credits') return `<section class="world-section"><div class="world-section-head"><h3>credits</h3><span>shared across this world</span></div><div class="credits-grid">${credits}</div></section>${adminPass}`;
     return worldOverviewHtml(group, lead);
   }
 
   function switchSongWorldTab(tab) {
-    if(!['overview','versions','artifacts','lyrics','credits'].includes(tab)) return;
+    if(!['overview','versions','artifacts','notes','lyrics','credits'].includes(tab)) return;
     activeWorldTab = tab;
     openSongWorld(activeWorldKey, tab);
     var body = document.getElementById('worldsBody');
@@ -415,7 +504,7 @@
     viewport?.setAttribute('aria-hidden','false');
     var sameWorld = activeWorldKey === key;
     activeWorldKey = key;
-    activeWorldTab = ['overview','versions','artifacts','lyrics','credits'].includes(tab) ? tab : (sameWorld ? activeWorldTab : 'overview');
+    activeWorldTab = ['overview','versions','artifacts','notes','lyrics','credits'].includes(tab) ? tab : (sameWorld ? activeWorldTab : 'overview');
     worldsCurrentView = 'worlds';
     setWorldNav('worlds');
     destroyWorldAudioTools();
@@ -429,10 +518,12 @@
       ['overview','overview',group.rows.length],
       ['versions','versions',group.audio.length],
       ['artifacts','artifacts',worldArtifactRows(group).length],
+      ['notes','notes',worldNoteEntries(group).length],
       ['lyrics','lyrics',worldLyricsRows(group).length],
       ['credits','credits',group.credits.length]
     ].map(item => `<button class="${item[0] === activeWorldTab ? 'active' : ''}" type="button" role="tab" aria-selected="${item[0] === activeWorldTab ? 'true' : 'false'}" onclick="switchSongWorldTab('${item[0]}')"><span>${item[1]}</span><small>${item[2]}</small></button>`).join('');
     body.innerHTML = `<article class="song-world" data-world-tab="${escapeAttr(activeWorldTab)}" style="--world-color:${escapeAttr(group.moodColor)}"><aside class="song-world-art-column"><div class="song-world-art">${art}${coverPicker}</div><div class="song-world-id"><div class="worlds-kicker">song world / ${group.rows.length} connected files</div><div class="world-title-heading"><h2>${escapeHtml(group.title)}</h2>${isAdmin ? '<button type="button" onclick="toggleWorldTitleEditor()">rename</button>' : ''}</div><div class="world-title-editor" id="worldTitleEditor" hidden><input id="worldTitleInput" type="text" maxlength="120" value="${escapeAttr(group.title)}" aria-label="world title"><button class="world-action" id="worldTitleSave" type="button" onclick="saveWorldTitle(decodeURIComponent('${encodeURIComponent(group.key)}'))">save title</button></div><p>${escapeHtml(group.summary || `${group.rows.length} archive files connected across versions, visuals, notes, and artifacts.`)}</p></div><div class="song-world-controls"><button class="world-action primary" type="button" onclick="openWorldAsset(decodeURIComponent('${encodeURIComponent(worldRowKey(lead))}'))">play featured</button><button class="world-action" type="button" onclick="switchSongWorldTab('versions')">versions</button>${accentPicker}<details class="world-more-actions"><summary class="world-action">...</summary><div><button class="world-action" type="button" onclick="renderVersionConstellation(decodeURIComponent('${encodeURIComponent(group.key)}'))">constellation</button><button class="world-action" type="button" onclick="renderArchiveObject(decodeURIComponent('${encodeURIComponent(group.key)}'))">object view</button><button class="world-action" type="button" onclick="openArchiveConnections(rowByWorldKey(decodeURIComponent('${encodeURIComponent(worldRowKey(lead))}')))">connections</button>${isAdmin ? `<button class="world-action" type="button" onclick="queueWorldForLive(decodeURIComponent('${encodeURIComponent(group.key)}'))">queue live</button>` : ''}</div></details></div></aside><div class="song-world-content"><nav class="song-world-tabs" role="tablist" aria-label="song world sections">${tabs}</nav><div class="song-world-tab-panel" role="tabpanel">${worldTabContent(group,activeWorldTab,lead)}</div></div></article>`;
+    body.scrollTo({ top:0,left:0,behavior:'auto' });
     if(activeWorldTab === 'versions' && group.audio.length > 1) setupComparison(group);
     setAppSection('worlds');
     syncMobileExitControl();

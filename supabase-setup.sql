@@ -367,6 +367,7 @@ create table if not exists public.archive_eras (
   name text not null,
   slug text not null unique,
   description text not null default '',
+  notes text not null default '',
   start_date date,
   end_date date,
   display_order integer not null default 0,
@@ -380,6 +381,8 @@ create table if not exists public.archive_eras (
 
 alter table public.archive_eras
   add column if not exists parent_era_id uuid references public.archive_eras(id) on delete set null;
+alter table public.archive_eras
+  add column if not exists notes text not null default '';
 
 create table if not exists public.archive_asset_eras (
   asset_id uuid not null references public.archive_assets(id) on delete cascade,
@@ -564,6 +567,7 @@ begin
   new.name := left(btrim(regexp_replace(coalesce(new.name,''),'[[:cntrl:]<>]','','g')),100);
   new.slug := public.archive_slug(coalesce(nullif(new.slug,''),new.name));
   new.description := left(regexp_replace(coalesce(new.description,''),'[[:cntrl:]]','','g'),4000);
+  new.notes := left(replace(coalesce(new.notes,''),E'\r',''),12000);
   new.cover_url := left(btrim(coalesce(new.cover_url,'')),2000);
   new.cover_storage_path := left(btrim(regexp_replace(coalesce(new.cover_storage_path,''),'[[:cntrl:]<>]','','g')),500);
   if char_length(new.name) not between 1 and 100 or char_length(new.slug) not between 1 and 80 then raise exception 'invalid era identity'; end if;

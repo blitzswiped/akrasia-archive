@@ -534,7 +534,7 @@
 
   /* Song Worlds use one internal room at a time instead of a long document. */
   .song-world-content{align-content:start;min-height:min(720px,78vh);}
-  .song-world-tabs{position:sticky;top:0;z-index:8;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding:6px;border:1px solid var(--line-soft);border-radius:var(--radius);background:rgba(2,2,2,.88);box-shadow:0 18px 52px rgba(0,0,0,.34);backdrop-filter:blur(18px);}
+  .song-world-tabs{position:sticky;top:0;z-index:8;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;padding:6px;border:1px solid var(--line-soft);border-radius:var(--radius);background:rgba(2,2,2,.88);box-shadow:0 18px 52px rgba(0,0,0,.34);backdrop-filter:blur(18px);}
   .song-world-tabs button{min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 11px;border:1px solid transparent;border-radius:var(--control-radius);color:var(--dim);font:700 .56rem 'JetBrains Mono',monospace;cursor:pointer;transition:background .22s,color .22s,border-color .22s,transform .3s var(--motion-ease);}
   .song-world-tabs button:hover{color:#fff;border-color:var(--line-soft);background:rgba(255,255,255,.045);}
   .song-world-tabs button.active{background:#fff;border-color:#fff;color:#000;box-shadow:0 10px 30px rgba(255,255,255,.1);}
@@ -549,6 +549,21 @@
   .world-analysis-details{border:1px solid var(--line-soft);border-radius:var(--radius);padding:10px}.world-analysis-details>summary{cursor:pointer;color:var(--dim-2);font:650 .52rem 'JetBrains Mono',monospace}.world-analysis-details .world-enrichment{margin-top:10px}
   .world-lyrics-list{display:grid;gap:6px}.world-lyrics-entry{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;padding:13px;border:1px solid var(--line-soft);border-radius:var(--radius);color:#fff;text-align:left;cursor:pointer}.world-lyrics-entry:hover{border-color:#fff;background:rgba(255,255,255,.05)}.world-lyrics-entry>span,.world-lyrics-entry small,.world-lyrics-entry i{color:var(--dim);font:600 .46rem 'JetBrains Mono',monospace}.world-lyrics-entry>div{display:grid;gap:3px;min-width:0}.world-lyrics-entry strong{font:750 .72rem 'Inter',sans-serif}.world-lyrics-entry p{overflow:hidden;margin:0;color:var(--dim-2);font:550 .52rem 'JetBrains Mono',monospace;text-overflow:ellipsis;white-space:nowrap}.world-lyrics-entry i{font-style:normal;white-space:nowrap}
   .world-overview-story p{font:500 .66rem/1.75 'JetBrains Mono',monospace;color:var(--dim-2);max-width:70ch;}
+  .world-note-feature,.world-notes-room{position:relative;display:grid;gap:12px;padding:16px;border:1px solid color-mix(in srgb,var(--world-color) 38%,var(--line-soft));border-radius:16px;background:radial-gradient(circle at 92% 8%,color-mix(in srgb,var(--world-color) 13%,transparent),transparent 34%),rgba(255,255,255,.018);overflow:hidden;animation:worldResolve .58s var(--motion-ease) both;}
+  .world-note-feature::before{content:"notes";position:absolute;right:-4px;top:28px;color:color-mix(in srgb,var(--world-color) 9%,transparent);font:800 clamp(4rem,10vw,9rem)/.7 'Inter',sans-serif;pointer-events:none;}
+  .world-notes-grid{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+  .world-note-card{position:relative;display:grid;grid-template-rows:auto auto minmax(130px,1fr) auto;gap:11px;min-width:0;padding:18px;border:1px solid var(--line-soft);border-radius:14px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(0,0,0,.28));box-shadow:0 18px 50px rgba(0,0,0,.24);overflow:hidden;animation:worldFileIn .52s var(--motion-ease) both;animation-delay:calc(var(--note-index,0) * 55ms);}
+  .world-note-card.featured{grid-template-rows:auto auto auto auto;min-height:260px;padding:clamp(20px,3vw,34px);border-color:rgba(255,255,255,.28);background:linear-gradient(135deg,color-mix(in srgb,var(--world-color) 10%,#090909),#030303 68%);}
+  .world-note-card>header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:9px;border-bottom:1px solid var(--line-soft);}
+  .world-note-card>header small,.world-note-card>header span{color:var(--dim);font:650 .46rem 'JetBrains Mono',monospace;text-transform:uppercase;}
+  .world-note-card h3{position:relative;margin:0;color:#fff;font:750 clamp(1rem,1.8vw,1.45rem)/1 'Inter',sans-serif;overflow-wrap:anywhere;}
+  .world-note-body{position:relative;color:rgba(255,255,255,.82);font:500 .59rem/1.78 'JetBrains Mono',monospace;overflow-wrap:anywhere;}
+  .world-note-card.featured .world-note-body{max-width:72ch;font-size:clamp(.62rem,1vw,.74rem);line-height:1.86;}
+  .world-note-body p{margin:0 0 1em}.world-note-body p:last-child{margin-bottom:0}
+  .world-note-card>footer,.world-note-feature-actions{display:flex;flex-wrap:wrap;gap:6px;position:relative;}
+  .world-note-card>footer button{padding:6px 8px;border:1px solid var(--line);border-radius:var(--control-radius);color:var(--dim-2);font:700 .48rem 'JetBrains Mono',monospace;cursor:pointer;}
+  .world-note-card>footer button:hover{border-color:#fff;background:#fff;color:#000}
+  .world-note-feature-actions{justify-content:flex-end}.world-note-add{justify-self:start;margin-top:2px}
   .world-empty.compact{min-height:170px;}
   .world-title-heading{display:flex;align-items:flex-end;gap:10px;min-width:0;}
   .world-title-heading h2{min-width:0;overflow-wrap:anywhere;}
@@ -647,6 +662,7 @@
     .timeline-panel.immersive .timeline-track,.timeline-panel:not(.immersive) .timeline-track{padding-top:88px!important;}
     .song-world-tabs{position:relative;top:auto;}
     .world-overview-stats{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .world-notes-grid{grid-template-columns:1fr;}
     .calendar-months{grid-template-columns:repeat(2,minmax(0,1fr));}.calendar-day-files{grid-template-columns:1fr;}
   }
   @media(max-width:600px){
@@ -666,6 +682,7 @@
     .song-world-tabs{display:flex;overflow-x:auto;scrollbar-width:none;}
     .song-world-tabs::-webkit-scrollbar{display:none;}
     .song-world-tabs button{flex:1 0 92px;}
+    .world-note-feature,.world-notes-room{padding:11px}.world-note-card,.world-note-card.featured{min-height:0;padding:15px}.world-note-card.featured .world-note-body{font-size:.62rem}.world-note-feature::before{display:none}
     .world-title-editor{grid-template-columns:1fr;}
     .world-title-editor button{width:100%;}
     .timeline-control-field>span{display:none;}
