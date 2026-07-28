@@ -1,6 +1,6 @@
   // ---- CATALOG ENRICHMENT -------------------------------------------------
   var archiveEnrichment = {
-    ready:false, loading:false, schemaMissing:false, error:'', refreshError:'', waiters:[],
+    ready:false, loading:false, schemaMissing:false, eraHierarchyAvailable:false, error:'', refreshError:'', waiters:[],
     suggestions:[], tags:[], aliases:[], assetTags:[], metadata:[], eras:[], assetEras:[],
     suggestionsByAsset:new Map(), suggestionsById:new Map(), tagsById:new Map(), assetTagsByAsset:new Map(),
     aliasesByTag:new Map(), metadataByAsset:new Map(), erasById:new Map(), assetErasByAsset:new Map()
@@ -36,6 +36,7 @@
     archiveEnrichment.metadata = [];
     archiveEnrichment.eras = [];
     archiveEnrichment.assetEras = [];
+    archiveEnrichment.eraHierarchyAvailable = false;
     archiveEnrichment.suggestionsByAsset = new Map();
     archiveEnrichment.suggestionsById = new Map();
     archiveEnrichment.tagsById = new Map();
@@ -201,8 +202,10 @@
         hydrateArchiveEnrichmentRows();
         return archiveEnrichment;
       }
+      var eraHierarchyProbe = await supabaseClient.from('archive_eras').select('parent_era_id').limit(1);
       emptyArchiveEnrichment();
       names.forEach((name,index) => archiveEnrichment[name] = results[index].data || []);
+      archiveEnrichment.eraHierarchyAvailable = !eraHierarchyProbe.error;
       archiveEnrichment.suggestions = archiveEnrichment.suggestions.map(summary => {
         var cached = cachedSuggestions.get(summary.id);
         if(cached?._payloadLoaded) return Object.assign({},summary,{ payload:cached.payload,_payloadLoaded:true });
@@ -1912,7 +1915,7 @@
   }
 
   function deriveArchiveEraGuesses() {
-    var entries = archiveEraWorldEntries().filter(entry => !entry.hasConfirmedPrimary);
+    var entries = archiveEraWorldEntries();
     var candidates = [];
     var signalGroups = new Map();
     var dayGroups = new Map();
@@ -1927,8 +1930,10 @@
       if(!dayGroups.has(date)) dayGroups.set(date,[]);
       dayGroups.get(date).push(entry);
       var month = date.slice(0,7);
-      if(!monthGroups.has(month)) monthGroups.set(month,[]);
-      monthGroups.get(month).push(entry);
+      if(!entry.hasConfirmedPrimary) {
+        if(!monthGroups.has(month)) monthGroups.set(month,[]);
+        monthGroups.get(month).push(entry);
+      }
     });
     signalGroups.forEach(({ signal,entries:group },key) => {
       var worlds = Array.from(group.values());
@@ -2007,33 +2012,163 @@
   function enrichmentEraGuessesHtml() {
     enrichmentEraGuesses = deriveArchiveEraGuesses();
     if(!enrichmentEraGuesses.length) return `<section class="era-guesses"><div class="era-editor-head"><strong>archive guesses</strong><span>no strong unconfirmed date or title clusters right now</span></div></section>`;
-    return `<section class="era-guesses"><div class="era-editor-head"><strong>archive guesses</strong><span>song origins + folders + text files / nothing changes until you confirm</span></div><div class="era-guess-grid">${enrichmentEraGuesses.map(guess => `<details class="era-guess-card" data-era-guess-id="${escapeAttr(guess.id)}"><summary><small>${escapeHtml(guess.type)} / ${Math.round(guess.confidence * 100)}%</small><strong>${escapeHtml(guess.name)}</strong><span>${guess.worlds.length} song${guess.worlds.length === 1 ? '' : 's'} / ${guess.revisionCount} revisions</span><i>preview contents</i></summary><div class="era-guess-preview"><p>${escapeHtml(guess.evidence)}</p><div class="era-guess-range"><span>songs began<strong>${escapeHtml(guess.startDate || 'open')}</strong></span><span>latest work<strong>${escapeHtml(guess.endDate || 'open')}</strong></span></div>${guess.aliases.length ? `<div class="era-guess-aliases"><small>other names found</small>${guess.aliases.map(name => `<span>${escapeHtml(name)}</span>`).join('')}</div>` : ''}${guess.evidenceDetails.length ? `<div class="era-guess-evidence">${guess.evidenceDetails.map(value => `<span>${escapeHtml(value)}</span>`).join('')}</div>` : ''}${archiveEraGuessWorldsHtml(guess)}<button type="button" onclick="createEraFromArchiveGuess('${escapeAttr(guess.id)}')">create this archive era</button></div></details>`).join('')}</div></section>`;
+    var cards = enrichmentEraGuesses.map(guess => {
+      var suggestedParent = archiveEraSuggestedParent(guess);
+      var parentControl = archiveEnrichment.eraHierarchyAvailable && archiveEnrichment.eras.length
+        ? `<label class="era-guess-parent"><span>place inside</span><select id="eraGuessParent-${escapeAttr(stableSourceHash(guess.id))}"><option value="">top-level era</option>${archiveEraParentOptions('',suggestedParent?.id || '')}</select>${suggestedParent ? `<small>Akrasia found the same parent era across these songs.</small>` : '<small>Choose an album or larger creative era when this was a chapter inside it.</small>'}</label>`
+        : '';
+      return `<details class="era-guess-card" data-era-guess-id="${escapeAttr(guess.id)}"><summary><small>${escapeHtml(guess.type)} / ${Math.round(guess.confidence * 100)}%</small><strong>${escapeHtml(guess.name)}</strong><span>${guess.worlds.length} song${guess.worlds.length === 1 ? '' : 's'} / ${guess.revisionCount} revisions${suggestedParent ? ` / inside ${escapeHtml(suggestedParent.name)}` : ''}</span><i>preview contents</i></summary><div class="era-guess-preview"><p>${escapeHtml(guess.evidence)}</p><div class="era-guess-range"><span>songs began<strong>${escapeHtml(guess.startDate || 'open')}</strong></span><span>latest work<strong>${escapeHtml(guess.endDate || 'open')}</strong></span></div>${guess.aliases.length ? `<div class="era-guess-aliases"><small>other names found</small>${guess.aliases.map(name => `<span>${escapeHtml(name)}</span>`).join('')}</div>` : ''}${guess.evidenceDetails.length ? `<div class="era-guess-evidence">${guess.evidenceDetails.map(value => `<span>${escapeHtml(value)}</span>`).join('')}</div>` : ''}${archiveEraGuessWorldsHtml(guess)}${parentControl}<button type="button" onclick="createEraFromArchiveGuess('${escapeAttr(guess.id)}')">create this ${suggestedParent ? 'sub-era' : 'archive era'}</button></div></details>`;
+    }).join('');
+    return `<section class="era-guesses"><div class="era-editor-head"><strong>archive guesses</strong><span>song origins + folders + text files / batches and sessions can live inside larger eras</span></div><div class="era-guess-grid">${cards}</div></section>`;
   }
 
   async function createEraFromArchiveGuess(id) {
     if(!requireAdmin()) return;
     var guess = enrichmentEraGuesses.find(item => item.id === id) || deriveArchiveEraGuesses().find(item => item.id === id);
     if(!guess) return showAppNotice('That archive pattern is no longer available.','error');
+    var parentId = archiveEnrichment.eraHierarchyAvailable ? document.getElementById(`eraGuessParent-${stableSourceHash(guess.id)}`)?.value || '' : '';
+    var parent = archiveEnrichment.erasById.get(parentId) || null;
     var name = cleanSingleLine(prompt('Name this creative era:',guess.name) || '',100);
     if(!name) return;
-    if(!confirm(`Create "${name}" as a private era for ${guess.worlds.length} song${guess.worlds.length === 1 ? '' : 's'}? Every revision and attached artifact in those Song Worlds will follow the song's starting era.`)) return;
+    if(!confirm(`Create "${name}" as a private ${parent ? `sub-era inside "${parent.name}"` : 'top-level era'} for ${guess.worlds.length} song${guess.worlds.length === 1 ? '' : 's'}? Every revision and attached artifact in those Song Worlds will follow the song's most specific starting era.`)) return;
+    var siblings = archiveEraChildren(parentId);
     var payload = {
       name,slug:'',description:`Archive-assisted song-origin suggestion. ${guess.evidence}. Confirmed from folder, date, and text evidence in the private era review.`,
-      start_date:guess.startDate || null,end_date:guess.endDate || null,accent_color:'#ffffff',
-      visibility:'private',display_order:archiveEnrichment.eras.length ? Math.max(...archiveEnrichment.eras.map(era => Number(era.display_order || 0))) + 1 : 0
+      start_date:guess.startDate || null,end_date:guess.endDate || null,accent_color:parent?.accent_color || '#ffffff',
+      visibility:'private',display_order:siblings.length ? Math.max(...siblings.map(era => Number(era.display_order || 0))) + 1 : 0
     };
+    if(archiveEnrichment.eraHierarchyAvailable) payload.parent_era_id = parentId || null;
     var result = await supabaseClient.from('archive_eras').insert(payload).select().single();
     if(result.error) return showAppNotice(result.error.message,'error');
     try {
       var count = await assignEraToRows(guess.rows,result.data.id,'primary');
       await loadArchiveEnrichmentData({ force:true });
       renderAdminWorkspace();
-      showAppNotice(`${name} created privately for ${guess.worlds.length} songs and ${count} connected files.`);
+      showAppNotice(`${name} created privately${parent ? ` inside ${parent.name}` : ''} for ${guess.worlds.length} songs and ${count} connected files.`);
     } catch(error) {
       await loadArchiveEnrichmentData({ force:true });
       renderAdminWorkspace();
       showAppNotice(`The era was created, but its files were not assigned: ${cleanSingleLine(error.message,180)}`,'error');
     }
+  }
+
+  function archiveEraParentId(era) {
+    var value = cleanSingleLine(era?.parent_era_id,80);
+    return value && value !== era?.id ? value : '';
+  }
+
+  function archiveEraChildren(parentId) {
+    return archiveEnrichment.eras
+      .filter(era => archiveEraParentId(era) === String(parentId || ''))
+      .sort((a,b) => Number(a.display_order || 0) - Number(b.display_order || 0) || String(a.name || '').localeCompare(String(b.name || '')));
+  }
+
+  function archiveEraRoots() {
+    return archiveEnrichment.eras
+      .filter(era => {
+        var parentId = archiveEraParentId(era);
+        return !parentId || !archiveEnrichment.erasById.has(parentId);
+      })
+      .sort((a,b) => Number(a.display_order || 0) - Number(b.display_order || 0) || String(a.name || '').localeCompare(String(b.name || '')));
+  }
+
+  function archiveEraDescendantIds(id,includeSelf) {
+    var found = new Set(includeSelf === false ? [] : [id]);
+    var queue = [id];
+    while(queue.length) {
+      var parentId = queue.shift();
+      archiveEraChildren(parentId).forEach(child => {
+        if(found.has(child.id)) return;
+        found.add(child.id);
+        queue.push(child.id);
+      });
+    }
+    return found;
+  }
+
+  function archiveEraAncestors(id) {
+    var list = [];
+    var seen = new Set([id]);
+    var current = archiveEnrichment.erasById.get(id);
+    while(current) {
+      var parentId = archiveEraParentId(current);
+      if(!parentId || seen.has(parentId)) break;
+      var parent = archiveEnrichment.erasById.get(parentId);
+      if(!parent) break;
+      list.unshift(parent);
+      seen.add(parentId);
+      current = parent;
+    }
+    return list;
+  }
+
+  function archiveEraHierarchyFlat() {
+    var output = [];
+    var seen = new Set();
+    var visit = function(era,depth) {
+      if(!era || seen.has(era.id)) return;
+      seen.add(era.id);
+      output.push({ era,depth,parent:archiveEnrichment.erasById.get(archiveEraParentId(era)) || null });
+      archiveEraChildren(era.id).forEach(child => visit(child,depth + 1));
+    };
+    archiveEraRoots().forEach(era => visit(era,0));
+    archiveEnrichment.eras.forEach(era => visit(era,0));
+    return output;
+  }
+
+  function archiveEraTreeRows(id) {
+    var ids = archiveEraDescendantIds(id,true);
+    var assetIds = new Set(archiveEnrichment.assetEras
+      .filter(item => ids.has(item.era_id) && item.review_status === 'confirmed')
+      .map(item => item.asset_id));
+    return baseRows().filter(row => assetIds.has(row.getAttribute('data-id')));
+  }
+
+  function archiveEraTreeEntries(id,entries) {
+    var ids = archiveEraDescendantIds(id,true);
+    var assetIds = new Set(archiveEnrichment.assetEras
+      .filter(item => ids.has(item.era_id) && item.review_status === 'confirmed')
+      .map(item => item.asset_id));
+    return (entries || archiveEraWorldEntries()).filter(entry => entry.rows.some(row => assetIds.has(row.getAttribute('data-id'))));
+  }
+
+  function archiveEraPathLabel(era) {
+    return archiveEraAncestors(era?.id).concat(era || []).filter(Boolean).map(item => item.name).join(' / ');
+  }
+
+  function archiveEraParentOptions(excludeId,selectedId) {
+    var blocked = excludeId ? archiveEraDescendantIds(excludeId,true) : new Set();
+    return archiveEraHierarchyFlat()
+      .filter(item => !blocked.has(item.era.id))
+      .map(item => `<option value="${escapeAttr(item.era.id)}"${item.era.id === selectedId ? ' selected' : ''}>${escapeHtml(`${'— '.repeat(item.depth)}${archiveEraPathLabel(item.era)}`)}</option>`)
+      .join('');
+  }
+
+  function archiveEraPrimaryForEntry(entry) {
+    var counts = new Map();
+    (entry?.rows || []).forEach(row => {
+      (archiveEnrichment.assetErasByAsset.get(row.getAttribute('data-id')) || [])
+        .filter(relation => relation.review_status === 'confirmed' && relation.relationship === 'primary')
+        .forEach(relation => counts.set(relation.era_id,(counts.get(relation.era_id) || 0) + 1));
+    });
+    var winner = Array.from(counts.entries()).sort((a,b) => b[1] - a[1])[0];
+    return winner ? archiveEnrichment.erasById.get(winner[0]) || null : null;
+  }
+
+  function archiveEraSuggestedParent(guess) {
+    if(!archiveEnrichment.eraHierarchyAvailable || !guess?.worlds?.length) return null;
+    var directParents = guess.worlds.map(archiveEraPrimaryForEntry).filter(Boolean);
+    if(directParents.length === guess.worlds.length && directParents.every(era => era.id === directParents[0].id)) return directParents[0];
+    if(!guess.startDate) return null;
+    return archiveEraRoots().filter(era => {
+      if(era.start_date && guess.startDate < era.start_date) return false;
+      if(era.end_date && guess.startDate > era.end_date) return false;
+      return Boolean(era.start_date || era.end_date);
+    }).sort((a,b) => {
+      var aSpan = `${a.start_date || '0000-00-00'}:${a.end_date || '9999-99-99'}`;
+      var bSpan = `${b.start_date || '0000-00-00'}:${b.end_date || '9999-99-99'}`;
+      return bSpan.localeCompare(aSpan);
+    })[0] || null;
   }
 
   function archiveEraEntriesForId(eraId,entries) {
@@ -2059,6 +2194,31 @@
     },160);
   }
 
+  function archiveSubEraTilesHtml(parentId,entries,context) {
+    var children = archiveEraChildren(parentId);
+    if(!children.length) return '';
+    return `<section class="archive-subera-passage"><header><small>inside this era</small><strong>${children.length} chapter${children.length === 1 ? '' : 's'}</strong></header><div>${children.map((child,index) => {
+      var cover = child.resolved_cover_url || child.cover_url;
+      var worlds = archiveEraTreeEntries(child.id,entries);
+      var rows = archiveEraTreeRows(child.id);
+      return `<button class="archive-subera-tile" type="button" style="--era-color:${escapeAttr(child.accent_color || '#ffffff')};--sub-index:${index}" onclick="${context === 'manager' ? `editArchiveEra('${escapeAttr(child.id)}')` : `openCreativeEraFromArchive('${escapeAttr(child.id)}')`}">${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : '<span class="archive-subera-field"></span>'}<span><small>${escapeHtml(child.start_date || 'open beginning')}</small><strong>${escapeHtml(child.name)}</strong><em>${worlds.length} songs / ${rows.length} files</em></span><i>${context === 'manager' ? 'edit' : 'enter'}</i></button>`;
+    }).join('')}</div></section>`;
+  }
+
+  function archiveEraHomeItem(era,entries) {
+    var worlds = archiveEraTreeEntries(era.id,entries);
+    var rows = archiveEraTreeRows(era.id);
+    var worldAssetIds = new Set(worlds.flatMap(world => world.rows).map(row => row.getAttribute('data-id')).filter(Boolean));
+    return { era,worlds,rows,children:archiveEraChildren(era.id),looseCount:rows.filter(row => !worldAssetIds.has(row.getAttribute('data-id'))).length };
+  }
+
+  function archiveEraHomeCardHtml(item,entries) {
+    var era = item.era;
+    var cover = era.resolved_cover_url || era.cover_url;
+    var chapterLabel = item.children.length ? ` / ${item.children.length} chapter${item.children.length === 1 ? '' : 's'}` : '';
+    return `<details class="archive-era-home-card" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')}"><summary>${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : '<span class="archive-era-home-field"></span>'}<span class="archive-era-home-copy"><small>${escapeHtml(era.visibility)} / ${escapeHtml(era.start_date || 'open beginning')}</small><strong>${escapeHtml(era.name)}</strong><span>${item.worlds.length} song${item.worlds.length === 1 ? '' : 's'} / ${item.rows.length} files${chapterLabel}</span></span><i>enter</i></summary><div class="archive-era-home-detail"><p>${escapeHtml(era.description || 'This archive era has no note yet.')}</p>${archiveSubEraTilesHtml(era.id,entries,'home')}${archiveEraGuessWorldsHtml({ worlds:item.worlds },12)}${item.looseCount ? `<span class="era-world-more">${item.looseCount} additional note${item.looseCount === 1 ? '' : 's'}, visual${item.looseCount === 1 ? '' : 's'}, or loose artifact${item.looseCount === 1 ? '' : 's'} also belong to this era.</span>` : ''}<button type="button" onclick="openCreativeEraFromArchive('${escapeAttr(era.id)}')">enter ${escapeHtml(era.name)}</button></div></details>`;
+  }
+
   function renderArchiveEraShelf() {
     var shelf = document.getElementById('archiveEraShelf');
     if(!shelf) return;
@@ -2068,12 +2228,7 @@
       return;
     }
     var entries = archiveEraWorldEntries();
-    var accepted = archiveEnrichment.eras.map(era => {
-      var worlds = archiveEraEntriesForId(era.id,entries);
-      var rows = eraRows(era.id);
-      var worldAssetIds = new Set(worlds.flatMap(world => world.rows).map(row => row.getAttribute('data-id')).filter(Boolean));
-      return { era,worlds,rows,looseCount:rows.filter(row => !worldAssetIds.has(row.getAttribute('data-id'))).length };
-    });
+    var accepted = archiveEraRoots().map(era => archiveEraHomeItem(era,entries));
     var allGuesses = isAdmin ? deriveArchiveEraGuesses() : [];
     var guesses = allGuesses.slice(0,6);
     if(!accepted.length && !guesses.length) {
@@ -2082,15 +2237,29 @@
       return;
     }
     if(isAdmin) enrichmentEraGuesses = allGuesses;
-    var acceptedHtml = accepted.map(item => {
-      var era = item.era;
-      var cover = era.resolved_cover_url || era.cover_url;
-      return `<details class="archive-era-home-card" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')}"><summary>${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : '<span class="archive-era-home-field"></span>'}<span class="archive-era-home-copy"><small>${escapeHtml(era.visibility)} / ${escapeHtml(era.start_date || 'open beginning')}</small><strong>${escapeHtml(era.name)}</strong><span>${item.worlds.length} song${item.worlds.length === 1 ? '' : 's'} / ${item.rows.length} assigned files</span></span><i>expand</i></summary><div class="archive-era-home-detail"><p>${escapeHtml(era.description || 'This archive era has no note yet.')}</p>${archiveEraGuessWorldsHtml({ worlds:item.worlds },12)}${item.looseCount ? `<span class="era-world-more">${item.looseCount} additional note${item.looseCount === 1 ? '' : 's'}, visual${item.looseCount === 1 ? '' : 's'}, or loose artifact${item.looseCount === 1 ? '' : 's'} also belong to this era.</span>` : ''}<button type="button" onclick="openCreativeEraFromArchive('${escapeAttr(era.id)}')">open full archive era</button></div></details>`;
+    var acceptedHtml = accepted.map(item => archiveEraHomeCardHtml(item,entries)).join('');
+    var guessHtml = guesses.map(guess => {
+      var parent = archiveEraSuggestedParent(guess);
+      return `<details class="archive-era-home-card suggested" data-home-era-guess="${escapeAttr(guess.id)}"><summary><span class="archive-era-home-field suggested"></span><span class="archive-era-home-copy"><small>suggested / ${Math.round(guess.confidence * 100)}% / private</small><strong>${escapeHtml(guess.name)}</strong><span>${guess.worlds.length} songs began ${escapeHtml(guess.startDate || 'across an undated session')}${parent ? ` / possible chapter inside ${escapeHtml(parent.name)}` : ''}</span></span><i>inspect</i></summary><div class="archive-era-home-detail"><p>${escapeHtml(guess.evidence)}</p>${guess.aliases.length ? `<div class="era-guess-aliases"><small>other names found</small>${guess.aliases.map(name => `<span>${escapeHtml(name)}</span>`).join('')}</div>` : ''}${archiveEraGuessWorldsHtml(guess,10)}<button type="button" onclick="openArchiveEraSuggestionReview('${escapeAttr(guess.id)}')">review this suggestion</button></div></details>`;
     }).join('');
-    var guessHtml = guesses.map(guess => `<details class="archive-era-home-card suggested" data-home-era-guess="${escapeAttr(guess.id)}"><summary><span class="archive-era-home-field suggested"></span><span class="archive-era-home-copy"><small>suggested / ${Math.round(guess.confidence * 100)}% / private</small><strong>${escapeHtml(guess.name)}</strong><span>${guess.worlds.length} songs began ${escapeHtml(guess.startDate || 'across an undated session')}</span></span><i>inspect</i></summary><div class="archive-era-home-detail"><p>${escapeHtml(guess.evidence)}</p>${guess.aliases.length ? `<div class="era-guess-aliases"><small>other names found</small>${guess.aliases.map(name => `<span>${escapeHtml(name)}</span>`).join('')}</div>` : ''}${archiveEraGuessWorldsHtml(guess,10)}<button type="button" onclick="openArchiveEraSuggestionReview('${escapeAttr(guess.id)}')">review this suggestion</button></div></details>`).join('');
     var assignedKeys = new Set(accepted.flatMap(item => item.worlds.map(world => world.key)));
+    var subEraCount = Math.max(0,archiveEnrichment.eras.length - accepted.length);
     shelf.hidden = false;
-    shelf.innerHTML = `<header class="archive-era-home-head"><div><small>archive / eras</small><strong>songs grouped by where they began.</strong><span>Later revisions stay with the song's original session.</span></div><div><span>${accepted.length} defined</span><span>${assignedKeys.size} songs placed</span>${isAdmin ? '<button type="button" onclick="openAdminReviewTool(\'eras\')">manage eras</button>' : ''}</div></header><div class="archive-era-home-list">${acceptedHtml}${guessHtml}</div>`;
+    shelf.innerHTML = `<header class="archive-era-home-head"><div><small>archive / eras</small><strong>creative worlds with chapters inside them.</strong><span>Songs keep the era where they began. Sessions, batches, and phases can live inside something larger.</span></div><div><span>${accepted.length} main era${accepted.length === 1 ? '' : 's'}</span><span>${subEraCount} sub-era${subEraCount === 1 ? '' : 's'}</span><span>${assignedKeys.size} songs placed</span>${isAdmin ? '<button type="button" onclick="openAdminReviewTool(\'eras\')">manage eras</button>' : ''}</div></header><div class="archive-era-home-list">${acceptedHtml}${guessHtml}</div>`;
+  }
+
+  function archiveEraManagerBranchHtml(era,entries,depth) {
+    var parent = archiveEnrichment.erasById.get(archiveEraParentId(era)) || null;
+    var siblings = parent ? archiveEraChildren(parent.id) : archiveEraRoots();
+    var index = siblings.findIndex(item => item.id === era.id);
+    var directCount = archiveEnrichment.assetEras.filter(item => item.era_id === era.id && item.review_status === 'confirmed').length;
+    var directWorlds = archiveEraEntriesForId(era.id,entries);
+    var treeWorlds = archiveEraTreeEntries(era.id,entries);
+    var treeRows = archiveEraTreeRows(era.id);
+    var children = archiveEraChildren(era.id);
+    var cover = era.resolved_cover_url || era.cover_url;
+    var branch = children.map(child => archiveEraManagerBranchHtml(child,entries,depth + 1)).join('');
+    return `<div class="era-manager-branch" data-era-depth="${depth}"><details class="era-manager-card" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')}"><summary><div class="era-manager-art">${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : `<span>${escapeHtml(era.name.slice(0,2).toLowerCase())}</span>`}</div><div class="era-manager-copy"><small>${parent ? `sub-era inside ${escapeHtml(parent.name)}` : 'top-level era'} / ${escapeHtml(era.visibility)}</small><strong>${escapeHtml(era.name)}</strong><p>${escapeHtml(era.description || 'No era note yet.')}</p><span>${directWorlds.length} direct songs / ${treeWorlds.length} including chapters / ${treeRows.length} files</span></div><i>${children.length ? `${children.length} chapter${children.length === 1 ? '' : 's'}` : 'expand'}</i></summary><div class="era-manager-expanded">${archiveSubEraTilesHtml(era.id,entries,'manager')}${archiveEraGuessWorldsHtml({ worlds:directWorlds },12)}${!directWorlds.length ? '<span class="era-world-more">No songs are assigned directly here yet.</span>' : ''}<div class="era-manager-actions"><button type="button" onclick="openCreativeEraFromArchive('${escapeAttr(era.id)}')">open</button>${archiveEnrichment.eraHierarchyAvailable ? `<button type="button" onclick="prepareArchiveSubEra('${escapeAttr(era.id)}')">+ sub-era</button>` : ''}<button type="button" onclick="editArchiveEra('${escapeAttr(era.id)}')">edit</button><button type="button" onclick="moveArchiveEra('${escapeAttr(era.id)}',-1)"${index <= 0 ? ' disabled' : ''}>up</button><button type="button" onclick="moveArchiveEra('${escapeAttr(era.id)}',1)"${index < 0 || index >= siblings.length - 1 ? ' disabled' : ''}>down</button><button type="button" onclick="deleteArchiveEra('${escapeAttr(era.id)}')">delete</button><span>${directCount} direct relations</span></div></div></details>${branch ? `<div class="era-manager-children">${branch}</div>` : ''}</div>`;
   }
 
   function enrichmentEraManagerHtml() {
@@ -2100,20 +2269,24 @@
     var selectionCount = selectedArchiveRows().length;
     var worldOptions = entries.map(entry => `<option value="${escapeAttr(entry.key)}">${escapeHtml(entry.title)} / began ${escapeHtml(entry.originDate || 'undated')} / ${entry.revisionCount} revisions</option>`).join('');
     var folderOptions = adminFolderPaths().map(path => `<option value="${escapeAttr(path)}">${escapeHtml(path)} / ${adminDescendantRows(path).length} files</option>`).join('');
-    var eraOptions = archiveEnrichment.eras.map(era => `<option value="${escapeAttr(era.id)}">${escapeHtml(era.name)}</option>`).join('');
-    var cards = archiveEnrichment.eras.map((era,index) => {
-      var count = archiveEnrichment.assetEras.filter(item => item.era_id === era.id && item.review_status === 'confirmed').length;
-      var worlds = archiveEraEntriesForId(era.id,entries);
-      var cover = era.resolved_cover_url || era.cover_url;
-      return `<details class="era-manager-card" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')}"><summary><div class="era-manager-art">${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : `<span>${escapeHtml(era.name.slice(0,2).toLowerCase())}</span>`}</div><div class="era-manager-copy"><small>${escapeHtml(era.visibility)} / order ${Number(era.display_order || 0)}</small><strong>${escapeHtml(era.name)}</strong><p>${escapeHtml(era.description || 'No era note yet.')}</p><span>${escapeHtml(era.start_date || 'open')} to ${escapeHtml(era.end_date || 'open')} / ${worlds.length} songs / ${count} files</span></div><i>expand contents</i></summary><div class="era-manager-expanded">${archiveEraGuessWorldsHtml({ worlds },18)}<div class="era-manager-actions"><button type="button" onclick="openCreativeEraFromArchive('${escapeAttr(era.id)}')">open era</button><button type="button" onclick="editArchiveEra('${escapeAttr(era.id)}')">edit</button><button type="button" onclick="moveArchiveEra('${escapeAttr(era.id)}',-1)"${index === 0 ? ' disabled' : ''}>up</button><button type="button" onclick="moveArchiveEra('${escapeAttr(era.id)}',1)"${index === archiveEnrichment.eras.length - 1 ? ' disabled' : ''}>down</button><button type="button" onclick="deleteArchiveEra('${escapeAttr(era.id)}')">delete</button></div></div></details>`;
-    }).join('');
+    var eraOptions = archiveEraHierarchyFlat().map(item => `<option value="${escapeAttr(item.era.id)}">${escapeHtml(`${'— '.repeat(item.depth)}${archiveEraPathLabel(item.era)}`)}</option>`).join('');
+    var cards = archiveEraRoots().map(era => archiveEraManagerBranchHtml(era,entries,0)).join('');
     var unassignedRows = unassigned.slice(0,24).map(entry => `<button type="button" onclick="openEraUnassignedRow('${escapeAttr(adminRowKey(entry.originRow))}')"><strong>${escapeHtml(entry.title)}</strong><span>began ${escapeHtml(entry.originDate || 'undated')} / ${entry.revisionCount} revisions</span></button>`).join('');
+    var rootCount = archiveEraRoots().length;
+    var subEraCount = Math.max(0,archiveEnrichment.eras.length - rootCount);
+    var hierarchySetup = archiveEnrichment.eraHierarchyAvailable ? '' : `<section class="era-hierarchy-setup"><strong>sub-era storage needs one Supabase migration</strong><span>Run <code>supabase-era-hierarchy.sql</code>. Existing eras and song assignments remain untouched.</span></section>`;
+    var parentControl = archiveEnrichment.eraHierarchyAvailable
+      ? `<label class="era-parent-field"><span>inside / optional</span><select id="eraParent"><option value="">top-level era</option>${archiveEraParentOptions('','')}</select><small>Use this for an album era containing Batch 4, sessions, or other chapters.</small></label>`
+      : `<label class="era-parent-field disabled"><span>inside / migration required</span><select id="eraParent" disabled><option value="">top-level era</option></select><small>Apply the private hierarchy migration before creating sub-eras.</small></label>`;
     return `<div class="era-manager">
-      <section class="era-manager-intro"><div><small>song origins + archive-assisted guesses</small><h3>an era starts with the song, not every revision.</h3><p>Akrasia reads each Song World's first revision, folder path, file names, notes, and text files. A song that began in one session stays there even when you keep revising it a month later.</p><button type="button" onclick="exportArchiveEraTraining()">teach the private analyzer from confirmed eras</button></div><div><span>eras<strong>${archiveEnrichment.eras.length}</strong></span><span>unassigned songs<strong>${unassigned.length}</strong></span><span>conflicts<strong>${conflicts.length}</strong></span></div></section>
+      <section class="era-manager-intro"><div><small>eras / chapters / song origins</small><h3>the album can hold the session.</h3><p>A larger creative era can contain batches, sessions, and phases without flattening them. Songs belong to their most specific starting chapter; parent eras gather everything below them automatically.</p><button type="button" onclick="exportArchiveEraTraining()">teach the private analyzer from confirmed eras</button></div><div><span>main eras<strong>${rootCount}</strong></span><span>sub-eras<strong>${subEraCount}</strong></span><span>unassigned<strong>${unassigned.length}</strong></span></div></section>
+      ${hierarchySetup}
+      <section class="era-manager-list"><div class="era-editor-head"><strong>archive era hierarchy</strong><span>enter any era or add a chapter inside it</span></div>${cards || '<div class="enrichment-empty">No eras are hard-coded. Define the first larger creative era below.</div>'}</section>
       ${enrichmentEraGuessesHtml()}
-      <section class="era-editor" id="eraEditor"><input type="hidden" id="eraEditId"><div class="era-editor-head"><strong>define an era</strong><button type="button" onclick="resetArchiveEraEditor()">clear</button></div><div class="era-editor-grid"><label><span>name</span><input id="eraName" maxlength="100" placeholder="artist-defined era name"></label><label><span>visibility</span><select id="eraVisibility"><option value="public">public</option><option value="private">private</option><option value="hidden">hidden</option></select></label><label><span>start date / optional</span><input id="eraStartDate" type="date"></label><label><span>end date / optional</span><input id="eraEndDate" type="date"></label><label><span>accent</span><input id="eraAccent" type="color" value="#ffffff"></label><label><span>cover / optional</span><input id="eraCoverFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label><label class="era-description"><span>what changed in this era</span><textarea id="eraDescription" maxlength="4000" rows="4"></textarea></label></div><button class="primary" type="button" onclick="saveArchiveEra()">save era</button></section>
-      <section class="era-assignment"><div class="era-editor-head"><strong>assign without moving files</strong><span>${selectionCount} archive files currently selected</span></div><div class="era-assignment-controls"><select id="eraAssignEra"><option value="">choose era</option>${eraOptions}</select><select id="eraAssignRelationship"><option value="primary">primary</option><option value="secondary">secondary</option></select><button type="button" onclick="assignEraToArchiveSelection()"${selectionCount ? '' : ' disabled'}>assign selection</button><button type="button" onclick="removeEraFromArchiveSelection()"${selectionCount ? '' : ' disabled'}>remove from selection</button></div><div class="era-world-assignment"><select id="eraAssignWorld"><option value="">choose Song World</option>${worldOptions}</select><button type="button" onclick="assignEraToWorld()">assign every revision in world</button></div><div class="era-folder-assignment"><select id="eraAssignFolder"><option value="">choose archive folder</option>${folderOptions}</select><button type="button" onclick="assignEraToFolder()">assign folder contents</button></div></section>
-      <section class="era-manager-list"><div class="era-editor-head"><strong>defined archive eras</strong><span>expand any era to inspect its Song Worlds</span></div>${cards || '<div class="enrichment-empty">No eras are hard-coded. Open a suggestion above or define the first one.</div>'}</section>
+      <div class="era-manager-tools">
+        <details class="era-tool-panel" id="eraEditorPanel" open><summary><strong id="eraEditorTitle">create or edit an era</strong><span>identity, parent, dates, cover</span></summary><section class="era-editor" id="eraEditor"><input type="hidden" id="eraEditId"><div class="era-editor-head"><strong>era identity</strong><button type="button" onclick="resetArchiveEraEditor()">clear</button></div><div class="era-editor-grid"><label><span>name</span><input id="eraName" maxlength="100" placeholder="artist-defined era name"></label>${parentControl}<label><span>visibility</span><select id="eraVisibility"><option value="public">public</option><option value="private">private</option><option value="hidden">hidden</option></select></label><label><span>start date / optional</span><input id="eraStartDate" type="date"></label><label><span>end date / optional</span><input id="eraEndDate" type="date"></label><label><span>accent</span><input id="eraAccent" type="color" value="#ffffff"></label><label><span>cover / optional</span><input id="eraCoverFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label><label class="era-description"><span>what changed in this era</span><textarea id="eraDescription" maxlength="4000" rows="4"></textarea></label></div><button class="primary" type="button" onclick="saveArchiveEra()">save era</button></section></details>
+        <details class="era-tool-panel"><summary><strong>place songs and folders</strong><span>${selectionCount} archive files selected</span></summary><section class="era-assignment"><div class="era-editor-head"><strong>assign without moving files</strong><span>choose the most specific era or sub-era</span></div><div class="era-assignment-controls"><select id="eraAssignEra"><option value="">choose era</option>${eraOptions}</select><select id="eraAssignRelationship"><option value="primary">primary</option><option value="secondary">secondary</option></select><button type="button" onclick="assignEraToArchiveSelection()"${selectionCount ? '' : ' disabled'}>assign selection</button><button type="button" onclick="removeEraFromArchiveSelection()"${selectionCount ? '' : ' disabled'}>remove from selection</button></div><div class="era-world-assignment"><select id="eraAssignWorld"><option value="">choose Song World</option>${worldOptions}</select><button type="button" onclick="assignEraToWorld()">assign every revision in world</button></div><div class="era-folder-assignment"><select id="eraAssignFolder"><option value="">choose archive folder</option>${folderOptions}</select><button type="button" onclick="assignEraToFolder()">assign folder contents</button></div></section></details>
+      </div>
       <details class="era-unassigned"><summary>unassigned songs / ${unassigned.length}</summary><div>${unassignedRows || '<span>Every Song World has a starting era.</span>'}</div></details>
     </div>`;
   }
@@ -2123,6 +2296,12 @@
     if(document.getElementById('eraVisibility')) document.getElementById('eraVisibility').value='public';
     if(document.getElementById('eraAccent')) document.getElementById('eraAccent').value='#ffffff';
     if(document.getElementById('eraCoverFile')) document.getElementById('eraCoverFile').value='';
+    var parent = document.getElementById('eraParent');
+    if(parent && archiveEnrichment.eraHierarchyAvailable) {
+      parent.innerHTML = `<option value="">top-level era</option>${archiveEraParentOptions('','')}`;
+      parent.value = '';
+    }
+    if(document.getElementById('eraEditorTitle')) document.getElementById('eraEditorTitle').textContent = 'create or edit an era';
   }
 
   function editArchiveEra(id) {
@@ -2135,13 +2314,41 @@
     document.getElementById('eraEndDate').value = era.end_date || '';
     document.getElementById('eraAccent').value = era.accent_color || '#ffffff';
     document.getElementById('eraDescription').value = era.description || '';
+    var parent = document.getElementById('eraParent');
+    if(parent && archiveEnrichment.eraHierarchyAvailable) {
+      parent.innerHTML = `<option value="">top-level era</option>${archiveEraParentOptions(era.id,archiveEraParentId(era))}`;
+      parent.value = archiveEraParentId(era);
+    }
+    var panel = document.getElementById('eraEditorPanel');
+    if(panel) panel.open = true;
+    if(document.getElementById('eraEditorTitle')) document.getElementById('eraEditorTitle').textContent = `edit ${era.name}`;
     document.getElementById('eraEditor')?.scrollIntoView({ behavior:archiveSettings?.motion === 'off' ? 'auto' : 'smooth',block:'start' });
+    document.getElementById('eraName')?.focus();
+  }
+
+  function prepareArchiveSubEra(parentId) {
+    if(!requireAdmin()) return;
+    if(!archiveEnrichment.eraHierarchyAvailable) return showAppNotice('Run supabase-era-hierarchy.sql before creating sub-eras.','error');
+    var parentEra = archiveEnrichment.erasById.get(parentId);
+    if(!parentEra) return showAppNotice('That parent era is no longer available.','error');
+    resetArchiveEraEditor();
+    var parent = document.getElementById('eraParent');
+    if(parent) parent.value = parentEra.id;
+    if(document.getElementById('eraAccent')) document.getElementById('eraAccent').value = parentEra.accent_color || '#ffffff';
+    if(document.getElementById('eraStartDate')) document.getElementById('eraStartDate').value = parentEra.start_date || '';
+    if(document.getElementById('eraEndDate')) document.getElementById('eraEndDate').value = parentEra.end_date || '';
+    if(document.getElementById('eraEditorTitle')) document.getElementById('eraEditorTitle').textContent = `new sub-era inside ${parentEra.name}`;
+    var panel = document.getElementById('eraEditorPanel');
+    if(panel) panel.open = true;
+    document.getElementById('eraEditor')?.scrollIntoView({ behavior:archiveSettings?.motion === 'off' ? 'auto' : 'smooth',block:'center' });
     document.getElementById('eraName')?.focus();
   }
 
   async function saveArchiveEra() {
     if(!requireAdmin()) return;
     var id = document.getElementById('eraEditId')?.value || '';
+    var parentId = archiveEnrichment.eraHierarchyAvailable ? document.getElementById('eraParent')?.value || '' : '';
+    if(id && archiveEraDescendantIds(id,true).has(parentId)) return showAppNotice('An era cannot be placed inside itself or one of its own sub-eras.','error');
     var payload = {
       name:cleanSingleLine(document.getElementById('eraName')?.value,100),
       slug:'',description:String(document.getElementById('eraDescription')?.value || '').slice(0,4000),
@@ -2150,9 +2357,13 @@
       accent_color:document.getElementById('eraAccent')?.value || '#ffffff',
       visibility:document.getElementById('eraVisibility')?.value || 'public'
     };
+    if(archiveEnrichment.eraHierarchyAvailable) payload.parent_era_id = parentId || null;
     if(!payload.name) return showAppNotice('Enter an era name.','error');
     if(payload.start_date && payload.end_date && payload.start_date > payload.end_date) return showAppNotice('The era start date is after its end date.','error');
-    if(!id) payload.display_order = archiveEnrichment.eras.length ? Math.max(...archiveEnrichment.eras.map(era => Number(era.display_order || 0))) + 1 : 0;
+    if(!id) {
+      var siblings = parentId ? archiveEraChildren(parentId) : archiveEraRoots();
+      payload.display_order = siblings.length ? Math.max(...siblings.map(era => Number(era.display_order || 0))) + 1 : 0;
+    }
     var result = id ? await supabaseClient.from('archive_eras').update(payload).eq('id',id).select().single() : await supabaseClient.from('archive_eras').insert(payload).select().single();
     if(result.error) return showAppNotice(result.error.message,'error');
     var era = result.data;
@@ -2170,12 +2381,16 @@
     resetArchiveEraEditor();
     await loadArchiveEnrichmentData({ force:true });
     renderAdminWorkspace();
-    showAppNotice('Creative era saved.');
+    var parentEra = archiveEnrichment.erasById.get(parentId);
+    showAppNotice(parentEra ? `Sub-era saved inside ${parentEra.name}.` : 'Creative era saved.');
   }
 
   async function moveArchiveEra(id,direction) {
     if(!requireAdmin()) return;
-    var list = archiveEnrichment.eras.slice();
+    var era = archiveEnrichment.erasById.get(id);
+    if(!era) return;
+    var parentId = archiveEraParentId(era);
+    var list = parentId ? archiveEraChildren(parentId) : archiveEraRoots();
     var index = list.findIndex(era => era.id === id);
     var target = index + Number(direction || 0);
     if(index < 0 || target < 0 || target >= list.length) return;
@@ -2191,7 +2406,8 @@
   async function deleteArchiveEra(id) {
     if(!requireAdmin()) return;
     var era = archiveEnrichment.erasById.get(id);
-    if(!era || !confirm(`Delete the era "${era.name}" and its assignments? Archive files are not moved or deleted.`)) return;
+    var children = archiveEraChildren(id);
+    if(!era || !confirm(`Delete the era "${era.name}" and its direct assignments? Archive files are not moved or deleted.${children.length ? ` Its ${children.length} sub-era${children.length === 1 ? '' : 's'} will become top-level eras.` : ''}`)) return;
     var result = await supabaseClient.from('archive_eras').delete().eq('id',id);
     if(result.error) return showAppNotice(result.error.message,'error');
     if(era.cover_storage_path) await supabaseClient.storage.from(STORAGE_BUCKET).remove([era.cover_storage_path]);
@@ -2378,45 +2594,74 @@
     return baseRows().filter(row => assetIds.has(row.getAttribute('data-id')));
   }
 
+  function creativeEraChapterCardsHtml(parentId,entries) {
+    var children = archiveEraChildren(parentId);
+    if(!children.length) return '';
+    return `<section class="creative-era-chapters"><header><div><small>chapters inside this era</small><strong>${children.length} sub-era${children.length === 1 ? '' : 's'}</strong></div><span>sessions, batches, and phases keep their own identity here.</span></header><div class="creative-era-chapter-grid">${children.map((child,index) => {
+      var cover = child.resolved_cover_url || child.cover_url;
+      var worlds = archiveEraTreeEntries(child.id,entries);
+      var rows = archiveEraTreeRows(child.id);
+      var grandchildren = archiveEraChildren(child.id);
+      return `<button class="creative-era-chapter" type="button" style="--era-color:${escapeAttr(child.accent_color || '#ffffff')};--chapter-index:${index}" onclick="openCreativeEraWorld('${escapeAttr(child.id)}')">${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : '<span class="creative-era-chapter-field"></span>'}<span class="creative-era-chapter-copy"><small>${escapeHtml(child.start_date || 'open beginning')}${grandchildren.length ? ` / ${grandchildren.length} nested` : ''}</small><strong>${escapeHtml(child.name)}</strong><span>${escapeHtml(child.description || `A chapter inside ${archiveEnrichment.erasById.get(parentId)?.name || 'this era'}.`)}</span><em>${worlds.length} song${worlds.length === 1 ? '' : 's'} / ${rows.length} files</em></span><i>enter chapter</i></button>`;
+    }).join('')}</div></section>`;
+  }
+
   function renderCreativeErasWorlds() {
     var body = document.getElementById('worldsBody');
     if(!body) return;
     var entries = archiveEraWorldEntries();
     var assigned = entries.filter(entry => entry.hasConfirmedPrimary);
     var unassigned = entries.filter(entry => !entry.hasConfirmedPrimary);
-    var cards = archiveEnrichment.eras.map((era,index) => {
-      var rows = eraRows(era.id);
-      var worlds = archiveEraEntriesForId(era.id,entries);
+    var roots = archiveEraRoots();
+    var portals = roots.map((era,index) => {
+      var rows = archiveEraTreeRows(era.id);
+      var worlds = archiveEraTreeEntries(era.id,entries);
+      var children = archiveEraChildren(era.id);
       var cover = era.resolved_cover_url || era.cover_url;
-      return `<button class="creative-era-card" type="button" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')};--era-index:${index}" onclick="openCreativeEraWorld('${escapeAttr(era.id)}')">${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : '<span class="creative-era-field"></span>'}<span class="creative-era-card-copy"><small>${escapeHtml(`${era.start_date || 'open'} / ${era.end_date || 'open'}`)}</small><strong>${escapeHtml(era.name)}</strong><span>${escapeHtml(era.description || 'Artist-defined archive era.')}</span><em>${worlds.length} song${worlds.length === 1 ? '' : 's'} / ${rows.length} connected files</em></span><i>enter era</i></button>`;
+      var directWorlds = archiveEraEntriesForId(era.id,entries);
+      var chapterHtml = children.length ? `<div class="creative-era-portal-chapters">${children.map((child,childIndex) => {
+        var childCover = child.resolved_cover_url || child.cover_url;
+        var childWorlds = archiveEraTreeEntries(child.id,entries);
+        return `<button type="button" style="--chapter-index:${childIndex}" onclick="openCreativeEraWorld('${escapeAttr(child.id)}')">${childCover ? `<img src="${escapeAttr(childCover)}" alt="" onerror="this.remove()">` : '<span></span>'}<i>${escapeHtml(child.name)}</i><small>${childWorlds.length} songs</small></button>`;
+      }).join('')}</div>` : '';
+      return `<article class="creative-era-portal" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')};--era-index:${index}"><button class="creative-era-portal-main" type="button" onclick="openCreativeEraWorld('${escapeAttr(era.id)}')"><span class="creative-era-portal-media">${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : '<span class="creative-era-field"></span>'}</span><span class="creative-era-portal-shade"></span><span class="creative-era-portal-copy"><small>main era ${String(index + 1).padStart(2,'0')} / ${escapeHtml(`${era.start_date || 'open beginning'} to ${era.end_date || 'open ending'}`)}</small><strong>${escapeHtml(era.name)}</strong><span>${escapeHtml(era.description || 'Artist-defined archive era.')}</span><em>${worlds.length} song${worlds.length === 1 ? '' : 's'} / ${rows.length} connected files / ${children.length} chapter${children.length === 1 ? '' : 's'}${directWorlds.length ? ` / ${directWorlds.length} songs at the main level` : ''}</em></span><i>enter world</i></button>${chapterHtml}</article>`;
     }).join('');
-    body.innerHTML = `<section class="worlds-intro creative-era-intro"><div class="worlds-intro-copy"><div class="worlds-kicker">creative eras / song beginnings</div><h1 class="worlds-title">the archive changes when angel changes.</h1><p class="worlds-copy">An era follows where a song began. Every later revision and attached artifact can stay with that Song World, even when the work continues weeks later.</p></div><div class="world-summary"><div>eras<strong>${archiveEnrichment.eras.length}</strong></div><div>assigned songs<strong>${assigned.length}</strong></div><div>unassigned songs<strong>${unassigned.length}</strong></div></div></section><section class="creative-era-grid">${cards || '<div class="world-empty">No public creative eras have been defined yet. The normal archive and timeline remain complete.</div>'}</section>${unassigned.length ? `<section class="world-section creative-era-unassigned"><div class="world-section-head"><h3>outside an era</h3><span>${unassigned.length} songs still need a starting era</span></div>${archiveEraGuessWorldsHtml({ worlds:unassigned },40)}</section>` : ''}`;
+    body.innerHTML = `<section class="worlds-intro creative-era-intro"><div class="worlds-intro-copy"><div class="worlds-kicker">creative eras / worlds with chapters</div><h1 class="worlds-title">the archive changes when angel changes.</h1><p class="worlds-copy">Albums can hold sessions. Sessions can hold batches. A song keeps the most specific place where it began, while every larger world gathers the history underneath it.</p></div><div class="world-summary"><div>main eras<strong>${roots.length}</strong></div><div>sub-eras<strong>${Math.max(0,archiveEnrichment.eras.length - roots.length)}</strong></div><div>placed songs<strong>${assigned.length}</strong></div></div></section><section class="creative-era-portals">${portals || '<div class="world-empty">No public creative eras have been defined yet. The normal archive and timeline remain complete.</div>'}</section>${unassigned.length ? `<section class="world-section creative-era-unassigned"><div class="world-section-head"><h3>outside an era</h3><span>${unassigned.length} songs still need a starting era</span></div>${archiveEraGuessWorldsHtml({ worlds:unassigned },40)}</section>` : ''}`;
   }
 
   function openCreativeEraWorld(id) {
     var era = archiveEnrichment.erasById.get(id);
     var body = document.getElementById('worldsBody');
     if(!era || !body) return;
-    var rows = eraRows(id).sort((a,b) => String(a.getAttribute('data-date') || '').localeCompare(String(b.getAttribute('data-date') || '')));
-    var assignedIds = new Set(rows.map(row => row.getAttribute('data-id')).filter(Boolean));
+    var entries = archiveEraWorldEntries();
+    var directRows = eraRows(id).sort((a,b) => String(a.getAttribute('data-date') || '').localeCompare(String(b.getAttribute('data-date') || '')));
+    var treeRows = archiveEraTreeRows(id).sort((a,b) => String(a.getAttribute('data-date') || '').localeCompare(String(b.getAttribute('data-date') || '')));
+    var treeWorlds = archiveEraTreeEntries(id,entries);
+    var assignedIds = new Set(directRows.map(row => row.getAttribute('data-id')).filter(Boolean));
     var coveredIds = new Set();
-    var groups = archiveEraEntriesForId(id,archiveEraWorldEntries()).map(entry => {
+    var groups = archiveEraEntriesForId(id,entries).map(entry => {
       var assignedRows = entry.rows.filter(row => assignedIds.has(row.getAttribute('data-id')));
       assignedRows.forEach(row => coveredIds.add(row.getAttribute('data-id')));
       return { entry,rows:assignedRows };
     }).filter(group => group.rows.length);
-    var looseRows = rows.filter(row => !coveredIds.has(row.getAttribute('data-id')));
+    var looseRows = directRows.filter(row => !coveredIds.has(row.getAttribute('data-id')));
     var cover = era.resolved_cover_url || era.cover_url;
     var groupHtml = groups.map(group => `<section class="world-section"><div class="world-section-head"><h3>${escapeHtml(group.entry.title)}</h3><span>began ${escapeHtml(group.entry.originDate || 'undated')} / ${group.rows.length} assigned files</span></div><div class="world-file-list">${group.rows.map((row,index) => worldFileHtml(row,index)).join('')}</div></section>`).join('');
     var looseHtml = looseRows.length ? `<section class="world-section creative-era-loose"><div class="world-section-head"><h3>notes, visuals + loose artifacts</h3><span>${looseRows.length} files assigned directly to this era</span></div><div class="world-file-list">${looseRows.map((row,index) => worldFileHtml(row,index)).join('')}</div></section>` : '';
-    body.innerHTML = `<section class="creative-era-detail" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')}"><button type="button" class="creative-era-back" onclick="renderCreativeErasWorlds()">back to eras</button><div class="creative-era-detail-hero">${cover ? `<img src="${escapeAttr(cover)}" alt="">` : '<span></span>'}<div><small>${escapeHtml(`${era.start_date || 'open beginning'} to ${era.end_date || 'open ending'}`)}</small><h1>${escapeHtml(era.name)}</h1><p>${escapeHtml(era.description || 'This era has no public note yet.')}</p><em>${groups.length} song world${groups.length === 1 ? '' : 's'} / ${rows.length} assigned files</em></div></div>${groupHtml}${looseHtml || (!groupHtml ? '<div class="world-empty">This era is defined, but no public archive revisions are assigned yet.</div>' : '')}</section>`;
+    var ancestors = archiveEraAncestors(id);
+    var breadcrumb = ancestors.map(parent => `<button type="button" onclick="openCreativeEraWorld('${escapeAttr(parent.id)}')">${escapeHtml(parent.name)}</button><span>/</span>`).join('');
+    var parent = ancestors[ancestors.length - 1] || null;
+    var directWorldCount = groups.length;
+    var chapterHtml = creativeEraChapterCardsHtml(id,entries);
+    var emptyDirect = !groupHtml && !looseHtml ? `<div class="world-empty creative-era-direct-empty">${archiveEraChildren(id).length ? 'This level holds its history through the chapters below. Enter a sub-era to see its direct songs and artifacts.' : 'This era is defined, but no public archive revisions are assigned yet.'}</div>` : '';
+    body.innerHTML = `<section class="creative-era-detail" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')}"><nav class="creative-era-breadcrumb"><button type="button" onclick="renderCreativeErasWorlds()">all eras</button><span>/</span>${breadcrumb}<strong>${escapeHtml(era.name)}</strong></nav><div class="creative-era-detail-hero"><span class="creative-era-detail-backdrop">${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : '<span></span>'}</span><span class="creative-era-detail-veil"></span><div class="creative-era-detail-cover">${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : '<span></span>'}</div><div class="creative-era-detail-copy"><small>${parent ? `sub-era inside ${escapeHtml(parent.name)}` : 'main creative era'} / ${escapeHtml(`${era.start_date || 'open beginning'} to ${era.end_date || 'open ending'}`)}</small><h1>${escapeHtml(era.name)}</h1><p>${escapeHtml(era.description || 'This era has no public note yet.')}</p><div class="creative-era-detail-stats"><span>all songs<strong>${treeWorlds.length}</strong></span><span>all files<strong>${treeRows.length}</strong></span><span>direct songs<strong>${directWorldCount}</strong></span><span>chapters<strong>${archiveEraChildren(id).length}</strong></span></div></div><button type="button" class="creative-era-back" onclick="${parent ? `openCreativeEraWorld('${escapeAttr(parent.id)}')` : 'renderCreativeErasWorlds()'}">${parent ? `back to ${escapeHtml(parent.name)}` : 'back to all eras'}</button></div>${chapterHtml}<section class="creative-era-direct"><header><small>${archiveEraChildren(id).length ? 'at this level' : 'inside this era'}</small><strong>songs and artifacts placed directly in ${escapeHtml(era.name)}</strong><span>Sub-era content stays inside its own chapter instead of appearing twice.</span></header>${groupHtml}${looseHtml}${emptyDirect}</section></section>`;
     body.scrollTo({ top:0,behavior:archiveSettings?.motion === 'off' ? 'auto' : 'smooth' });
   }
 
   function creativeEraTimelineGroups() {
-    var groups = archiveEnrichment.eras.map(era => ({ key:era.id,era,rows:[] }));
+    var groups = archiveEraHierarchyFlat().map(item => ({ key:item.era.id,era:item.era,depth:item.depth,parent:item.parent,rows:[] }));
     var byId = new Map(groups.map(group => [group.key,group]));
-    var unassigned = { key:'unassigned',era:{ name:'outside an era',description:'Dated archive files without a confirmed creative-era assignment.',accent_color:'#777777' },rows:[] };
+    var unassigned = { key:'unassigned',depth:0,parent:null,era:{ name:'outside an era',description:'Dated archive files without a confirmed creative-era assignment.',accent_color:'#777777' },rows:[] };
     baseRows().filter(timelineRowMatchesFilter).forEach(row => {
       var relations = archiveEnrichment.assetErasByAsset.get(row.getAttribute('data-id')) || [];
       var primary = relations.find(item => item.review_status === 'confirmed' && item.relationship === 'primary') || relations.find(item => item.review_status === 'confirmed');
@@ -2438,13 +2683,14 @@
     var sections = groups.map((group,index) => {
       var era = group.era;
       var dates = group.rows.map(timelineDateForRow).filter(Boolean).sort();
+      var path = group.key === 'unassigned' ? era.name : archiveEraPathLabel(era);
       var files = group.rows.map((row,rowIndex) => {
         var otherEras = acceptedErasForRow(row).filter(item => item.id !== group.key).map(item => item.name);
         return `<button class="immersive-file creative-era-file" type="button" data-row-key="${escapeAttr(timelineRowKey(row))}" style="--dot-color:${escapeAttr(era.accent_color || '#ffffff')};--file-index:${Math.min(rowIndex,12)}"><span class="immersive-file-number">${String(rowIndex + 1).padStart(2,'0')}</span><span class="immersive-file-icon"></span><span class="immersive-file-main"><strong>${escapeHtml(row.getAttribute('data-title') || 'untitled')}</strong><span class="immersive-file-sub">${escapeHtml(row.getAttribute('data-sub') || 'archive')} / ${escapeHtml(row.getAttribute('data-ver') || 'v1')}${otherEras.length ? ` / also ${escapeHtml(otherEras.join(' + '))}` : ''}</span></span><span class="immersive-file-actions"><span class="immersive-file-time">${escapeHtml(timelineDisplayTimeForRow(row) || row.getAttribute('data-type') || 'asset')}</span><span class="immersive-info" data-row-key="${escapeAttr(timelineRowKey(row))}">info</span></span></button>`;
       }).join('');
-      return `<section class="immersive-day creative-era-timeline-section" data-immersive-day data-creative-era="${escapeAttr(group.key)}" style="--day-index:${index};--dot-color:${escapeAttr(era.accent_color || '#ffffff')}"><div class="immersive-day-label"><small>creative era ${String(index + 1).padStart(2,'0')}</small><strong>${escapeHtml(era.name)}</strong><span>${group.rows.length} indexed / ${escapeHtml(dates.length ? `${dates[0]} to ${dates[dates.length - 1]}` : 'undated')}<br>${escapeHtml(era.description || '')}</span></div><div class="immersive-files">${files}</div></section>`;
+      return `<section class="immersive-day creative-era-timeline-section" data-immersive-day data-creative-era="${escapeAttr(group.key)}" data-era-depth="${group.depth || 0}" style="--day-index:${index};--era-depth:${group.depth || 0};--dot-color:${escapeAttr(era.accent_color || '#ffffff')}"><div class="immersive-day-label"><small>${group.depth ? `sub-era / level ${group.depth}` : 'main creative era'} ${String(index + 1).padStart(2,'0')}</small><strong>${escapeHtml(era.name)}</strong><em>${escapeHtml(path)}</em><span>${group.rows.length} indexed / ${escapeHtml(dates.length ? `${dates[0]} to ${dates[dates.length - 1]}` : 'undated')}<br>${escapeHtml(era.description || '')}</span></div><div class="immersive-files">${files}</div></section>`;
     }).join('');
-    var rail = groups.map((group,index) => `<button type="button" onclick="jumpToCreativeEra('${escapeAttr(group.key)}')"><span>${String(index + 1).padStart(2,'0')}</span>${escapeHtml(group.era.name)}</button>`).join('');
+    var rail = groups.map((group,index) => `<button type="button" data-era-depth="${group.depth || 0}" style="--era-depth:${group.depth || 0}" onclick="jumpToCreativeEra('${escapeAttr(group.key)}')"><span>${String(index + 1).padStart(2,'0')}</span><i>${escapeHtml(group.era.name)}</i></button>`).join('');
     track.innerHTML = `<div class="immersive-timeline-list creative-era-timeline-list">${sections}</div><div class="creative-era-rail">${rail}</div>`;
   }
 

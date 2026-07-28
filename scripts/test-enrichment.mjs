@@ -118,8 +118,8 @@ const enrichmentHelpers = `
   function stableSourceHash(value){let h=2166136261;for(const c of String(value||'')){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0).toString(16).padStart(8,'0')}
   ${playerLyricsBlock}
 `;
-const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility } = new Function(
-  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility };`
+const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions } = new Function(
+  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions };`
 )();
 
 const lyrics = privateLyricsPayload({
@@ -218,6 +218,73 @@ assert.equal(privateAudioMetadataPayload({ energyScore:.72 }).energyScore,.72);
 assert.equal(privateTagSuggestions([{ value:'late-night',category:'time-of-day',confidence:.7 }]).length,1);
 assert.equal(privateTagSuggestions([{ value:'made-up',category:'unsupported',confidence:.9 }]).length,0);
 
+function makeEraRow(values) {
+  return {
+    getAttribute(name) {
+      return Object.hasOwn(values,name) ? values[name] : '';
+    }
+  };
+}
+
+assert.ok(archiveEraNameSignals('June 15 sessions','text file').some(signal => signal.name === 'june 15 sessions'));
+assert.ok(archiveEraNameSignals('these songs are from Before Akrasia.','folder note').some(signal => signal.name === 'before akrasia'));
+assert.ok(archiveEraNameSignals('project name: glass hallway','text file').some(signal => signal.name === 'glass hallway'));
+assert.equal(archiveEraNameSignals('mix notes for tomorrow','song note').length,0);
+assert.equal(
+  archiveEraTextMentionsWorld(
+    makeEraRow({ 'data-text-content':'come back\nanother song', 'data-notes':'' }),
+    'come back'
+  ),
+  true
+);
+assert.equal(
+  archiveEraTextTitleSignal(makeEraRow({
+    'data-title':'DAYS AFTER/BEFORE AKRASIA TRACKLIST IDEA.txt',
+    'data-text-content':'song one\nsong two\nsong three'
+  })).name,
+  'days after/before akrasia'
+);
+assert.equal(
+  archiveEraTextTitleSignal(makeEraRow({
+    'data-title':'inspirations.txt',
+    'data-text-content':'artist one\nartist two\nartist three'
+  })),
+  null
+);
+const originV1 = makeEraRow({
+  'data-id':'song-v1','data-type':'audio','data-ver':'v001','data-name':'Song - v001.mp3',
+  'data-asset-date':'2026-06-15T12:00:00Z','data-date':'2026-06-15'
+});
+const laterV4 = makeEraRow({
+  'data-id':'song-v4','data-type':'audio','data-ver':'v004','data-name':'Song - v004.mp3',
+  'data-asset-date':'2026-07-15T12:00:00Z','data-date':'2026-07-15'
+});
+const originSummary = archiveEraWorldOrigin({
+  key:'song-world',title:'song',audio:[laterV4,originV1],rows:[laterV4,originV1]
+});
+assert.equal(originSummary.originRow,originV1);
+assert.equal(originSummary.originDate,'2026-06-15');
+assert.equal(originSummary.latestDate,'2026-07-15');
+assert.equal(originSummary.revisionCount,2);
+
+const albumEra = { id:'album-era',name:'Album Era',display_order:0,parent_era_id:null };
+const batchEra = { id:'batch-4',name:'Batch 4',display_order:1,parent_era_id:'album-era' };
+const sessionEra = { id:'night-session',name:'Night Session',display_order:0,parent_era_id:'batch-4' };
+const orphanEra = { id:'orphan-era',name:'Orphan Era',display_order:2,parent_era_id:'missing-era' };
+archiveEnrichment.eras = [batchEra,orphanEra,sessionEra,albumEra];
+archiveEnrichment.erasById = new Map(archiveEnrichment.eras.map(era => [era.id,era]));
+assert.equal(archiveEraParentId(batchEra),'album-era');
+assert.deepEqual(archiveEraChildren('album-era').map(era => era.id),['batch-4']);
+assert.deepEqual(archiveEraRoots().map(era => era.id),['album-era','orphan-era']);
+assert.deepEqual(Array.from(archiveEraDescendantIds('album-era',true)).sort(),['album-era','batch-4','night-session']);
+assert.deepEqual(archiveEraAncestors('night-session').map(era => era.id),['album-era','batch-4']);
+assert.deepEqual(
+  archiveEraHierarchyFlat().map(item => `${item.depth}:${item.era.id}`),
+  ['0:album-era','1:batch-4','2:night-session','0:orphan-era']
+);
+assert.equal(archiveEraPathLabel(sessionEra),'Album Era / Batch 4 / Night Session');
+assert.doesNotMatch(archiveEraParentOptions('album-era',''),/batch-4|night-session/);
+
 const fakeRow = { getAttribute(name){ return name === 'data-id' ? 'asset-id' : ''; } };
 const suggestions = bandlabAnalysisSuggestionRecords({
   revisionId:'revision-id',sha256:'A'.repeat(64),status:'unchanged',existingRow:fakeRow,analysisStale:false,
@@ -251,6 +318,16 @@ assert.match(sql,/archive_asset_eras\.era_id/);
 assert.match(sql,/invalid loudness/);
 assert.match(sql,/analysis_features jsonb/);
 assert.match(sql,/invalid era cover storage path/);
+assert.match(sql,/parent_era_id uuid references public\.archive_eras\(id\) on delete set null/);
+assert.match(sql,/archive_eras_parent_order_idx/);
+assert.match(sql,/era hierarchy cycle detected/);
+
+const eraHierarchySql = fs.readFileSync(new URL('../supabase-era-hierarchy.sql', import.meta.url),'utf8');
+assert.match(eraHierarchySql,/^begin;/);
+assert.match(eraHierarchySql,/add column if not exists parent_era_id/);
+assert.match(eraHierarchySql,/with recursive era_ancestors/);
+assert.match(eraHierarchySql,/create trigger archive_era_validation/);
+assert.match(eraHierarchySql,/commit;\s*$/);
 
 const archiveSource = fs.readFileSync(new URL('../assets/js/archive.js', import.meta.url),'utf8');
 assert.match(archiveSource,/hydrateArchiveEnrichmentRows === 'function'/);
@@ -258,10 +335,17 @@ assert.match(enrichmentSource,/data-analysis-status/);
 assert.match(enrichmentSource,/data-lyrics-review/);
 assert.match(enrichmentSource,/ENRICHMENT_SUGGESTION_SUMMARY_COLUMNS/);
 assert.match(enrichmentSource,/assignEraToFolder/);
+assert.match(enrichmentSource,/collapseEnrichmentEraSuggestions/);
+assert.match(enrichmentSource,/archiveEraTextRowsForWorld/);
+assert.match(enrichmentSource,/renderArchiveEraShelf/);
+assert.match(enrichmentSource,/accept for entire song world/);
 assert.match(enrichmentSource,/joinFocusedEnrichmentLyricLine/);
 assert.match(enrichmentSource,/No clear automatic breaks found/);
 assert.match(enrichmentSource,/data-lyric-glow/);
 assert.match(enrichmentSource,/data-lyric-speed/);
+assert.match(enrichmentSource,/prepareArchiveSubEra/);
+assert.match(enrichmentSource,/creativeEraChapterCardsHtml/);
+assert.match(enrichmentSource,/chapters inside this era/);
 assert.match(playerSource,/data-glow="\$\{escapeAttr\(glow\)\}"/);
 assert.match(playerSource,/data-speed="\$\{escapeAttr\(speed\)\}"/);
 
