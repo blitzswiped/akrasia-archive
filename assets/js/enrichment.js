@@ -137,6 +137,10 @@
     return /does not exist|schema cache|relation .* not found|could not find the table/i.test(error && error.message || '');
   }
 
+  function enrichmentErrorIsBrokenNullSanitizer(error) {
+    return /null character not permitted/i.test(error && error.message || '');
+  }
+
   async function hydrateEraSignedCovers(eras) {
     if(!supabaseClient || !Array.isArray(eras)) return;
     var paths = Array.from(new Set(eras.map(era => era.cover_storage_path).filter(Boolean)));
@@ -1086,6 +1090,48 @@
     openLyricsFullscreen();
   }
 
+  async function acceptEnrichmentLyricsCompatibility(suggestion,row,syncedText) {
+    var assetId = String(suggestion?.asset_id || '');
+    if(!assetId || row?.getAttribute('data-id') !== assetId) {
+      return { error:new Error('The lyric suggestion no longer matches this archive revision.') };
+    }
+    var cleanText = cleanSyncedLyrics(syncedText);
+    var assetWrite = await supabaseClient
+      .from('archive_assets')
+      .update({ synced_lyrics:cleanText })
+      .eq('id',assetId)
+      .select('id');
+    if(assetWrite.error) return { error:assetWrite.error };
+    if(!Array.isArray(assetWrite.data) || assetWrite.data.length !== 1) {
+      return { error:new Error('The archive revision could not be updated.') };
+    }
+    var payload = Object.assign({},suggestion.payload || {},{
+      syncedText:cleanText,
+      format:'akrasia-synced-text'
+    });
+    var suggestionWrite = await supabaseClient
+      .from('archive_enrichment_suggestions')
+      .update({
+        status:'accepted',
+        payload,
+        reviewed_at:new Date().toISOString(),
+        review_note:''
+      })
+      .eq('id',suggestion.id)
+      .eq('asset_id',assetId)
+      .select('id');
+    if(suggestionWrite.error) {
+      return { error:new Error(`Lyrics were saved, but the review state could not be updated: ${suggestionWrite.error.message}`) };
+    }
+    if(!Array.isArray(suggestionWrite.data) || suggestionWrite.data.length !== 1) {
+      return { error:new Error('Lyrics were saved, but the private suggestion was not marked accepted.') };
+    }
+    suggestion.payload = payload;
+    suggestion.status = 'accepted';
+    suggestion._payloadLoaded = true;
+    return { error:null,compatibilityFallback:true };
+  }
+
   async function acceptEnrichmentLyrics(id) {
     if(!requireAdmin()) return;
     var suggestion;
@@ -1099,6 +1145,9 @@
     var replace = Boolean(accepted && accepted !== enrichmentEditorDraft);
     if(replace && !confirm(`Replace the ${parseSyncedLyrics(accepted).length} currently accepted lines with this ${parseSyncedLyrics(enrichmentEditorDraft).length}-line edited draft?`)) return;
     var result = await supabaseClient.rpc('accept_archive_lyrics',{ p_suggestion_id:id,p_synced_text:enrichmentEditorDraft,p_replace_existing:replace });
+    if(result.error && enrichmentErrorIsBrokenNullSanitizer(result.error)) {
+      result = await acceptEnrichmentLyricsCompatibility(suggestion,row,enrichmentEditorDraft);
+    }
     if(result.error) return showAppNotice(result.error.message,'error');
     row.setAttribute('data-lyrics',enrichmentEditorDraft);
     removeEnrichmentLocalDraft(id);

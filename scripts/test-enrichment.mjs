@@ -36,7 +36,28 @@ assert.equal(revision.lyrics.syncedText,'[0:01.00] line');
 assert.throws(() => cleanBandlabAnalysisRevision({ revisionId:'x',revisionNumber:'v1',analysisStatus:'complete' }),/identity/);
 
 const enrichmentSource = fs.readFileSync(new URL('../assets/js/enrichment.js', import.meta.url),'utf8');
+const compatibilityWrites = [];
+globalThis.__enrichmentTestSupabase = {
+  from(table) {
+    return {
+      update(values) {
+        const filters = {};
+        return {
+          eq(column,value) {
+            filters[column] = value;
+            return this;
+          },
+          async select() {
+            compatibilityWrites.push({ table,values,filters });
+            return { data:[{ id:filters.id || 'asset-id' }],error:null };
+          }
+        };
+      }
+    };
+  }
+};
 const enrichmentHelpers = `
+  var supabaseClient = globalThis.__enrichmentTestSupabase;
   function cleanSingleLine(value,maxLength){return String(value||'').replace(/[\\r\\n\\t]+/g,' ').trim().slice(0,maxLength||500)}
   function cleanSyncedLyrics(value){return String(value==null?'':value).replace(/\\r\\n?/g,'\\n').replace(/[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]/g,'').trim().slice(0,40000)}
   function cleanSourceToken(value,maxLength){return String(value||'').replace(/[^a-z0-9._:-]+/gi,'-').replace(/^-+|-+$/g,'').slice(0,maxLength||180)}
@@ -44,8 +65,8 @@ const enrichmentHelpers = `
   function parseLyricTime(value){const m=String(value||'').trim().match(/^(?:(\\d+):)?(\\d{1,2})(?:[.:](\\d{1,3}))?$/);if(!m)return null;return Number(m[1]||0)*60+Number(m[2]||0)+(m[3]?Number('0.'+m[3].padEnd(3,'0').slice(0,3)):0)}
   function parseSyncedLyrics(text){const out=[];cleanSyncedLyrics(text).split('\\n').forEach(line=>{const m=line.trim().match(/^\\[([^\\]]+)\\]\\s*(.+)$/);if(!m)return;const time=parseLyricTime(m[1]);let lyric=m[2];let lane='main';const laneMatch=lyric.match(/^\\[(adlib|bg|background|lead|main|effect)\\]\\s*(.*)$/i);if(laneMatch){lane=laneMatch[1].toLowerCase()==='background'?'bg':laneMatch[1].toLowerCase();lyric=laneMatch[2]}out.push({time,text:lyric,lane,isPause:lyric==='...'})});return out}
 `;
-const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks } = new Function(
-  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks };`
+const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility } = new Function(
+  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility };`
 )();
 
 const lyrics = privateLyricsPayload({
@@ -56,6 +77,19 @@ const lyrics = privateLyricsPayload({
 assert.equal(lyrics.segments[0].words[0].text,'hello');
 assert.equal(lyrics.format,'akrasia-synced-text');
 assert.equal(privateLyricsPayload({ syncedText:'[0:01.00] hel\u0000lo' }).syncedText,'[0:01.00] hello');
+assert.equal(enrichmentErrorIsBrokenNullSanitizer({ message:'null character not permitted' }),true);
+assert.equal(enrichmentErrorIsBrokenNullSanitizer({ message:'permission denied' }),false);
+const compatibilityResult = await acceptEnrichmentLyricsCompatibility(
+  { id:'suggestion-id',asset_id:'asset-id',payload:{ format:'akrasia-synced-text' } },
+  { getAttribute(name){ return name === 'data-id' ? 'asset-id' : ''; } },
+  '[0:01.00] hel\u0000lo'
+);
+assert.equal(compatibilityResult.error,null);
+assert.equal(compatibilityWrites.length,2);
+assert.equal(compatibilityWrites[0].table,'archive_assets');
+assert.equal(compatibilityWrites[0].values.synced_lyrics,'[0:01.00] hello');
+assert.equal(compatibilityWrites[1].table,'archive_enrichment_suggestions');
+assert.equal(compatibilityWrites[1].values.status,'accepted');
 assert.equal(
   repairEnrichmentLyricBreaks('[0:01.00] this is a template and.\n[0:02.00] i was saying.'),
   '[0:01.00] this is a template and i was saying'
@@ -89,6 +123,8 @@ const sql = fs.readFileSync(new URL('../supabase-setup.sql', import.meta.url),'u
 assert.match(sql,/archive_enrichment_suggestions enable row level security/);
 assert.match(sql,/revoke all on public\.archive_enrichment_suggestions from anon,public/);
 assert.match(sql,/accept_archive_lyrics/);
+assert.match(sql,/clean_lyrics := left\(coalesce\(p_synced_text,''\),40000\)/);
+assert.doesNotMatch(sql,/replace\(coalesce\(p_synced_text,''\),chr\(0\),''\)/);
 assert.match(sql,/archive_asset_primary_era_unique/);
 assert.match(sql,/archive_tag_aliases\.tag_id/);
 assert.match(sql,/archive_asset_tags\.tag_id/);
