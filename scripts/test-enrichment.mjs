@@ -118,8 +118,8 @@ const enrichmentHelpers = `
   function stableSourceHash(value){let h=2166136261;for(const c of String(value||'')){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0).toString(16).padStart(8,'0')}
   ${playerLyricsBlock}
 `;
-const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, buildEnrichmentFlowGroups, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions } = new Function(
-  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, buildEnrichmentFlowGroups, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions };`
+const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, buildEnrichmentFlowGroups, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions, archiveEraAssignedRowsForWorld } = new Function(
+  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, buildEnrichmentFlowGroups, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions, archiveEraAssignedRowsForWorld };`
 )();
 
 const lyrics = privateLyricsPayload({
@@ -292,6 +292,16 @@ assert.deepEqual(
 );
 assert.equal(archiveEraPathLabel(sessionEra),'Album Era / Batch 4 / Night Session');
 assert.doesNotMatch(archiveEraParentOptions('album-era',''),/batch-4|night-session/);
+const assignedEraRow = makeEraRow({ 'data-id':'assigned-asset' });
+const otherEraRow = makeEraRow({ 'data-id':'other-asset' });
+archiveEnrichment.assetErasByAsset = new Map([
+  ['assigned-asset',[{ era_id:'batch-4',review_status:'confirmed' }]],
+  ['other-asset',[{ era_id:'album-era',review_status:'confirmed' }]]
+]);
+assert.deepEqual(
+  archiveEraAssignedRowsForWorld('batch-4',{ rows:[assignedEraRow,otherEraRow] }),
+  [assignedEraRow]
+);
 
 const fakeRow = { getAttribute(name){ return name === 'data-id' ? 'asset-id' : ''; } };
 const suggestions = bandlabAnalysisSuggestionRecords({
@@ -356,6 +366,8 @@ assert.match(enrichmentSource,/data-lyric-speed/);
 assert.match(enrichmentSource,/enrichmentReviewSearch/);
 assert.match(enrichmentSource,/enrichmentLyricFlowHtml/);
 assert.match(enrichmentSource,/archiveEraJournalHtml/);
+assert.match(enrichmentSource,/removeWorldFromArchiveEra/);
+assert.match(enrichmentSource,/The archive files were not deleted/);
 assert.match(enrichmentSource,/prepareArchiveSubEra/);
 assert.match(enrichmentSource,/creativeEraChapterCardsHtml/);
 assert.match(enrichmentSource,/chapters inside this era/);

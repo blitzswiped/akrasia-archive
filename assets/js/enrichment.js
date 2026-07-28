@@ -2705,6 +2705,37 @@
     renderAdminWorkspace();
   }
 
+  async function removeWorldFromArchiveEra(eraId,worldKey,button) {
+    if(!requireAdmin()) return;
+    var era = archiveEnrichment.erasById.get(eraId);
+    var world = getWorld(worldKey);
+    var rows = archiveEraAssignedRowsForWorld(eraId,world);
+    var ids = Array.from(new Set(rows.map(row => row.getAttribute('data-id')).filter(Boolean)));
+    if(!era || !world || !ids.length) return showAppNotice('This song is no longer assigned directly to that era.','error');
+    if(!confirm(`Remove "${world.title}" from "${era.name}"? This only removes ${ids.length} era assignment${ids.length === 1 ? '' : 's'}. The song, revisions, artwork, notes, and archive folders stay untouched.`)) return;
+    var originalText = button?.textContent || 'remove from era';
+    if(button) {
+      button.disabled = true;
+      button.textContent = 'removing...';
+    }
+    try {
+      for(var offset=0; offset<ids.length; offset+=100) {
+        var result = await supabaseClient.from('archive_asset_eras').delete().eq('era_id',eraId).in('asset_id',ids.slice(offset,offset+100));
+        if(result.error) throw result.error;
+      }
+      await loadArchiveEnrichmentData({ force:true });
+      if(archiveEnrichment.erasById.has(eraId)) openCreativeEraWorld(eraId);
+      else renderCreativeErasWorlds();
+      showAppNotice(`${world.title} was removed from ${era.name}. The archive files were not deleted.`);
+    } catch(error) {
+      if(button) {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+      showAppNotice(error.message || 'The era assignment could not be removed.','error');
+    }
+  }
+
   function openEraUnassignedRow(key) {
     var row = adminRowFromKey(key);
     if(!row) return;
@@ -2812,6 +2843,16 @@
     return baseRows().filter(row => assetIds.has(row.getAttribute('data-id')));
   }
 
+  function archiveEraAssignedRowsForWorld(eraId,world) {
+    return (world?.rows || []).filter(row => {
+      var assetId = row.getAttribute('data-id');
+      if(!assetId) return false;
+      return (archiveEnrichment.assetErasByAsset.get(assetId) || []).some(relation =>
+        relation.era_id === eraId && relation.review_status === 'confirmed'
+      );
+    });
+  }
+
   function creativeEraChapterCardsHtml(parentId,entries) {
     var children = archiveEraChildren(parentId);
     if(!children.length) return '';
@@ -2864,7 +2905,7 @@
     }).filter(group => group.rows.length);
     var looseRows = directRows.filter(row => !coveredIds.has(row.getAttribute('data-id')));
     var cover = era.resolved_cover_url || era.cover_url;
-    var groupHtml = groups.map(group => `<section class="world-section"><div class="world-section-head"><h3>${escapeHtml(group.entry.title)}</h3><span>began ${escapeHtml(group.entry.originDate || 'undated')} / ${group.rows.length} assigned files</span></div><div class="world-file-list">${group.rows.map((row,index) => worldFileHtml(row,index)).join('')}</div></section>`).join('');
+    var groupHtml = groups.map(group => `<section class="world-section creative-era-song-group"><div class="world-section-head creative-era-song-head"><div><h3>${escapeHtml(group.entry.title)}</h3><span>began ${escapeHtml(group.entry.originDate || 'undated')} / ${group.rows.length} assigned files</span></div>${isAdmin ? `<button class="creative-era-song-remove" type="button" onclick="removeWorldFromArchiveEra('${escapeAttr(id)}',decodeURIComponent('${encodeURIComponent(group.entry.key)}'),this)">remove from era</button>` : ''}</div><div class="world-file-list">${group.rows.map((row,index) => worldFileHtml(row,index)).join('')}</div></section>`).join('');
     var looseHtml = looseRows.length ? `<section class="world-section creative-era-loose"><div class="world-section-head"><h3>notes, visuals + loose artifacts</h3><span>${looseRows.length} files assigned directly to this era</span></div><div class="world-file-list">${looseRows.map((row,index) => worldFileHtml(row,index)).join('')}</div></section>` : '';
     var ancestors = archiveEraAncestors(id);
     var breadcrumb = ancestors.map(parent => `<button type="button" onclick="openCreativeEraWorld('${escapeAttr(parent.id)}')">${escapeHtml(parent.name)}</button><span>/</span>`).join('');
