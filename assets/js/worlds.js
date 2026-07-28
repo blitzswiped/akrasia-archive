@@ -60,7 +60,7 @@
     var groups = new Map();
     baseRows().forEach(row => {
       var key = projectKeyForRow(row);
-      if(!groups.has(key)) groups.set(key, { key, title:worldTitleForRow(row), rows:[], moodColor:row.getAttribute('data-mood-color') || '#ffffff' });
+      if(!groups.has(key)) groups.set(key, { key, title:worldTitleForRow(row), rows:[], moodColor:'#ffffff' });
       var group = groups.get(key);
       group.rows.push(row);
       if(!group.worldTitle && row.getAttribute('data-world-title')) group.worldTitle = row.getAttribute('data-world-title');
@@ -77,6 +77,10 @@
       group.credits = group.rows.flatMap(rowCredits).filter((item,index,list) => list.findIndex(other => other.role.toLowerCase() === item.role.toLowerCase() && other.name.toLowerCase() === item.name.toLowerCase()) === index);
       var explicitName = cleanSingleLine(group.rows.find(row => row.getAttribute('data-project-key'))?.getAttribute('data-project-key'),100);
       group.title = cleanSingleLine(group.worldTitle,120) || (explicitName ? explicitName.replace(/[-_]+/g,' ') : worldTitleForRow(group.audio[0] || group.rows[0]));
+      var explicitAccentRow = group.rows.find(row => explicitSongAccent(row.getAttribute('data-mood-color')));
+      group.moodColor = explicitAccentRow
+        ? explicitSongAccent(explicitAccentRow.getAttribute('data-mood-color'))
+        : deterministicSongAccent(group.key || group.title);
       return group;
     }).sort((a,b) => {
       var aDate = a.rows.reduce((max,row) => row.getAttribute('data-date') > max ? row.getAttribute('data-date') : max, '');
@@ -369,6 +373,38 @@
     }
   }
 
+  async function updateWorldAccent(input, key) {
+    if(!requireAdmin()) return;
+    var group = getWorld(key);
+    var color = normalizedSongAccent(input?.value);
+    if(!group || !color) return showAppNotice('choose a valid song accent.','error');
+    if(input) input.disabled = true;
+    try {
+      var ids = group.rows.map(row => row.getAttribute('data-id')).filter(Boolean);
+      if(isRemoteReady && supabaseClient && ids.length) {
+        for(var offset = 0; offset < ids.length; offset += 100) {
+          var result = await supabaseClient.from('archive_assets').update({ mood_color:color }).in('id',ids.slice(offset,offset + 100));
+          if(result.error) throw result.error;
+        }
+      }
+      group.rows.forEach(row => {
+        row.setAttribute('data-mood-color',color);
+        row.style.setProperty('--mood-color',color);
+      });
+      var playing = group.rows.find(row => row.classList.contains('playing'));
+      if(playing) {
+        var cover = playing.getAttribute('data-cover') || playing.getAttribute('data-img-src') || '';
+        readCoverColor(cover,color,songAccentSeedForRow(playing));
+        updateNowPlayingDetails(playing,playing.getAttribute('data-type') || activeMediaType);
+      }
+      openSongWorld(group.key,activeWorldTab);
+      showAppNotice('song accent updated across this world.');
+    } catch(error) {
+      showAppNotice(error.message || 'song accent could not be updated.','error');
+      if(input) input.disabled = false;
+    }
+  }
+
   function openSongWorld(key, tab) {
     var group = getWorld(key);
     if(!group) return;
@@ -388,6 +424,7 @@
     var fallback = `<div class="song-world-art-fallback"><span>${escapeHtml(group.title.slice(0,2).toLowerCase())}</span><small>cover not attached</small></div>`;
     var art = group.cover ? `${fallback}<img src="${escapeAttr(group.cover)}" alt="${escapeAttr(group.title)} cover" onerror="this.style.display='none'">` : fallback;
     var coverPicker = isAdmin ? `<label class="world-cover-picker">change cover<input type="file" accept="image/*" onchange="updateWorldCover(this,decodeURIComponent('${encodeURIComponent(group.key)}'))"></label>` : '';
+    var accentPicker = isAdmin ? `<label class="world-accent-picker"><span>song accent</span><input type="color" value="${escapeAttr(group.moodColor)}" aria-label="song accent" title="Set one accent for every version in this Song World" onchange="updateWorldAccent(this,decodeURIComponent('${encodeURIComponent(group.key)}'))"></label>` : '';
     var tabs = [
       ['overview','overview',group.rows.length],
       ['versions','versions',group.audio.length],
@@ -395,7 +432,7 @@
       ['lyrics','lyrics',worldLyricsRows(group).length],
       ['credits','credits',group.credits.length]
     ].map(item => `<button class="${item[0] === activeWorldTab ? 'active' : ''}" type="button" role="tab" aria-selected="${item[0] === activeWorldTab ? 'true' : 'false'}" onclick="switchSongWorldTab('${item[0]}')"><span>${item[1]}</span><small>${item[2]}</small></button>`).join('');
-    body.innerHTML = `<article class="song-world" data-world-tab="${escapeAttr(activeWorldTab)}" style="--world-color:${escapeAttr(group.moodColor)}"><aside class="song-world-art-column"><div class="song-world-art">${art}${coverPicker}</div><div class="song-world-id"><div class="worlds-kicker">song world / ${group.rows.length} connected files</div><div class="world-title-heading"><h2>${escapeHtml(group.title)}</h2>${isAdmin ? '<button type="button" onclick="toggleWorldTitleEditor()">rename</button>' : ''}</div><div class="world-title-editor" id="worldTitleEditor" hidden><input id="worldTitleInput" type="text" maxlength="120" value="${escapeAttr(group.title)}" aria-label="world title"><button class="world-action" id="worldTitleSave" type="button" onclick="saveWorldTitle(decodeURIComponent('${encodeURIComponent(group.key)}'))">save title</button></div><p>${escapeHtml(group.summary || `${group.rows.length} archive files connected across versions, visuals, notes, and artifacts.`)}</p></div><div class="song-world-controls"><button class="world-action primary" type="button" onclick="openWorldAsset(decodeURIComponent('${encodeURIComponent(worldRowKey(lead))}'))">play featured</button><button class="world-action" type="button" onclick="switchSongWorldTab('versions')">versions</button><details class="world-more-actions"><summary class="world-action">...</summary><div><button class="world-action" type="button" onclick="renderVersionConstellation(decodeURIComponent('${encodeURIComponent(group.key)}'))">constellation</button><button class="world-action" type="button" onclick="renderArchiveObject(decodeURIComponent('${encodeURIComponent(group.key)}'))">object view</button><button class="world-action" type="button" onclick="openArchiveConnections(rowByWorldKey(decodeURIComponent('${encodeURIComponent(worldRowKey(lead))}')))">connections</button>${isAdmin ? `<button class="world-action" type="button" onclick="queueWorldForLive(decodeURIComponent('${encodeURIComponent(group.key)}'))">queue live</button>` : ''}</div></details></div></aside><div class="song-world-content"><nav class="song-world-tabs" role="tablist" aria-label="song world sections">${tabs}</nav><div class="song-world-tab-panel" role="tabpanel">${worldTabContent(group,activeWorldTab,lead)}</div></div></article>`;
+    body.innerHTML = `<article class="song-world" data-world-tab="${escapeAttr(activeWorldTab)}" style="--world-color:${escapeAttr(group.moodColor)}"><aside class="song-world-art-column"><div class="song-world-art">${art}${coverPicker}</div><div class="song-world-id"><div class="worlds-kicker">song world / ${group.rows.length} connected files</div><div class="world-title-heading"><h2>${escapeHtml(group.title)}</h2>${isAdmin ? '<button type="button" onclick="toggleWorldTitleEditor()">rename</button>' : ''}</div><div class="world-title-editor" id="worldTitleEditor" hidden><input id="worldTitleInput" type="text" maxlength="120" value="${escapeAttr(group.title)}" aria-label="world title"><button class="world-action" id="worldTitleSave" type="button" onclick="saveWorldTitle(decodeURIComponent('${encodeURIComponent(group.key)}'))">save title</button></div><p>${escapeHtml(group.summary || `${group.rows.length} archive files connected across versions, visuals, notes, and artifacts.`)}</p></div><div class="song-world-controls"><button class="world-action primary" type="button" onclick="openWorldAsset(decodeURIComponent('${encodeURIComponent(worldRowKey(lead))}'))">play featured</button><button class="world-action" type="button" onclick="switchSongWorldTab('versions')">versions</button>${accentPicker}<details class="world-more-actions"><summary class="world-action">...</summary><div><button class="world-action" type="button" onclick="renderVersionConstellation(decodeURIComponent('${encodeURIComponent(group.key)}'))">constellation</button><button class="world-action" type="button" onclick="renderArchiveObject(decodeURIComponent('${encodeURIComponent(group.key)}'))">object view</button><button class="world-action" type="button" onclick="openArchiveConnections(rowByWorldKey(decodeURIComponent('${encodeURIComponent(worldRowKey(lead))}')))">connections</button>${isAdmin ? `<button class="world-action" type="button" onclick="queueWorldForLive(decodeURIComponent('${encodeURIComponent(group.key)}'))">queue live</button>` : ''}</div></details></div></aside><div class="song-world-content"><nav class="song-world-tabs" role="tablist" aria-label="song world sections">${tabs}</nav><div class="song-world-tab-panel" role="tabpanel">${worldTabContent(group,activeWorldTab,lead)}</div></div></article>`;
     if(activeWorldTab === 'versions' && group.audio.length > 1) setupComparison(group);
     setAppSection('worlds');
     syncMobileExitControl();

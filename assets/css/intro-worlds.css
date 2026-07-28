@@ -562,6 +562,12 @@
   .world-cover-picker{position:absolute;z-index:3;right:10px;bottom:10px;padding:7px 9px;border:1px solid rgba(255,255,255,.45);border-radius:var(--control-radius);background:rgba(0,0,0,.72);color:#fff;font:700 .52rem 'JetBrains Mono',monospace;cursor:pointer;backdrop-filter:blur(12px);transition:background .2s,color .2s,transform .25s var(--motion-ease);}
   .world-cover-picker:hover{background:#fff;color:#000;transform:translateY(-2px);}
   .world-cover-picker input{display:none;}
+  .world-accent-picker{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:4px 7px 4px 11px;border:1px solid var(--line);border-radius:var(--control-radius);background:rgba(255,255,255,.025);color:var(--dim-2);font:700 .52rem 'JetBrains Mono',monospace;cursor:pointer;transition:border-color .2s,background .2s,color .2s;}
+  .world-accent-picker:hover,.world-accent-picker:focus-within{border-color:rgba(255,255,255,.65);background:rgba(255,255,255,.07);color:#fff;}
+  .world-accent-picker input{width:24px;height:24px;padding:0;border:0;border-radius:50%;overflow:hidden;background:transparent;cursor:pointer;}
+  .world-accent-picker input::-webkit-color-swatch-wrapper{padding:2px;}
+  .world-accent-picker input::-webkit-color-swatch{border:1px solid rgba(255,255,255,.48);border-radius:50%;}
+  .world-accent-picker input::-moz-color-swatch{border:1px solid rgba(255,255,255,.48);border-radius:50%;}
 
   /* Timeline scale and media filters share one quiet floating instrument. */
   .timeline-view-controls{position:absolute;z-index:9;left:50%;top:14px;transform:translateX(-50%);display:flex;align-items:center;gap:7px;max-width:calc(100% - 220px);padding:6px;border:1px solid rgba(255,255,255,.26);border-radius:var(--radius);background:rgba(2,2,2,.86);box-shadow:0 16px 54px rgba(0,0,0,.52),0 0 28px rgba(var(--reactive-r),var(--reactive-g),var(--reactive-b),.1);backdrop-filter:blur(18px);}

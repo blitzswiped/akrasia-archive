@@ -59,7 +59,7 @@
       img.alt = row.getAttribute('data-title') || 'archive preview';
       img.loading = 'eager';
       stage.appendChild(img);
-      readCoverColor(src, row.getAttribute('data-mood-color') || moodColorFor(row.getAttribute('data-mood') || 'raw'));
+      readCoverColor(src, row.getAttribute('data-mood-color'), songAccentSeedForRow(row));
     } else if(type === 'video') {
       var video = document.createElement('video');
       video.src = row.getAttribute('data-video-src') || '';
@@ -455,8 +455,8 @@
   function updateNowPlayingDetails(row, type) {
     var title = row.getAttribute('data-title') || 'untitled';
     var mood = row.getAttribute('data-mood') || 'raw';
-    var moodColor = row.getAttribute('data-mood-color') || moodColorFor(mood);
-    setMoodTheme(moodColor);
+    var moodColor = songAccentForRow(row);
+    applySongAccent(moodColor);
     var source = row.getAttribute('data-file-url') || row.getAttribute('data-file') || row.getAttribute('data-img-src') || row.getAttribute('data-video-src') ? 'indexed' : 'placeholder';
     var qText = '--';
     var nextText = 'none';
@@ -572,7 +572,7 @@
     var fsCover = document.getElementById('fsCover');
     if(cover) { fsCover.src = cover; fsCover.classList.add('active'); } 
     else { fsCover.src = ''; fsCover.classList.remove('active'); }
-    readCoverColor(cover, row.getAttribute('data-mood-color') || moodColorFor(row.getAttribute('data-mood') || 'raw'));
+    readCoverColor(cover, row.getAttribute('data-mood-color'), songAccentSeedForRow(row));
 
     renderQueueList();
     updateNowPlayingDetails(row, 'audio');

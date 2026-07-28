@@ -491,7 +491,10 @@
       liveBtn.setAttribute('aria-pressed', isLive ? 'true' : 'false');
       liveBtn.title = isRehearsal ? 'private rehearsal active' : (isLive ? 'live broadcast active' : 'open live room');
     }
-    var liveColor = hexToRgb(state.mood_color || (row && row.getAttribute('data-mood-color')) || '#ffffff');
+    var storedAccent = state.mood_color || (row && row.getAttribute('data-mood-color')) || '';
+    var liveAccent = explicitSongAccent(storedAccent)
+      || (row ? songAccentForRow(row) : deterministicSongAccent(state.project_id || state.project_key || state.title || state.id || 'live'));
+    var liveColor = hexToRgb(liveAccent);
     setLiveColor(liveColor);
     var title = isLive ? (state.title || (row && row.getAttribute('data-title')) || 'live signal') : 'live room';
     var type = isLive ? (state.type || (row && row.getAttribute('data-type')) || 'asset') : 'none';
@@ -511,7 +514,7 @@
     document.getElementById('liveStageTime').textContent = isLive ? fmt(liveSyncedPosition(state)) : '--';
     var notes = state.notes || (row && row.getAttribute('data-notes')) || '';
     document.getElementById('liveNotes').innerHTML = `<strong>room notes</strong>${escapeHtml(notes || 'no notes are attached to the current live item yet.')}`;
-    setMoodTheme(state.mood_color || (row && row.getAttribute('data-mood-color')) || '#ffffff');
+    setMoodTheme(liveAccent);
     setReactiveColor(liveColor);
     sampleLiveColor(state.cover || state.file_url || (row && (row.getAttribute('data-cover') || row.getAttribute('data-img-src'))) || '');
     renderLivePreview(row, type, state.cover);
@@ -1522,7 +1525,11 @@
     var colorSignature = [cover || state.file_url || '', state.mood_color || '#ffffff'].join('|');
     if(colorSignature !== liveColorSignature) {
       liveColorSignature = colorSignature;
-      readCoverColor(cover || state.file_url, state.mood_color || '#ffffff');
+      readCoverColor(
+        cover || state.file_url,
+        state.mood_color,
+        state.project_id || state.project_key || state.title || state.id || state.file_url
+      );
     }
     renderLiveState(state);
     syncLiveStagePlayback(state, asHost);

@@ -135,6 +135,7 @@
   var audioSourceNodes = new WeakMap();
   var analyserConnected = false;
   var reactiveBase = { r: 255, g: 255, b: 255 };
+  var reactiveColorRequest = 0;
   var reactiveHueShift = 0;
   var visualEnergy = 0;
   var visualBass = 0;
@@ -471,12 +472,62 @@
     document.documentElement.style.setProperty('--theme-b', rgb.b);
   }
 
-  function readCoverColor(src, fallbackColor) {
-    setReactiveColor(hexToRgb(fallbackColor));
-    if(!src) return;
+  const SONG_ACCENT_PALETTE = [
+    '#8caeff','#ec7998','#77c8ad','#ba91e8',
+    '#e4b66b','#6fbad0','#b7ca68','#e9876d'
+  ];
+
+  function normalizedSongAccent(value) {
+    var clean = String(value || '').trim().toLowerCase();
+    if(/^#[0-9a-f]{3}$/.test(clean)) clean = '#' + clean.slice(1).split('').map(char => char + char).join('');
+    return /^#[0-9a-f]{6}$/.test(clean) ? clean : '';
+  }
+
+  function explicitSongAccent(value) {
+    var color = normalizedSongAccent(value);
+    return color && color !== '#ffffff' ? color : '';
+  }
+
+  function deterministicSongAccent(seed) {
+    var value = String(seed || 'akrasia').trim().toLowerCase();
+    var hash = 2166136261;
+    for(var index = 0; index < value.length; index++) {
+      hash ^= value.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return SONG_ACCENT_PALETTE[(hash >>> 0) % SONG_ACCENT_PALETTE.length];
+  }
+
+  function songAccentSeedForRow(row) {
+    if(!row) return 'akrasia';
+    return row.getAttribute('data-project-key')
+      || row.getAttribute('data-title')
+      || row.getAttribute('data-name')
+      || 'akrasia';
+  }
+
+  function songAccentForRow(row) {
+    return explicitSongAccent(row && row.getAttribute('data-mood-color'))
+      || deterministicSongAccent(songAccentSeedForRow(row));
+  }
+
+  function applySongAccent(color) {
+    var normalized = normalizedSongAccent(color) || '#ffffff';
+    setReactiveColor(hexToRgb(normalized));
+    setMoodTheme(normalized);
+    document.documentElement.style.setProperty('--song-accent', normalized);
+  }
+
+  function readCoverColor(src, fallbackColor, seed) {
+    var request = ++reactiveColorRequest;
+    var manualAccent = explicitSongAccent(fallbackColor);
+    var automaticAccent = deterministicSongAccent(seed || src);
+    applySongAccent(manualAccent || automaticAccent);
+    if(manualAccent || !src) return;
     var img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = function() {
+      if(request !== reactiveColorRequest) return;
       try {
         var sample = document.createElement('canvas');
         sample.width = 24;
@@ -484,31 +535,47 @@
         var ctx = sample.getContext('2d', { willReadFrequently: true });
         ctx.drawImage(img, 0, 0, sample.width, sample.height);
         var pixels = ctx.getImageData(0, 0, sample.width, sample.height).data;
-        var r = 0, g = 0, b = 0, count = 0;
+        var r = 0, g = 0, b = 0, weightTotal = 0;
         for(var i = 0; i < pixels.length; i += 16) {
           var alpha = pixels[i + 3];
           if(alpha < 80) continue;
           var brightness = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
-          if(brightness < 18) continue;
-          r += pixels[i]; g += pixels[i + 1]; b += pixels[i + 2]; count++;
+          var maximum = Math.max(pixels[i],pixels[i + 1],pixels[i + 2]);
+          var minimum = Math.min(pixels[i],pixels[i + 1],pixels[i + 2]);
+          var saturation = maximum ? (maximum - minimum) / maximum : 0;
+          if(brightness < 22 || brightness > 242 || saturation < 0.10) continue;
+          var weight = 0.45 + saturation * 1.8;
+          r += pixels[i] * weight;
+          g += pixels[i + 1] * weight;
+          b += pixels[i + 2] * weight;
+          weightTotal += weight;
         }
-        if(count) setReactiveColor({ r: r / count, g: g / count, b: b / count });
+        if(weightTotal && request === reactiveColorRequest) {
+          var rgb = { r:r / weightTotal,g:g / weightTotal,b:b / weightTotal };
+          var level = Math.max(rgb.r,rgb.g,rgb.b);
+          var scale = level < 105 ? 105 / Math.max(1,level) : level > 225 ? 225 / level : 1;
+          applySongAccent(rgbToHex({
+            r:Math.min(255,rgb.r * scale),
+            g:Math.min(255,rgb.g * scale),
+            b:Math.min(255,rgb.b * scale)
+          }));
+        }
       } catch(err) {}
     };
     img.src = src;
   }
 
   function reactiveBandColor(low, mid, high, energy) {
-    var swing = Math.max(0, Math.min(1, (high - low + 80) / 180));
     var bpmFeel = Math.max(0, Math.min(1, (low * 0.7 + mid * 0.3) / 255));
     reactiveHueShift = (reactiveHueShift + 0.006 + bpmFeel * 0.018) % 1;
-    var tint = {
-      r: reactiveBase.r * (0.78 + low / 900) + 255 * swing * 0.22,
-      g: reactiveBase.g * (0.78 + mid / 950) + 255 * reactiveHueShift * 0.14,
-      b: reactiveBase.b * (0.82 + high / 900) + 255 * (1 - swing) * 0.16
+    var bass = Math.max(0, Math.min(1, low / 255));
+    var lift = 0.82 + energy * 0.34 + bass * 0.12;
+    var neutralLift = Math.max(0,Math.min(14,(high - low) / 18 + energy * 5));
+    return {
+      r:Math.min(255,reactiveBase.r * lift + neutralLift),
+      g:Math.min(255,reactiveBase.g * lift + neutralLift),
+      b:Math.min(255,reactiveBase.b * lift + neutralLift)
     };
-    var lift = 1 + energy * 0.34;
-    return { r: Math.min(255, tint.r * lift), g: Math.min(255, tint.g * lift), b: Math.min(255, tint.b * lift) };
   }
 
   function supabaseConfigured() {

@@ -12,8 +12,8 @@
   <link rel="stylesheet" href="assets/css/live.css?v=20260722-3">
   <link rel="stylesheet" href="assets/css/player.css?v=20260727-4">
   <link rel="stylesheet" href="assets/css/archive-timeline.css?v=20260722-3">
-  <link rel="stylesheet" href="assets/css/polish-responsive.css?v=20260727-4">
-  <link rel="stylesheet" href="assets/css/intro-worlds.css?v=20260722-3">
+  <link rel="stylesheet" href="assets/css/polish-responsive.css?v=20260728-1">
+  <link rel="stylesheet" href="assets/css/intro-worlds.css?v=20260728-1">
   <link rel="stylesheet" href="assets/css/admin-workspace.css?v=20260722-3">
   <link rel="stylesheet" href="assets/css/enrichment.css?v=20260727-4">
 </head>
@@ -267,7 +267,7 @@
             <option value="video">asset: video</option>
           </select>
           <input type="text" id="injMood" class="span-3" placeholder="mood" value="raw" required>
-          <input type="color" id="injMoodColor" value="#ffffff" title="mood color">
+          <input type="color" id="injMoodColor" value="#ffffff" title="song accent; white uses the cover color" aria-label="song accent">
         </div>
 
         <div class="field-group intake-advanced">
@@ -711,7 +711,7 @@
         <div class="edit-folder-field"><input type="text" id="editFolder" placeholder="folder path (blank = root)"><button type="button" onclick="setEditDestinationRoot()">root</button></div>
         <input type="number" id="editPosition" min="1" step="1" placeholder="list position">
         <input type="text" id="editMood" placeholder="mood / tag">
-        <input type="color" id="editMoodColor" value="#ffffff" title="mood color">
+        <input type="color" id="editMoodColor" value="#ffffff" title="song accent; white uses the cover color" aria-label="song accent">
         <input type="text" id="editProject" placeholder="project key / song world">
         <select id="editRole">
           <option value="version">song version</option><option value="visual">visual</option><option value="note">note</option><option value="artifact">artifact</option>
@@ -794,7 +794,7 @@
         </section>
         <section class="bulk-edit-section">
           <label class="bulk-edit-enable"><input type="checkbox" id="bulkApplyTag"> tag</label>
-          <div class="bulk-edit-fields"><input type="text" id="bulkTag" maxlength="32" placeholder="tag / mood"><input type="color" id="bulkTagColor" value="#ffffff" title="tag color"><small>This replaces the existing archive tag on every selected file.</small></div>
+          <div class="bulk-edit-fields"><input type="text" id="bulkTag" maxlength="32" placeholder="tag / mood"><input type="color" id="bulkTagColor" value="#ffffff" title="song accent; white uses the cover color" aria-label="song accent"><small>This replaces the tag and sets the song accent on every selected file.</small></div>
         </section>
         <section class="bulk-edit-section">
           <label class="bulk-edit-enable"><input type="checkbox" id="bulkApplyCover"> cover art</label>
@@ -853,16 +853,16 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/js/core.js?v=20260727-2"></script>
-<script src="assets/js/live.js?v=20260722-3"></script>
+<script src="assets/js/core.js?v=20260728-1"></script>
+<script src="assets/js/live.js?v=20260728-1"></script>
 <script src="assets/js/stats.js?v=20260722-3"></script>
 <script src="assets/js/timeline.js?v=20260722-3"></script>
 <script src="assets/js/bandlab-sync.js?v=20260722-3"></script>
 <script src="assets/js/archive.js?v=20260727-2"></script>
 <script src="assets/js/rules.js?v=20260722-3"></script>
 <script src="assets/js/admin-workspace.js?v=20260722-3"></script>
-<script src="assets/js/player.js?v=20260727-4"></script>
-<script src="assets/js/worlds.js?v=20260722-3"></script>
+<script src="assets/js/player.js?v=20260728-1"></script>
+<script src="assets/js/worlds.js?v=20260728-1"></script>
   <script src="assets/js/enrichment.js?v=20260728-1"></script>
 <script src="assets/js/bootstrap.js?v=20260722-3"></script>
 
