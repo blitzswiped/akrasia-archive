@@ -872,8 +872,8 @@
         distance = value;
       }
     });
-    if(!closest || distance > .4) {
-      return { unsure:/\[unclear\]/i.test(line.text),confidence:null,words:[] };
+    if(!closest || distance > .65) {
+      return { unsure:/\[unclear\]/i.test(line.text),confidence:null,words:[],reason:'' };
     }
     var words = (Array.isArray(closest.words) ? closest.words : [])
       .filter(word => word?.unclear)
@@ -881,12 +881,20 @@
       .filter(Boolean)
       .slice(0,8);
     var confidence = Number(closest.confidence);
+    var rescueReason = closest.rescued
+      ? cleanSingleLine(closest.reviewReason || 'recovered by the second transcription listen',240)
+      : '';
     var unsure = Boolean(
-      closest.unclear || words.length ||
+      closest.unclear || closest.rescued || words.length ||
       (Number.isFinite(confidence) && confidence < .55) ||
       /\[unclear\]/i.test(line.text)
     );
-    return { unsure,confidence:Number.isFinite(confidence) ? confidence : null,words };
+    return {
+      unsure,
+      confidence:Number.isFinite(confidence) ? confidence : null,
+      words,
+      reason:rescueReason
+    };
   }
 
   function serializeEnrichmentDraftLines(lines) {
@@ -1118,7 +1126,7 @@
       var evidence = enrichmentLyricEvidence(suggestion.payload,line);
       if(evidence.unsure) unsureCount++;
       var certaintyText = evidence.confidence === null ? '?' : `? ${Math.round(evidence.confidence * 100)}%`;
-      var certaintyTitle = evidence.words.length ? `Unsure words: ${evidence.words.join(', ')}` : 'Low-confidence transcription. Listen and correct this line.';
+      var certaintyTitle = evidence.reason || (evidence.words.length ? `Unsure words: ${evidence.words.join(', ')}` : 'Low-confidence transcription. Listen and correct this line.');
       var glow = normalizeLyricGlow(line.glow,line.lane);
       var speed = normalizeLyricSpeed(line.speed);
       return `<div class="enrichment-lyric-edit-row${evidence.unsure ? ' is-unsure' : ''}${index === enrichmentFocusedLineIndex ? ' is-selected-line' : ''}" data-enrichment-lyric-row${evidence.unsure ? ' data-unsure="true"' : ''} onclick="setEnrichmentFocusedLine(${index})">
@@ -2002,7 +2010,12 @@
         text:cleanSingleLine(segment.text,500),renderedText:cleanSingleLine(segment.renderedText || segment.text,500),
         confidence:boundedAnalysisNumber(segment.confidence,0,1),
         lane:['lead','main','adlib','bg','background','effect'].includes(segment.lane) ? segment.lane : 'main',
-        unclear:Boolean(segment.unclear),words
+        unclear:Boolean(segment.unclear),words,
+        source:cleanSingleLine(segment.source,80),
+        rescued:Boolean(segment.rescued),
+        reviewReason:cleanSingleLine(segment.reviewReason,240),
+        originalStart:boundedAnalysisNumber(segment.originalStart,0,86400),
+        boundaryDeduplicatedWords:boundedAnalysisNumber(segment.boundaryDeduplicatedWords,0,100)
       };
     }) : [];
     var payload = {

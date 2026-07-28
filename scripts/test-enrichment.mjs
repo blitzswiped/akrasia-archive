@@ -85,16 +85,27 @@ const enrichmentHelpers = `
   function parseLyricDirectives(value,defaultLane){let raw=String(value||'').trim();let lane=defaultLane||'main';let glow='';let speed='';for(let index=0;index<8;index++){const match=raw.match(/^\\[([^\\]]+)\\]\\s*/);if(!match)break;const directive=match[1].trim().toLowerCase();if(['adlib','bg','background','lead','main','effect'].includes(directive)){lane=directive==='background'?'bg':directive}else if(/^glow\\s*:/.test(directive)){glow=directive.split(':').slice(1).join(':').trim()}else if(/^(?:speed|motion)\\s*:/.test(directive)){speed=directive.split(':').slice(1).join(':').trim()}else{break}raw=raw.slice(match[0].length).trim()}return{text:raw,lane,glow:normalizeLyricGlow(glow,lane),speed:normalizeLyricSpeed(speed)}}
   function parseSyncedLyrics(text){const out=[];cleanSyncedLyrics(text).split('\\n').forEach(line=>{const m=line.trim().match(/^\\[([^\\]]+)\\]\\s*(.+)$/);if(!m)return;const time=parseLyricTime(m[1]);const parts=m[2].split(/\\s*\\|\\|\\s*/);parts.forEach((part,splitIndex)=>{const directives=parseLyricDirectives(part,splitIndex?'adlib':'main');if(!directives.text)return;const isPause=/^(\\.{3,}|pause|instrumental)$/i.test(directives.text);out.push({time,text:isPause?'...':directives.text,lane:directives.lane,glow:directives.glow,speed:directives.speed,isPause})})});return out}
 `;
-const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, serializeEnrichmentDraftLines, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility } = new Function(
-  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, serializeEnrichmentDraftLines, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility };`
+const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility } = new Function(
+  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility };`
 )();
 
 const lyrics = privateLyricsPayload({
   syncedText:'[0:01.00] hello',detectedLanguage:'en',vocalInstrumentalStatus:'vocal',
-  segments:[{start:1,end:2,text:'hello',confidence:.8,lane:'main',words:[{start:1,end:1.4,text:'hello',probability:.82}]}],
+  segments:[{
+    start:1.42,end:2,text:'hello',confidence:.8,lane:'main',
+    source:'rescue-vocal-stem',rescued:true,
+    reviewReason:'recovered by the permissive second transcription pass',
+    words:[{start:1.42,end:1.7,text:'hello',probability:.82}]
+  }],
   model:{adapter:'faster-whisper',name:'test',version:'1'}
 });
 assert.equal(lyrics.segments[0].words[0].text,'hello');
+assert.equal(lyrics.segments[0].rescued,true);
+assert.equal(
+  enrichmentLyricEvidence(lyrics,{ time:1,text:'hello' }).reason,
+  'recovered by the permissive second transcription pass'
+);
+assert.equal(enrichmentLyricEvidence(lyrics,{ time:1,text:'hello' }).unsure,true);
 assert.equal(lyrics.format,'akrasia-synced-text');
 assert.equal(privateLyricsPayload({ syncedText:'[0:01.00] hel\u0000lo' }).syncedText,'[0:01.00] hello');
 assert.equal(enrichmentErrorIsBrokenNullSanitizer({ message:'null character not permitted' }),true);
