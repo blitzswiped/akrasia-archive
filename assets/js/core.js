@@ -516,6 +516,7 @@
     setReactiveColor(hexToRgb(normalized));
     setMoodTheme(normalized);
     document.documentElement.style.setProperty('--song-accent', normalized);
+    document.documentElement.style.setProperty('--active-mood-color', normalized);
   }
 
   function readCoverColor(src, fallbackColor, seed) {
