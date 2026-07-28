@@ -237,6 +237,7 @@
       archiveEnrichment.waiters.splice(0).forEach(resolve => resolve());
       if(adminWorkspaceMode === 'enrichment' && adminWorkspaceIsOpen()) renderAdminWorkspace();
       if(document.getElementById('worldsViewport')?.classList.contains('active') && ['worlds','eras'].includes(worldsCurrentView)) renderWorldsView(worldsCurrentView);
+      renderArchiveEraShelf();
     }
   }
 
@@ -488,7 +489,7 @@
   }
 
   function enrichmentReviewItems() {
-    return archiveEnrichment.suggestions.filter(item => {
+    return collapseEnrichmentEraSuggestions(archiveEnrichment.suggestions).filter(item => {
       if(enrichmentReviewStatus !== 'all' && item.status !== enrichmentReviewStatus) return false;
       if(enrichmentReviewKind !== 'all' && item.kind !== enrichmentReviewKind) return false;
       if(enrichmentSuggestionConfidence(item) < enrichmentReviewConfidence) return false;
@@ -500,6 +501,26 @@
       }
       return true;
     });
+  }
+
+  function collapseEnrichmentEraSuggestions(items) {
+    var chosen = new Map();
+    var passthrough = [];
+    (items || []).forEach(item => {
+      if(item.kind !== 'era') return passthrough.push(item);
+      var row = enrichmentRowForSuggestion(item);
+      var key = row ? projectKeyForRow(row) : `missing:${item.asset_id || item.id}`;
+      var date = archiveEraGuessDate(row) || '9999-99-99';
+      var version = archiveEraVersionNumber(row);
+      var current = chosen.get(key);
+      var currentRow = current && enrichmentRowForSuggestion(current);
+      var currentDate = currentRow ? archiveEraGuessDate(currentRow) || '9999-99-99' : '9999-99-99';
+      var currentVersion = archiveEraVersionNumber(currentRow);
+      var earlier = !current || date < currentDate || (date === currentDate && version < currentVersion);
+      var sameOriginNewer = current && date === currentDate && version === currentVersion && String(item.updated_at || '') > String(current.updated_at || '');
+      if(earlier || sameOriginNewer) chosen.set(key,item);
+    });
+    return passthrough.concat(Array.from(chosen.values())).sort((a,b) => String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || '')));
   }
 
   function enrichmentSuggestionHasUncertainty(item) {
@@ -520,8 +541,9 @@
   }
 
   function enrichmentWorkspaceTabsHtml() {
+    var reviewCount = collapseEnrichmentEraSuggestions(archiveEnrichment.suggestions).filter(item => ['pending','draft','needs_review','stale'].includes(item.status)).length;
     return `<div class="enrichment-workspace-tabs" role="tablist" aria-label="catalog enrichment tools">
-      <button class="${enrichmentWorkspaceTab === 'review' ? 'active' : ''}" type="button" onclick="setEnrichmentWorkspaceTab('review')">review queue<span>${archiveEnrichment.suggestions.filter(item => ['pending','draft','needs_review','stale'].includes(item.status)).length}</span></button>
+      <button class="${enrichmentWorkspaceTab === 'review' ? 'active' : ''}" type="button" onclick="setEnrichmentWorkspaceTab('review')">review queue<span>${reviewCount}</span></button>
       <button class="${enrichmentWorkspaceTab === 'eras' ? 'active' : ''}" type="button" onclick="setEnrichmentWorkspaceTab('eras')">creative eras<span>${archiveEnrichment.eras.length}</span></button>
       <button class="${enrichmentWorkspaceTab === 'tags' ? 'active' : ''}" type="button" onclick="setEnrichmentWorkspaceTab('tags')">tag library<span>${archiveEnrichment.tags.length}</span></button>
     </div>`;
@@ -1553,28 +1575,48 @@
   function enrichmentEraSuggestionInspectorHtml(suggestion) {
     var payload = suggestion.payload?.eraEvidence || {};
     var evidence = suggestion.evidence || payload;
+    var row = enrichmentRowForSuggestion(suggestion);
+    var world = row && typeof getWorld === 'function' ? getWorld(projectKeyForRow(row)) : null;
+    var origin = world ? archiveEraWorldOrigin(world) : null;
     var guessed = archiveEnrichment.erasById.get(payload.suggestedEraId)
       || archiveEnrichment.eras.find(era => String(era.name || '').toLowerCase() === String(payload.suggestedEraName || '').toLowerCase())
       || null;
     var candidates = Array.isArray(payload.candidates) ? payload.candidates : [];
     var candidateHtml = candidates.map((candidate,index) => `<span${guessed && candidate.eraId === guessed.id ? ' class="is-leading"' : ''}><b>${index + 1}</b>${escapeHtml(candidate.eraName || 'unnamed era')}<strong>${Math.round(Number(candidate.confidence || 0) * 100)}%</strong></span>`).join('');
     var options = archiveEnrichment.eras.map(era => `<option value="${escapeAttr(era.id)}"${guessed?.id === era.id ? ' selected' : ''}>${escapeHtml(era.name)}</option>`).join('');
-    return `<div class="enrichment-era-review"><p class="enrichment-review-note">This is a private ranked guess learned from dates and eras you already confirmed. Correct it here; nothing is published automatically.</p>${candidateHtml ? `<div class="enrichment-era-candidates">${candidateHtml}</div>` : ''}<div class="enrichment-evidence"><span>revision date<strong>${escapeHtml(evidence.revisionDateTime || payload.revisionDateTime || 'unknown')}</strong></span><span>reason<strong>${escapeHtml(evidence.explanation || payload.explanation || enrichmentSuggestionReason(suggestion))}</strong></span></div><label><span>creative era</span><select id="enrichmentSuggestionEra"><option value="">choose an era</option>${options}</select></label><label><span>relationship</span><select id="enrichmentSuggestionEraRelationship"><option value="primary">primary</option><option value="secondary">secondary</option></select></label><button class="primary enrichment-accept" type="button" onclick="acceptEnrichmentEra('${escapeAttr(suggestion.id)}')">accept assignment</button></div>`;
+    var worldEvidence = origin
+      ? `<span>song world<strong>${escapeHtml(origin.title)} / ${origin.revisionCount} revision${origin.revisionCount === 1 ? '' : 's'}</strong></span><span>song began<strong>${escapeHtml(origin.originDate || 'undated')}</strong></span><span>latest work<strong>${escapeHtml(origin.latestDate || origin.originDate || 'undated')} / does not change the starting era</strong></span>`
+      : `<span>song began<strong>${escapeHtml(evidence.revisionDateTime || payload.revisionDateTime || 'unknown')}</strong></span>`;
+    return `<div class="enrichment-era-review"><p class="enrichment-review-note">This private guess appears once for the Song World. Akrasia uses where the song began; later revisions stay with that starting era. Correct it here and nothing is published automatically.</p>${candidateHtml ? `<div class="enrichment-era-candidates">${candidateHtml}</div>` : ''}<div class="enrichment-evidence">${worldEvidence}<span>analyzer reason<strong>${escapeHtml(evidence.explanation || payload.explanation || enrichmentSuggestionReason(suggestion))}</strong></span></div><label><span>creative era</span><select id="enrichmentSuggestionEra"><option value="">choose an era</option>${options}</select></label><label><span>relationship</span><select id="enrichmentSuggestionEraRelationship"><option value="primary">primary</option><option value="secondary">secondary</option></select></label><button class="primary enrichment-accept" type="button" onclick="acceptEnrichmentEra('${escapeAttr(suggestion.id)}')">accept for entire song world</button></div>`;
   }
 
   async function acceptEnrichmentEra(id) {
     if(!requireAdmin()) return;
     try { await ensureEnrichmentSuggestionPayload(id); }
     catch(error) { return showAppNotice(cleanSingleLine(error.message || 'Private suggestion could not be loaded.',240),'error'); }
+    var suggestion = enrichmentSuggestionById(id);
+    var row = enrichmentRowForSuggestion(suggestion);
+    var world = row && typeof getWorld === 'function' ? getWorld(projectKeyForRow(row)) : null;
     var eraId = document.getElementById('enrichmentSuggestionEra')?.value;
     var relationship = document.getElementById('enrichmentSuggestionEraRelationship')?.value || 'primary';
     if(!eraId) return showAppNotice('Choose an artist-defined era first.','error');
     var result = await supabaseClient.rpc('accept_archive_era',{ p_suggestion_id:id,p_era_id:eraId,p_relationship:relationship });
     if(result.error) return showAppNotice(result.error.message,'error');
+    var assignedCount = 1;
+    if(world?.rows?.length) {
+      try {
+        assignedCount = await assignEraToRows(world.rows,eraId,relationship);
+      } catch(error) {
+        await loadArchiveEnrichmentData({ force:true });
+        enrichmentSelectedSuggestionId = id;
+        renderAdminWorkspace();
+        return showAppNotice(`The starting revision was accepted, but the rest of "${world.title}" could not be assigned: ${cleanSingleLine(error.message,180)}`,'error');
+      }
+    }
     await loadArchiveEnrichmentData({ force:true });
     enrichmentSelectedSuggestionId = id;
     renderAdminWorkspace();
-    showAppNotice('Creative-era assignment accepted.');
+    showAppNotice(world ? `${world.title} assigned to this era across ${assignedCount} connected files.` : 'Creative-era assignment accepted.');
   }
 
   function eraTrainingAudioMetadata(value) {
@@ -1675,6 +1717,11 @@
     return value ? value[0] : '';
   }
 
+  function archiveEraVersionNumber(row) {
+    var match = String(row?.getAttribute('data-ver') || row?.getAttribute('data-name') || '').match(/\bv0*(\d+)\b/i);
+    return match ? Number(match[1]) || 0 : 0;
+  }
+
   function archiveEraGuessDateLabel(value,monthOnly) {
     if(!value) return 'undated';
     try {
@@ -1685,72 +1732,282 @@
     }
   }
 
+  function archiveEraComparable(value) {
+    return cleanSingleLine(value,160).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
+  }
+
+  function archiveEraNameSignals(value,source) {
+    var text = String(value || '').replace(/\r/g,'\n').slice(0,16000);
+    var signals = new Map();
+    var add = function(name,strength,kind) {
+      name = cleanSingleLine(name,100)
+        .replace(/^[#>*\-\s]+/,'')
+        .replace(/\s+(?:notes?|track\s*list(?:\s+idea)?)$/i,'')
+        .replace(/[,:;.\-]+$/,'')
+        .trim();
+      var key = archiveEraComparable(name);
+      if(!key || key.length < 3) return;
+      var next = { key,name:name.toLowerCase(),strength:Math.max(0,Math.min(1,Number(strength) || 0)),kind:kind || 'text signal',source:source || 'archive context' };
+      if(!signals.has(key) || signals.get(key).strength < next.strength) signals.set(key,next);
+    };
+    [
+      { pattern:/\b((?:days?\s+)?(?:before|after)\s+akrasia)\b/gi,strength:.99,kind:'named chronology' },
+      { pattern:/\b(akrasia\s+(?:v(?:ersion)?\s*)?\d+)\b/gi,strength:.98,kind:'named chronology' },
+      { pattern:/\b((?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|sept(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2}(?:st|nd|rd|th)?(?:\s*,?\s*(?:19|20)?\d{2})?\s+(?:sessions?|era|phase))\b/gi,strength:.96,kind:'named session' },
+      { pattern:/\b(batch\s+[a-z0-9]+(?:\s+\d{5,8})?)\b/gi,strength:.94,kind:'batch name' },
+      { pattern:/^\s*(?:era|project|album|mixtape|tape|session|phase|working\s+title|name)\s*(?:name|title)?\s*[:=\-]\s*([^\n]{3,84})$/gim,strength:.93,kind:'named in text' }
+    ].forEach(rule => {
+      var match;
+      while((match = rule.pattern.exec(text))) add(match[1],rule.strength,rule.kind);
+    });
+    text.split(/\n+/).slice(0,180).forEach(line => {
+      var heading = cleanSingleLine(line,100).replace(/^[#>*\-\s]+/,'').trim();
+      if(!heading || heading.length > 84 || heading.split(/\s+/).length > 10) return;
+      if(/\b(?:sessions?|era|batch|phase|chapter)\b/i.test(heading)) add(heading,.82,'text heading');
+    });
+    return Array.from(signals.values()).sort((a,b) => b.strength - a.strength || a.name.localeCompare(b.name));
+  }
+
+  function archiveEraTextMentionsWorld(row,title) {
+    var wanted = archiveEraComparable(title);
+    var wantedKey = typeof normalizedWorldKey === 'function' ? normalizedWorldKey(title) : '';
+    if(wanted.length < 4) return false;
+    var text = [row?.getAttribute('data-text-content'),row?.getAttribute('data-notes')].filter(Boolean).join('\n');
+    return text.split(/\r?\n/).slice(0,500).some(line => {
+      var clean = archiveEraComparable(String(line || '').replace(/^\s*(?:[-*]|\d+\s*[:.)-])\s*/,''));
+      var lineKey = typeof normalizedWorldKey === 'function' ? normalizedWorldKey(line) : '';
+      return clean === wanted || Boolean(wantedKey && lineKey === wantedKey);
+    });
+  }
+
+  function archiveEraTextTitleSignal(row) {
+    var title = cleanSingleLine(row?.getAttribute('data-title') || row?.getAttribute('data-name'),100)
+      .replace(/\.(?:txt|md|rtf)$/i,'')
+      .replace(/\s+(?:track\s*list|tracklist)(?:\s+idea)?$/i,'')
+      .trim();
+    var key = archiveEraComparable(title);
+    if(!key || /^(?:notes?|folder notes?|readme|manifest|inspirations?|lyrics?|untitled)$/i.test(key)) return null;
+    var content = String(row?.getAttribute('data-text-content') || row?.getAttribute('data-notes') || '');
+    var substantial = content.split(/\r?\n/).filter(line => cleanSingleLine(line,200)).length >= 3;
+    var explicit = /\b(?:akrasia|before|after|sessions?|era|phase|batch|project|album|mixtape|tape)\b/i.test(title);
+    if(!explicit && !substantial) return null;
+    return {
+      key,
+      name:title.toLowerCase(),
+      strength:explicit ? .94 : .72,
+      kind:explicit ? 'text file title' : 'possible text file title',
+      source:`text file title / ${title}`
+    };
+  }
+
+  function archiveEraWorldOrigin(group) {
+    var audioRows = (group?.audio || group?.rows || []).filter(row => row?.getAttribute('data-type') === 'audio' && row.getAttribute('data-id'));
+    if(!audioRows.length) return null;
+    var chronological = audioRows.slice().sort((a,b) => {
+      var aDate = archiveEraGuessDate(a) || '9999-99-99';
+      var bDate = archiveEraGuessDate(b) || '9999-99-99';
+      return aDate.localeCompare(bDate) || archiveEraVersionNumber(a) - archiveEraVersionNumber(b);
+    });
+    var originRow = chronological.find(archiveEraGuessDate) || chronological[0];
+    var dates = audioRows.map(archiveEraGuessDate).filter(Boolean).sort();
+    return {
+      key:group.key,
+      title:group.title || worldTitleForRow(originRow),
+      group,
+      rows:(group.rows || audioRows).filter(row => row?.getAttribute('data-id')),
+      audioRows,
+      originRow,
+      originDate:archiveEraGuessDate(originRow),
+      latestDate:dates[dates.length - 1] || archiveEraGuessDate(originRow),
+      revisionCount:audioRows.length
+    };
+  }
+
+  function archiveEraTextRowsForWorld(entry,textRows) {
+    var folders = Array.from(new Set(entry.rows.map(row => normalizeFolderPath(row.getAttribute('data-sub'))).filter(Boolean)));
+    var projectKeys = new Set(entry.rows.map(row => normalizedWorldKey(row.getAttribute('data-project-key'))).filter(Boolean));
+    return (textRows || []).filter(row => {
+      if(entry.rows.includes(row)) return true;
+      var noteProject = normalizedWorldKey(row.getAttribute('data-project-key'));
+      if(noteProject && projectKeys.has(noteProject)) return true;
+      var noteFolder = normalizeFolderPath(row.getAttribute('data-sub'));
+      if(noteFolder && folders.some(folder => folder === noteFolder || folder.startsWith(noteFolder + '/') || noteFolder.startsWith(folder + '/'))) return true;
+      return !noteFolder && archiveEraTextMentionsWorld(row,entry.title);
+    });
+  }
+
+  function archiveEraWorldEntries() {
+    if(typeof worldGroups !== 'function') return [];
+    var textRows = baseRows().filter(row => row.getAttribute('data-type') === 'text');
+    return worldGroups().map(group => {
+      var entry = archiveEraWorldOrigin(group);
+      if(!entry) return null;
+      entry.folders = Array.from(new Set(entry.rows.map(row => normalizeFolderPath(row.getAttribute('data-sub'))).filter(Boolean)));
+      entry.topFolders = Array.from(new Set(entry.folders.map(folder => folder.split('/')[0]).filter(Boolean)));
+      entry.textRows = archiveEraTextRowsForWorld(entry,textRows);
+      var signalSources = [];
+      entry.topFolders.forEach(folder => signalSources.push({ value:folder,source:`folder / ${folder}` }));
+      signalSources.push({
+        value:[entry.title].concat(entry.rows.map(row => row.getAttribute('data-name') || '')).join('\n'),
+        source:'song and file titles'
+      });
+      var songNotes = entry.rows.map(row => row.getAttribute('data-notes') || '').filter(Boolean);
+      if(songNotes.length) signalSources.push({ value:songNotes.join('\n'),source:'song notes' });
+      entry.textRows.forEach(row => signalSources.push({
+        value:[row.getAttribute('data-title'),row.getAttribute('data-text-content'),row.getAttribute('data-notes')].filter(Boolean).join('\n'),
+        source:`text file / ${row.getAttribute('data-title') || row.getAttribute('data-name') || 'note'}`
+      }));
+      var signals = new Map();
+      signalSources.forEach(item => archiveEraNameSignals(item.value,item.source).forEach(signal => {
+        var current = signals.get(signal.key);
+        if(!current || current.strength < signal.strength) signals.set(signal.key,signal);
+      }));
+      entry.textRows.forEach(row => {
+        var signal = archiveEraTextTitleSignal(row);
+        if(!signal) return;
+        var current = signals.get(signal.key);
+        if(!current || current.strength < signal.strength) signals.set(signal.key,signal);
+      });
+      entry.signals = Array.from(signals.values()).sort((a,b) => b.strength - a.strength || a.name.localeCompare(b.name));
+      entry.folderPath = entry.folders.slice().sort((a,b) => a.length - b.length || a.localeCompare(b))[0] || '';
+      entry.noteEvidence = entry.textRows.map(row => row.getAttribute('data-title') || row.getAttribute('data-name')).filter(Boolean).slice(0,8);
+      entry.hasConfirmedPrimary = entry.rows.some(row => (archiveEnrichment.assetErasByAsset.get(row.getAttribute('data-id')) || []).some(relation => relation.review_status === 'confirmed' && relation.relationship === 'primary'));
+      return entry;
+    }).filter(Boolean);
+  }
+
+  function archiveEraPreferredSignal(entries) {
+    var ranked = new Map();
+    entries.forEach(entry => entry.signals.forEach(signal => {
+      if(!ranked.has(signal.key)) ranked.set(signal.key,Object.assign({},signal,{ worlds:new Set(),sources:new Set() }));
+      ranked.get(signal.key).worlds.add(entry.key);
+      ranked.get(signal.key).sources.add(signal.source);
+    }));
+    return Array.from(ranked.values())
+      .filter(item => item.worlds.size >= 2 || item.strength >= .98)
+      .map(item => Object.assign(item,{ score:item.strength + Math.min(.18,item.worlds.size * .04) }))
+      .sort((a,b) => b.score - a.score || b.worlds.size - a.worlds.size || a.name.localeCompare(b.name))[0] || null;
+  }
+
+  function archiveEraGuessFromEntries(options) {
+    var worlds = Array.from(new Map((options.entries || []).map(entry => [entry.key,entry])).values());
+    var rows = Array.from(new Map(worlds.flatMap(entry => entry.rows).map(row => [row.getAttribute('data-id'),row])).values());
+    var originDates = worlds.map(entry => entry.originDate).filter(Boolean).sort();
+    var activityDates = worlds.map(entry => entry.latestDate).filter(Boolean).sort();
+    return {
+      id:options.id,
+      type:options.type,
+      name:cleanSingleLine(options.name,100).toLowerCase(),
+      worlds,
+      rows,
+      revisionCount:worlds.reduce((sum,entry) => sum + entry.revisionCount,0),
+      startDate:originDates[0] || '',
+      endDate:activityDates[activityDates.length - 1] || originDates[originDates.length - 1] || '',
+      originDate:originDates.length && originDates.every(date => date === originDates[0]) ? originDates[0] : '',
+      confidence:Math.max(0,Math.min(1,Number(options.confidence) || 0)),
+      evidence:cleanSingleLine(options.evidence,500),
+      evidenceDetails:Array.from(new Set(options.evidenceDetails || [])).slice(0,10),
+      aliases:Array.from(new Set(options.aliases || [])).filter(Boolean).slice(0,8)
+    };
+  }
+
   function deriveArchiveEraGuesses() {
-    var rows = baseRows().filter(row => row.getAttribute('data-type') === 'audio' && row.getAttribute('data-id'));
+    var entries = archiveEraWorldEntries().filter(entry => !entry.hasConfirmedPrimary);
     var candidates = [];
-    var batchGroups = new Map();
+    var signalGroups = new Map();
     var dayGroups = new Map();
     var monthGroups = new Map();
-    rows.forEach(row => {
-      var source = [row.getAttribute('data-title'),row.getAttribute('data-name'),row.getAttribute('data-sub'),row.getAttribute('data-project-key')].filter(Boolean).join(' ');
-      var batch = source.match(/(?:^|[\s/_-])batch[\s_-]*([a-z0-9]+)/i);
-      if(batch) {
-        var token = cleanSingleLine(batch[1],30).toLowerCase();
-        if(token) {
-          if(!batchGroups.has(token)) batchGroups.set(token,[]);
-          batchGroups.get(token).push(row);
-        }
-      }
-      var date = archiveEraGuessDate(row);
+    entries.forEach(entry => {
+      entry.signals.forEach(signal => {
+        if(!signalGroups.has(signal.key)) signalGroups.set(signal.key,{ signal,entries:new Map() });
+        signalGroups.get(signal.key).entries.set(entry.key,entry);
+      });
+      var date = entry.originDate;
       if(!date) return;
       if(!dayGroups.has(date)) dayGroups.set(date,[]);
-      dayGroups.get(date).push(row);
+      dayGroups.get(date).push(entry);
       var month = date.slice(0,7);
       if(!monthGroups.has(month)) monthGroups.set(month,[]);
-      monthGroups.get(month).push(row);
+      monthGroups.get(month).push(entry);
     });
-    batchGroups.forEach((group,token) => {
-      var unique = Array.from(new Set(group));
-      if(unique.length < 3) return;
-      var dates = unique.map(archiveEraGuessDate).filter(Boolean).sort();
-      candidates.push({
-        id:`batch:${token}`,type:'title pattern',name:`batch ${token}`,rows:unique,
-        startDate:dates[0] || '',endDate:dates[dates.length - 1] || '',
-        confidence:Math.min(.96,.72 + unique.length / 100),
-        evidence:`"${`batch ${token}`}" repeats across ${unique.length} audio revisions`
-      });
+    signalGroups.forEach(({ signal,entries:group },key) => {
+      var worlds = Array.from(group.values());
+      if(worlds.length < 2 && signal.strength < .98) return;
+      candidates.push(archiveEraGuessFromEntries({
+        id:`signal:${key.replace(/\s+/g,'-')}`,
+        type:signal.kind,
+        name:signal.name,
+        entries:worlds,
+        confidence:Math.min(.98,signal.strength + Math.min(.08,worlds.length * .012)),
+        evidence:`"${signal.name}" appears in ${signal.source} and connects ${worlds.length} song${worlds.length === 1 ? '' : 's'}.`,
+        evidenceDetails:Array.from(new Set(worlds.flatMap(entry => entry.signals.filter(item => item.key === key).map(item => item.source))))
+      }));
     });
     dayGroups.forEach((group,date) => {
-      var worlds = new Set(group.map(projectKeyForRow).filter(Boolean));
-      if(group.length < 4 || worlds.size < 2) return;
-      candidates.push({
-        id:`day:${date}`,type:'dense session',name:`${archiveEraGuessDateLabel(date,false)} sessions`,rows:group,
-        startDate:date,endDate:date,confidence:Math.min(.9,.62 + worlds.size * .035 + group.length * .008),
-        evidence:`${group.length} revisions from ${worlds.size} Song Worlds were worked on this day`
-      });
+      if(group.length < 2) return;
+      var preferred = archiveEraPreferredSignal(group);
+      var fallbackName = `${archiveEraGuessDateLabel(date,false)} sessions`;
+      var name = preferred && preferred.worlds.size >= Math.ceil(group.length / 2) ? preferred.name : fallbackName;
+      candidates.push(archiveEraGuessFromEntries({
+        id:`day:${date}`,
+        type:'song-origin session',
+        name,
+        entries:group,
+        confidence:Math.min(.94,.68 + group.length * .04 + (preferred ? .05 : 0)),
+        evidence:`${group.length} songs began on ${archiveEraGuessDateLabel(date,false)}. Later revisions stay in this starting session through their latest work date.`,
+        evidenceDetails:(preferred ? [`possible archive name "${preferred.name}" found in ${Array.from(preferred.sources).join(', ')}`] : []).concat(group.flatMap(entry => entry.noteEvidence.map(note => `text evidence / ${note}`))),
+        aliases:name === fallbackName ? [] : [fallbackName]
+      }));
     });
     monthGroups.forEach((group,month) => {
-      var worlds = new Set(group.map(projectKeyForRow).filter(Boolean));
-      if(group.length < 14 || worlds.size < 5) return;
-      candidates.push({
-        id:`month:${month}`,type:'date cluster',name:`${archiveEraGuessDateLabel(month,true)} cluster`,rows:group,
-        startDate:`${month}-01`,endDate:group.map(archiveEraGuessDate).filter(Boolean).sort().at(-1) || `${month}-01`,
-        confidence:Math.min(.84,.56 + worlds.size * .018 + group.length * .004),
-        evidence:`${group.length} revisions across ${worlds.size} Song Worlds cluster in this month`
-      });
+      if(group.length < 5) return;
+      var preferred = archiveEraPreferredSignal(group);
+      var fallbackName = `${archiveEraGuessDateLabel(month,true)} beginnings`;
+      var name = preferred && preferred.worlds.size >= Math.ceil(group.length * .6) ? preferred.name : fallbackName;
+      candidates.push(archiveEraGuessFromEntries({
+        id:`month:${month}`,
+        type:'song-origin month',
+        name,
+        entries:group,
+        confidence:Math.min(.86,.58 + group.length * .025 + (preferred ? .04 : 0)),
+        evidence:`${group.length} different songs began in ${archiveEraGuessDateLabel(month,true)}; revision volume did not affect this cluster.`,
+        evidenceDetails:preferred ? [`possible archive name "${preferred.name}" found in ${Array.from(preferred.sources).join(', ')}`] : [],
+        aliases:name === fallbackName ? [] : [fallbackName]
+      }));
     });
     var existingNames = new Set(archiveEnrichment.eras.map(era => String(era.name || '').trim().toLowerCase()));
-    var existingRanges = new Set(archiveEnrichment.eras.map(era => `${era.start_date || ''}|${era.end_date || ''}`));
-    return candidates
-      .filter(candidate => !existingNames.has(candidate.name.toLowerCase()) && !existingRanges.has(`${candidate.startDate}|${candidate.endDate}`))
-      .sort((a,b) => b.confidence - a.confidence || b.rows.length - a.rows.length)
-      .slice(0,12);
+    var merged = new Map();
+    candidates.filter(candidate => candidate.worlds.length && !existingNames.has(candidate.name.toLowerCase())).forEach(candidate => {
+      var fingerprint = candidate.worlds.map(world => world.key).sort().join('|');
+      var current = merged.get(fingerprint);
+      if(!current) return merged.set(fingerprint,candidate);
+      var currentNamed = current.type !== 'song-origin session' && current.type !== 'song-origin month';
+      var candidateNamed = candidate.type !== 'song-origin session' && candidate.type !== 'song-origin month';
+      var winner = candidateNamed && !currentNamed ? candidate : ((!candidateNamed && currentNamed) ? current : (candidate.confidence > current.confidence ? candidate : current));
+      var other = winner === candidate ? current : candidate;
+      winner.aliases = Array.from(new Set((winner.aliases || []).concat(other.name,other.aliases || []))).filter(name => name && name !== winner.name).slice(0,8);
+      winner.evidenceDetails = Array.from(new Set((winner.evidenceDetails || []).concat(other.evidenceDetails || [],other.evidence))).slice(0,10);
+      merged.set(fingerprint,winner);
+    });
+    return Array.from(merged.values())
+      .sort((a,b) => b.confidence - a.confidence || b.worlds.length - a.worlds.length || a.startDate.localeCompare(b.startDate))
+      .slice(0,16);
+  }
+
+  function archiveEraGuessWorldsHtml(guess,limit) {
+    var worlds = (guess?.worlds || []).slice(0,limit || 18);
+    var rows = worlds.map(entry => {
+      var activity = entry.latestDate && entry.latestDate !== entry.originDate ? ` / worked through ${entry.latestDate}` : '';
+      return `<button class="era-world-row" type="button" onclick="openSongWorld(decodeURIComponent('${encodeURIComponent(entry.key)}'),'overview')"><span class="era-world-folder" aria-hidden="true"></span><span><strong>${escapeHtml(entry.title)}</strong><small>${escapeHtml(entry.folderPath || 'root')} / began ${escapeHtml(entry.originDate || 'undated')}${escapeHtml(activity)}</small></span><em>${entry.revisionCount} revision${entry.revisionCount === 1 ? '' : 's'}</em></button>`;
+    }).join('');
+    var remaining = Math.max(0,(guess?.worlds || []).length - worlds.length);
+    return `<div class="era-world-list">${rows}${remaining ? `<span class="era-world-more">${remaining} more songs remain in this suggestion</span>` : ''}</div>`;
   }
 
   function enrichmentEraGuessesHtml() {
     enrichmentEraGuesses = deriveArchiveEraGuesses();
     if(!enrichmentEraGuesses.length) return `<section class="era-guesses"><div class="era-editor-head"><strong>archive guesses</strong><span>no strong unconfirmed date or title clusters right now</span></div></section>`;
-    return `<section class="era-guesses"><div class="era-editor-head"><strong>archive guesses</strong><span>private patterns / nothing changes until you confirm</span></div><div class="era-guess-grid">${enrichmentEraGuesses.map(guess => `<article class="era-guess-card"><small>${escapeHtml(guess.type)} / ${Math.round(guess.confidence * 100)}%</small><strong>${escapeHtml(guess.name)}</strong><p>${escapeHtml(guess.evidence)}</p><span>${guess.rows.length} revisions / ${escapeHtml(guess.startDate || 'open')} to ${escapeHtml(guess.endDate || 'open')}</span><button type="button" onclick="createEraFromArchiveGuess('${escapeAttr(guess.id)}')">review + create</button></article>`).join('')}</div></section>`;
+    return `<section class="era-guesses"><div class="era-editor-head"><strong>archive guesses</strong><span>song origins + folders + text files / nothing changes until you confirm</span></div><div class="era-guess-grid">${enrichmentEraGuesses.map(guess => `<details class="era-guess-card" data-era-guess-id="${escapeAttr(guess.id)}"><summary><small>${escapeHtml(guess.type)} / ${Math.round(guess.confidence * 100)}%</small><strong>${escapeHtml(guess.name)}</strong><span>${guess.worlds.length} song${guess.worlds.length === 1 ? '' : 's'} / ${guess.revisionCount} revisions</span><i>preview contents</i></summary><div class="era-guess-preview"><p>${escapeHtml(guess.evidence)}</p><div class="era-guess-range"><span>songs began<strong>${escapeHtml(guess.startDate || 'open')}</strong></span><span>latest work<strong>${escapeHtml(guess.endDate || 'open')}</strong></span></div>${guess.aliases.length ? `<div class="era-guess-aliases"><small>other names found</small>${guess.aliases.map(name => `<span>${escapeHtml(name)}</span>`).join('')}</div>` : ''}${guess.evidenceDetails.length ? `<div class="era-guess-evidence">${guess.evidenceDetails.map(value => `<span>${escapeHtml(value)}</span>`).join('')}</div>` : ''}${archiveEraGuessWorldsHtml(guess)}<button type="button" onclick="createEraFromArchiveGuess('${escapeAttr(guess.id)}')">create this archive era</button></div></details>`).join('')}</div></section>`;
   }
 
   async function createEraFromArchiveGuess(id) {
@@ -1759,9 +2016,9 @@
     if(!guess) return showAppNotice('That archive pattern is no longer available.','error');
     var name = cleanSingleLine(prompt('Name this creative era:',guess.name) || '',100);
     if(!name) return;
-    if(!confirm(`Create "${name}" as a private era and assign ${guess.rows.length} matching audio revisions? You can edit every assignment afterward.`)) return;
+    if(!confirm(`Create "${name}" as a private era for ${guess.worlds.length} song${guess.worlds.length === 1 ? '' : 's'}? Every revision and attached artifact in those Song Worlds will follow the song's starting era.`)) return;
     var payload = {
-      name,slug:'',description:`Archive-assisted suggestion. ${guess.evidence}. Confirmed from the private era review.`,
+      name,slug:'',description:`Archive-assisted song-origin suggestion. ${guess.evidence}. Confirmed from folder, date, and text evidence in the private era review.`,
       start_date:guess.startDate || null,end_date:guess.endDate || null,accent_color:'#ffffff',
       visibility:'private',display_order:archiveEnrichment.eras.length ? Math.max(...archiveEnrichment.eras.map(era => Number(era.display_order || 0))) + 1 : 0
     };
@@ -1771,7 +2028,7 @@
       var count = await assignEraToRows(guess.rows,result.data.id,'primary');
       await loadArchiveEnrichmentData({ force:true });
       renderAdminWorkspace();
-      showAppNotice(`${name} created privately with ${count} confirmed revisions.`);
+      showAppNotice(`${name} created privately for ${guess.worlds.length} songs and ${count} connected files.`);
     } catch(error) {
       await loadArchiveEnrichmentData({ force:true });
       renderAdminWorkspace();
@@ -1779,31 +2036,85 @@
     }
   }
 
+  function archiveEraEntriesForId(eraId,entries) {
+    var assetIds = new Set(archiveEnrichment.assetEras.filter(item => item.era_id === eraId && item.review_status === 'confirmed').map(item => item.asset_id));
+    return (entries || archiveEraWorldEntries()).filter(entry => entry.rows.some(row => assetIds.has(row.getAttribute('data-id'))));
+  }
+
+  function openCreativeEraFromArchive(id) {
+    openWorldsHub('eras');
+    window.setTimeout(function(){
+      if(document.getElementById('worldsViewport')?.classList.contains('active')) openCreativeEraWorld(id);
+    },140);
+  }
+
+  function openArchiveEraSuggestionReview(id) {
+    if(!requireAdmin()) return;
+    openAdminReviewTool('eras');
+    window.setTimeout(function(){
+      var target = document.querySelector(`[data-era-guess-id="${cssEscape(id)}"]`);
+      if(!target) return;
+      target.open = true;
+      target.scrollIntoView({ behavior:archiveSettings?.motion === 'off' ? 'auto' : 'smooth',block:'center' });
+    },160);
+  }
+
+  function renderArchiveEraShelf() {
+    var shelf = document.getElementById('archiveEraShelf');
+    if(!shelf) return;
+    if(!archiveEnrichment.ready && !isAdmin) {
+      shelf.hidden = true;
+      shelf.innerHTML = '';
+      return;
+    }
+    var entries = archiveEraWorldEntries();
+    var accepted = archiveEnrichment.eras.map(era => {
+      var worlds = archiveEraEntriesForId(era.id,entries);
+      var rows = eraRows(era.id);
+      var worldAssetIds = new Set(worlds.flatMap(world => world.rows).map(row => row.getAttribute('data-id')).filter(Boolean));
+      return { era,worlds,rows,looseCount:rows.filter(row => !worldAssetIds.has(row.getAttribute('data-id'))).length };
+    });
+    var allGuesses = isAdmin ? deriveArchiveEraGuesses() : [];
+    var guesses = allGuesses.slice(0,6);
+    if(!accepted.length && !guesses.length) {
+      shelf.hidden = true;
+      shelf.innerHTML = '';
+      return;
+    }
+    if(isAdmin) enrichmentEraGuesses = allGuesses;
+    var acceptedHtml = accepted.map(item => {
+      var era = item.era;
+      var cover = era.resolved_cover_url || era.cover_url;
+      return `<details class="archive-era-home-card" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')}"><summary>${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : '<span class="archive-era-home-field"></span>'}<span class="archive-era-home-copy"><small>${escapeHtml(era.visibility)} / ${escapeHtml(era.start_date || 'open beginning')}</small><strong>${escapeHtml(era.name)}</strong><span>${item.worlds.length} song${item.worlds.length === 1 ? '' : 's'} / ${item.rows.length} assigned files</span></span><i>expand</i></summary><div class="archive-era-home-detail"><p>${escapeHtml(era.description || 'This archive era has no note yet.')}</p>${archiveEraGuessWorldsHtml({ worlds:item.worlds },12)}${item.looseCount ? `<span class="era-world-more">${item.looseCount} additional note${item.looseCount === 1 ? '' : 's'}, visual${item.looseCount === 1 ? '' : 's'}, or loose artifact${item.looseCount === 1 ? '' : 's'} also belong to this era.</span>` : ''}<button type="button" onclick="openCreativeEraFromArchive('${escapeAttr(era.id)}')">open full archive era</button></div></details>`;
+    }).join('');
+    var guessHtml = guesses.map(guess => `<details class="archive-era-home-card suggested" data-home-era-guess="${escapeAttr(guess.id)}"><summary><span class="archive-era-home-field suggested"></span><span class="archive-era-home-copy"><small>suggested / ${Math.round(guess.confidence * 100)}% / private</small><strong>${escapeHtml(guess.name)}</strong><span>${guess.worlds.length} songs began ${escapeHtml(guess.startDate || 'across an undated session')}</span></span><i>inspect</i></summary><div class="archive-era-home-detail"><p>${escapeHtml(guess.evidence)}</p>${guess.aliases.length ? `<div class="era-guess-aliases"><small>other names found</small>${guess.aliases.map(name => `<span>${escapeHtml(name)}</span>`).join('')}</div>` : ''}${archiveEraGuessWorldsHtml(guess,10)}<button type="button" onclick="openArchiveEraSuggestionReview('${escapeAttr(guess.id)}')">review this suggestion</button></div></details>`).join('');
+    var assignedKeys = new Set(accepted.flatMap(item => item.worlds.map(world => world.key)));
+    shelf.hidden = false;
+    shelf.innerHTML = `<header class="archive-era-home-head"><div><small>archive / eras</small><strong>songs grouped by where they began.</strong><span>Later revisions stay with the song's original session.</span></div><div><span>${accepted.length} defined</span><span>${assignedKeys.size} songs placed</span>${isAdmin ? '<button type="button" onclick="openAdminReviewTool(\'eras\')">manage eras</button>' : ''}</div></header><div class="archive-era-home-list">${acceptedHtml}${guessHtml}</div>`;
+  }
+
   function enrichmentEraManagerHtml() {
-    var assignedIds = new Set(archiveEnrichment.assetEras.filter(item => item.review_status === 'confirmed').map(item => item.asset_id));
-    var unassigned = baseRows().filter(row => row.getAttribute('data-type') === 'audio' && row.getAttribute('data-id') && !assignedIds.has(row.getAttribute('data-id')));
+    var entries = archiveEraWorldEntries();
+    var unassigned = entries.filter(entry => !entry.hasConfirmedPrimary);
     var conflicts = baseRows().filter(row => (archiveEnrichment.assetErasByAsset.get(row.getAttribute('data-id')) || []).filter(item => item.relationship === 'primary' && item.review_status === 'confirmed').length > 1);
     var selectionCount = selectedArchiveRows().length;
-    var worldOptions = worldGroups().map(group => `<option value="${escapeAttr(group.key)}">${escapeHtml(group.title)} / ${group.rows.length} files</option>`).join('');
+    var worldOptions = entries.map(entry => `<option value="${escapeAttr(entry.key)}">${escapeHtml(entry.title)} / began ${escapeHtml(entry.originDate || 'undated')} / ${entry.revisionCount} revisions</option>`).join('');
     var folderOptions = adminFolderPaths().map(path => `<option value="${escapeAttr(path)}">${escapeHtml(path)} / ${adminDescendantRows(path).length} files</option>`).join('');
     var eraOptions = archiveEnrichment.eras.map(era => `<option value="${escapeAttr(era.id)}">${escapeHtml(era.name)}</option>`).join('');
     var cards = archiveEnrichment.eras.map((era,index) => {
       var count = archiveEnrichment.assetEras.filter(item => item.era_id === era.id && item.review_status === 'confirmed').length;
+      var worlds = archiveEraEntriesForId(era.id,entries);
       var cover = era.resolved_cover_url || era.cover_url;
-      return `<article class="era-manager-card" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')}">
-        <div class="era-manager-art">${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : `<span>${escapeHtml(era.name.slice(0,2).toLowerCase())}</span>`}</div>
-        <div class="era-manager-copy"><small>${escapeHtml(era.visibility)} / order ${Number(era.display_order || 0)}</small><strong>${escapeHtml(era.name)}</strong><p>${escapeHtml(era.description || 'No era note yet.')}</p><span>${escapeHtml(era.start_date || 'open')} to ${escapeHtml(era.end_date || 'open')} / ${count} files</span></div>
-        <div class="era-manager-actions"><button type="button" onclick="editArchiveEra('${escapeAttr(era.id)}')">edit</button><button type="button" onclick="moveArchiveEra('${escapeAttr(era.id)}',-1)"${index === 0 ? ' disabled' : ''}>up</button><button type="button" onclick="moveArchiveEra('${escapeAttr(era.id)}',1)"${index === archiveEnrichment.eras.length - 1 ? ' disabled' : ''}>down</button><button type="button" onclick="deleteArchiveEra('${escapeAttr(era.id)}')">delete</button></div>
-      </article>`;
+      return `<details class="era-manager-card" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')}"><summary><div class="era-manager-art">${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : `<span>${escapeHtml(era.name.slice(0,2).toLowerCase())}</span>`}</div><div class="era-manager-copy"><small>${escapeHtml(era.visibility)} / order ${Number(era.display_order || 0)}</small><strong>${escapeHtml(era.name)}</strong><p>${escapeHtml(era.description || 'No era note yet.')}</p><span>${escapeHtml(era.start_date || 'open')} to ${escapeHtml(era.end_date || 'open')} / ${worlds.length} songs / ${count} files</span></div><i>expand contents</i></summary><div class="era-manager-expanded">${archiveEraGuessWorldsHtml({ worlds },18)}<div class="era-manager-actions"><button type="button" onclick="openCreativeEraFromArchive('${escapeAttr(era.id)}')">open era</button><button type="button" onclick="editArchiveEra('${escapeAttr(era.id)}')">edit</button><button type="button" onclick="moveArchiveEra('${escapeAttr(era.id)}',-1)"${index === 0 ? ' disabled' : ''}>up</button><button type="button" onclick="moveArchiveEra('${escapeAttr(era.id)}',1)"${index === archiveEnrichment.eras.length - 1 ? ' disabled' : ''}>down</button><button type="button" onclick="deleteArchiveEra('${escapeAttr(era.id)}')">delete</button></div></div></details>`;
     }).join('');
-    var unassignedRows = unassigned.slice(0,24).map(row => `<button type="button" onclick="openEraUnassignedRow('${escapeAttr(adminRowKey(row))}')"><strong>${escapeHtml(row.getAttribute('data-title'))}</strong><span>${escapeHtml(row.getAttribute('data-ver'))} / ${escapeHtml(row.getAttribute('data-asset-date') || 'undated')}</span></button>`).join('');
+    var unassignedRows = unassigned.slice(0,24).map(entry => `<button type="button" onclick="openEraUnassignedRow('${escapeAttr(adminRowKey(entry.originRow))}')"><strong>${escapeHtml(entry.title)}</strong><span>began ${escapeHtml(entry.originDate || 'undated')} / ${entry.revisionCount} revisions</span></button>`).join('');
     return `<div class="era-manager">
-      <section class="era-manager-intro"><div><small>artist-defined chronology + archive-assisted guesses</small><h3>creative eras organize meaning, not files.</h3><p>Akrasia can propose private eras from dense work dates and repeated title patterns such as batches. You still decide what becomes real, and no original file moves.</p><button type="button" onclick="exportArchiveEraTraining()">teach the private analyzer from confirmed eras</button></div><div><span>eras<strong>${archiveEnrichment.eras.length}</strong></span><span>unassigned audio<strong>${unassigned.length}</strong></span><span>conflicts<strong>${conflicts.length}</strong></span></div></section>
+      <section class="era-manager-intro"><div><small>song origins + archive-assisted guesses</small><h3>an era starts with the song, not every revision.</h3><p>Akrasia reads each Song World's first revision, folder path, file names, notes, and text files. A song that began in one session stays there even when you keep revising it a month later.</p><button type="button" onclick="exportArchiveEraTraining()">teach the private analyzer from confirmed eras</button></div><div><span>eras<strong>${archiveEnrichment.eras.length}</strong></span><span>unassigned songs<strong>${unassigned.length}</strong></span><span>conflicts<strong>${conflicts.length}</strong></span></div></section>
       ${enrichmentEraGuessesHtml()}
       <section class="era-editor" id="eraEditor"><input type="hidden" id="eraEditId"><div class="era-editor-head"><strong>define an era</strong><button type="button" onclick="resetArchiveEraEditor()">clear</button></div><div class="era-editor-grid"><label><span>name</span><input id="eraName" maxlength="100" placeholder="artist-defined era name"></label><label><span>visibility</span><select id="eraVisibility"><option value="public">public</option><option value="private">private</option><option value="hidden">hidden</option></select></label><label><span>start date / optional</span><input id="eraStartDate" type="date"></label><label><span>end date / optional</span><input id="eraEndDate" type="date"></label><label><span>accent</span><input id="eraAccent" type="color" value="#ffffff"></label><label><span>cover / optional</span><input id="eraCoverFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label><label class="era-description"><span>what changed in this era</span><textarea id="eraDescription" maxlength="4000" rows="4"></textarea></label></div><button class="primary" type="button" onclick="saveArchiveEra()">save era</button></section>
       <section class="era-assignment"><div class="era-editor-head"><strong>assign without moving files</strong><span>${selectionCount} archive files currently selected</span></div><div class="era-assignment-controls"><select id="eraAssignEra"><option value="">choose era</option>${eraOptions}</select><select id="eraAssignRelationship"><option value="primary">primary</option><option value="secondary">secondary</option></select><button type="button" onclick="assignEraToArchiveSelection()"${selectionCount ? '' : ' disabled'}>assign selection</button><button type="button" onclick="removeEraFromArchiveSelection()"${selectionCount ? '' : ' disabled'}>remove from selection</button></div><div class="era-world-assignment"><select id="eraAssignWorld"><option value="">choose Song World</option>${worldOptions}</select><button type="button" onclick="assignEraToWorld()">assign every revision in world</button></div><div class="era-folder-assignment"><select id="eraAssignFolder"><option value="">choose archive folder</option>${folderOptions}</select><button type="button" onclick="assignEraToFolder()">assign folder contents</button></div></section>
-      <section class="era-manager-list"><div class="era-editor-head"><strong>defined eras</strong><span>drag-free order controls preserve a stable chronology</span></div>${cards || '<div class="enrichment-empty">No eras are hard-coded. Define the first one when you are ready.</div>'}</section>
-      <details class="era-unassigned"><summary>unassigned audio / ${unassigned.length}</summary><div>${unassignedRows || '<span>Every audio revision has an era.</span>'}</div></details>
+      <section class="era-manager-list"><div class="era-editor-head"><strong>defined archive eras</strong><span>expand any era to inspect its Song Worlds</span></div>${cards || '<div class="enrichment-empty">No eras are hard-coded. Open a suggestion above or define the first one.</div>'}</section>
+      <details class="era-unassigned"><summary>unassigned songs / ${unassigned.length}</summary><div>${unassignedRows || '<span>Every Song World has a starting era.</span>'}</div></details>
     </div>`;
   }
 
@@ -2059,6 +2370,7 @@
       if(adminWorkspaceMode === 'enrichment' && adminWorkspaceIsOpen()) renderEnrichmentInspector();
     });
     if(supabaseClient) loadArchiveEnrichmentData();
+    else renderArchiveEraShelf();
   }
 
   function eraRows(eraId) {
@@ -2069,15 +2381,16 @@
   function renderCreativeErasWorlds() {
     var body = document.getElementById('worldsBody');
     if(!body) return;
-    var assigned = new Set(archiveEnrichment.assetEras.filter(item => item.review_status === 'confirmed').map(item => item.asset_id));
-    var unassigned = baseRows().filter(row => row.getAttribute('data-id') && !assigned.has(row.getAttribute('data-id')));
+    var entries = archiveEraWorldEntries();
+    var assigned = entries.filter(entry => entry.hasConfirmedPrimary);
+    var unassigned = entries.filter(entry => !entry.hasConfirmedPrimary);
     var cards = archiveEnrichment.eras.map((era,index) => {
       var rows = eraRows(era.id);
-      var worlds = new Set(rows.map(projectKeyForRow));
+      var worlds = archiveEraEntriesForId(era.id,entries);
       var cover = era.resolved_cover_url || era.cover_url;
-      return `<button class="creative-era-card" type="button" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')};--era-index:${index}" onclick="openCreativeEraWorld('${escapeAttr(era.id)}')">${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : '<span class="creative-era-field"></span>'}<span class="creative-era-card-copy"><small>${escapeHtml(`${era.start_date || 'open'} / ${era.end_date || 'open'}`)}</small><strong>${escapeHtml(era.name)}</strong><span>${escapeHtml(era.description || 'Artist-defined archive era.')}</span><em>${rows.length} files / ${worlds.size} song worlds</em></span><i>enter era</i></button>`;
+      return `<button class="creative-era-card" type="button" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')};--era-index:${index}" onclick="openCreativeEraWorld('${escapeAttr(era.id)}')">${cover ? `<img src="${escapeAttr(cover)}" alt="" onerror="this.remove()">` : '<span class="creative-era-field"></span>'}<span class="creative-era-card-copy"><small>${escapeHtml(`${era.start_date || 'open'} / ${era.end_date || 'open'}`)}</small><strong>${escapeHtml(era.name)}</strong><span>${escapeHtml(era.description || 'Artist-defined archive era.')}</span><em>${worlds.length} song${worlds.length === 1 ? '' : 's'} / ${rows.length} connected files</em></span><i>enter era</i></button>`;
     }).join('');
-    body.innerHTML = `<section class="worlds-intro creative-era-intro"><div class="worlds-intro-copy"><div class="worlds-kicker">creative eras / artist-defined chronology</div><h1 class="worlds-title">the archive changes when angel changes.</h1><p class="worlds-copy">Eras connect revisions by creative identity without moving the original files. A Song World can cross boundaries, and each version keeps its own place in time.</p></div><div class="world-summary"><div>eras<strong>${archiveEnrichment.eras.length}</strong></div><div>assigned<strong>${assigned.size}</strong></div><div>unassigned<strong>${unassigned.length}</strong></div></div></section><section class="creative-era-grid">${cards || '<div class="world-empty">No public creative eras have been defined yet. The normal archive and timeline remain complete.</div>'}</section>${unassigned.length ? `<section class="world-section creative-era-unassigned"><div class="world-section-head"><h3>outside an era</h3><span>${unassigned.length} files remain visible in the archive</span></div><div class="world-file-list">${unassigned.slice(0,40).map((row,index) => worldFileHtml(row,index)).join('')}</div></section>` : ''}`;
+    body.innerHTML = `<section class="worlds-intro creative-era-intro"><div class="worlds-intro-copy"><div class="worlds-kicker">creative eras / song beginnings</div><h1 class="worlds-title">the archive changes when angel changes.</h1><p class="worlds-copy">An era follows where a song began. Every later revision and attached artifact can stay with that Song World, even when the work continues weeks later.</p></div><div class="world-summary"><div>eras<strong>${archiveEnrichment.eras.length}</strong></div><div>assigned songs<strong>${assigned.length}</strong></div><div>unassigned songs<strong>${unassigned.length}</strong></div></div></section><section class="creative-era-grid">${cards || '<div class="world-empty">No public creative eras have been defined yet. The normal archive and timeline remain complete.</div>'}</section>${unassigned.length ? `<section class="world-section creative-era-unassigned"><div class="world-section-head"><h3>outside an era</h3><span>${unassigned.length} songs still need a starting era</span></div>${archiveEraGuessWorldsHtml({ worlds:unassigned },40)}</section>` : ''}`;
   }
 
   function openCreativeEraWorld(id) {
@@ -2085,15 +2398,18 @@
     var body = document.getElementById('worldsBody');
     if(!era || !body) return;
     var rows = eraRows(id).sort((a,b) => String(a.getAttribute('data-date') || '').localeCompare(String(b.getAttribute('data-date') || '')));
-    var groups = new Map();
-    rows.forEach(row => {
-      var key = projectKeyForRow(row);
-      if(!groups.has(key)) groups.set(key,{ title:worldTitleForRow(row),rows:[] });
-      groups.get(key).rows.push(row);
-    });
+    var assignedIds = new Set(rows.map(row => row.getAttribute('data-id')).filter(Boolean));
+    var coveredIds = new Set();
+    var groups = archiveEraEntriesForId(id,archiveEraWorldEntries()).map(entry => {
+      var assignedRows = entry.rows.filter(row => assignedIds.has(row.getAttribute('data-id')));
+      assignedRows.forEach(row => coveredIds.add(row.getAttribute('data-id')));
+      return { entry,rows:assignedRows };
+    }).filter(group => group.rows.length);
+    var looseRows = rows.filter(row => !coveredIds.has(row.getAttribute('data-id')));
     var cover = era.resolved_cover_url || era.cover_url;
-    var groupHtml = Array.from(groups.values()).map(group => `<section class="world-section"><div class="world-section-head"><h3>${escapeHtml(group.title)}</h3><span>${group.rows.length} files in this era</span></div><div class="world-file-list">${group.rows.map((row,index) => worldFileHtml(row,index)).join('')}</div></section>`).join('');
-    body.innerHTML = `<section class="creative-era-detail" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')}"><button type="button" class="creative-era-back" onclick="renderCreativeErasWorlds()">back to eras</button><div class="creative-era-detail-hero">${cover ? `<img src="${escapeAttr(cover)}" alt="">` : '<span></span>'}<div><small>${escapeHtml(`${era.start_date || 'open beginning'} to ${era.end_date || 'open ending'}`)}</small><h1>${escapeHtml(era.name)}</h1><p>${escapeHtml(era.description || 'This era has no public note yet.')}</p><em>${rows.length} connected files / ${groups.size} song worlds</em></div></div>${groupHtml || '<div class="world-empty">This era is defined, but no public archive revisions are assigned yet.</div>'}</section>`;
+    var groupHtml = groups.map(group => `<section class="world-section"><div class="world-section-head"><h3>${escapeHtml(group.entry.title)}</h3><span>began ${escapeHtml(group.entry.originDate || 'undated')} / ${group.rows.length} assigned files</span></div><div class="world-file-list">${group.rows.map((row,index) => worldFileHtml(row,index)).join('')}</div></section>`).join('');
+    var looseHtml = looseRows.length ? `<section class="world-section creative-era-loose"><div class="world-section-head"><h3>notes, visuals + loose artifacts</h3><span>${looseRows.length} files assigned directly to this era</span></div><div class="world-file-list">${looseRows.map((row,index) => worldFileHtml(row,index)).join('')}</div></section>` : '';
+    body.innerHTML = `<section class="creative-era-detail" style="--era-color:${escapeAttr(era.accent_color || '#ffffff')}"><button type="button" class="creative-era-back" onclick="renderCreativeErasWorlds()">back to eras</button><div class="creative-era-detail-hero">${cover ? `<img src="${escapeAttr(cover)}" alt="">` : '<span></span>'}<div><small>${escapeHtml(`${era.start_date || 'open beginning'} to ${era.end_date || 'open ending'}`)}</small><h1>${escapeHtml(era.name)}</h1><p>${escapeHtml(era.description || 'This era has no public note yet.')}</p><em>${groups.length} song world${groups.length === 1 ? '' : 's'} / ${rows.length} assigned files</em></div></div>${groupHtml}${looseHtml || (!groupHtml ? '<div class="world-empty">This era is defined, but no public archive revisions are assigned yet.</div>' : '')}</section>`;
     body.scrollTo({ top:0,behavior:archiveSettings?.motion === 'off' ? 'auto' : 'smooth' });
   }
 

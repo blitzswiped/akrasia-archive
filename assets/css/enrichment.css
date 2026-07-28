@@ -116,3 +116,84 @@ body.enrichment-reviewing-lyrics .player-bar{transform:translateY(calc(100% + 10
   .enrichment-lyrics-open .enrichment-editor-commit{grid-template-columns:1fr;bottom:env(safe-area-inset-bottom)}
   .enrichment-lyrics-open .enrichment-editor-commit>span{padding:3px;text-align:center;white-space:normal}
 }
+
+/* Archive eras: one song-level chronology shared by home, Worlds, and admin review. */
+.archive-era-shelf{display:grid;gap:12px;margin:12px 0 18px;padding:14px;border:1px solid var(--line-soft);border-radius:var(--radius-soft);background:rgba(255,255,255,.016);overflow:hidden}
+.archive-era-shelf[hidden]{display:none}
+.archive-era-home-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:2px 2px 12px;border-bottom:1px solid var(--line-soft)}
+.archive-era-home-head>div:first-child{display:grid;gap:4px}
+.archive-era-home-head small{color:var(--dim);font:700 .43rem 'JetBrains Mono',monospace;text-transform:uppercase}
+.archive-era-home-head strong{color:#fff;font:750 .82rem Arial,sans-serif}
+.archive-era-home-head>div:first-child>span{color:var(--dim-2);font:500 .48rem/1.45 'JetBrains Mono',monospace}
+.archive-era-home-head>div:last-child{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+.archive-era-home-head>div:last-child>span{padding:6px 8px;border-left:1px solid var(--line);color:var(--dim);font:650 .43rem 'JetBrains Mono',monospace}
+.archive-era-home-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.archive-era-home-card{min-width:0;border:1px solid var(--line-soft);border-radius:var(--radius);background:linear-gradient(125deg,color-mix(in srgb,var(--era-color,#fff) 7%,transparent),rgba(255,255,255,.012));overflow:hidden;transition:border-color .2s,background .2s,transform .2s}
+.archive-era-home-card:hover,.archive-era-home-card[open]{border-color:color-mix(in srgb,var(--era-color,#fff) 52%,var(--line))}
+.archive-era-home-card>summary{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:76px;padding:10px;list-style:none;cursor:pointer}
+.archive-era-home-card>summary::-webkit-details-marker,.era-guess-card>summary::-webkit-details-marker,.era-manager-card>summary::-webkit-details-marker{display:none}
+.archive-era-home-card>summary>img,.archive-era-home-field{width:54px;aspect-ratio:1;border:1px solid color-mix(in srgb,var(--era-color,#fff) 45%,var(--line));border-radius:9px;object-fit:cover;background:repeating-radial-gradient(circle at 50% 50%,transparent 0 5px,color-mix(in srgb,var(--era-color,#fff) 30%,transparent) 6px 7px)}
+.archive-era-home-field.suggested{background:linear-gradient(145deg,rgba(255,255,255,.12),transparent),repeating-linear-gradient(135deg,transparent 0 7px,rgba(255,255,255,.08) 8px 9px)}
+.archive-era-home-copy{display:grid;gap:3px;min-width:0}
+.archive-era-home-copy small,.archive-era-home-copy>span{overflow:hidden;color:var(--dim);font:600 .42rem 'JetBrains Mono',monospace;text-overflow:ellipsis;white-space:nowrap}
+.archive-era-home-copy strong{overflow-wrap:anywhere;color:#fff;font:750 .72rem Arial,sans-serif}
+.archive-era-home-card>summary>i{color:var(--dim);font:650 .42rem 'JetBrains Mono',monospace;white-space:nowrap}
+.archive-era-home-card[open]>summary>i{color:#fff}
+.archive-era-home-detail{display:grid;gap:10px;padding:0 10px 11px;border-top:1px solid var(--line-soft);animation:eraReveal .24s cubic-bezier(.2,.8,.2,1)}
+.archive-era-home-detail>p{margin:10px 0 0;color:var(--dim-2);font:500 .49rem/1.55 'JetBrains Mono',monospace}
+.archive-era-home-detail>button{justify-self:start}
+.era-guess-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.era-guess-card{display:block;min-width:0;padding:0;overflow:hidden}
+.era-guess-card>summary{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 12px;align-items:center;padding:12px;list-style:none;cursor:pointer}
+.era-guess-card>summary small,.era-guess-card>summary strong,.era-guess-card>summary span{grid-column:1}
+.era-guess-card>summary i{grid-column:2;grid-row:1/4;align-self:center;color:var(--dim);font:650 .43rem 'JetBrains Mono',monospace;white-space:nowrap}
+.era-guess-card[open]>summary i{color:#fff}
+.era-guess-preview{display:grid;gap:10px;padding:0 12px 12px;border-top:1px solid var(--line-soft);animation:eraReveal .24s cubic-bezier(.2,.8,.2,1)}
+.era-guess-preview>p{margin-top:10px}
+.era-guess-range{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.era-guess-range>span{display:grid;gap:3px;padding:8px;border-left:1px solid var(--line);color:var(--dim);font:650 .42rem 'JetBrains Mono',monospace}
+.era-guess-range strong{color:#fff;font-size:.49rem}
+.era-guess-aliases,.era-guess-evidence{display:flex;flex-wrap:wrap;gap:5px}
+.era-guess-aliases small{flex:0 0 100%;color:var(--dim);font:650 .4rem 'JetBrains Mono',monospace;text-transform:uppercase}
+.era-guess-aliases span,.era-guess-evidence span{padding:5px 7px;border:1px solid var(--line-soft);border-radius:7px;color:var(--dim-2);font:600 .42rem/1.35 'JetBrains Mono',monospace}
+.era-guess-evidence span{border-style:dashed}
+.era-world-list{display:grid;gap:2px;min-width:0}
+.era-world-row{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:8px;align-items:center;width:100%;min-width:0;padding:8px 2px;border:0;border-top:1px solid var(--line-soft);border-radius:0;background:transparent;color:#fff;text-align:left;cursor:pointer}
+.era-world-row:first-child{border-top:0}
+.era-world-row:hover{padding-left:7px;background:rgba(255,255,255,.035)}
+.era-world-folder{position:relative;width:13px;height:9px;border:1px solid var(--dim);border-radius:2px}
+.era-world-folder:before{content:"";position:absolute;left:1px;top:-4px;width:6px;height:3px;border:1px solid var(--dim);border-bottom:0;border-radius:2px 2px 0 0}
+.era-world-row>span:nth-child(2){display:grid;gap:2px;min-width:0}
+.era-world-row strong{overflow:hidden;color:#fff;font:700 .51rem 'JetBrains Mono',monospace;text-overflow:ellipsis;white-space:nowrap}
+.era-world-row small{overflow:hidden;color:var(--dim);font:500 .4rem 'JetBrains Mono',monospace;text-overflow:ellipsis;white-space:nowrap}
+.era-world-row em{color:var(--dim-2);font:600 .4rem 'JetBrains Mono',monospace;white-space:nowrap}
+.era-world-more{padding:8px 2px;border-top:1px solid var(--line-soft);color:var(--dim);font:600 .42rem 'JetBrains Mono',monospace}
+.era-manager-card{display:block;padding:0;overflow:hidden}
+.era-manager-card>summary{display:grid;grid-template-columns:74px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px;list-style:none;cursor:pointer}
+.era-manager-card>summary>i{color:var(--dim);font:650 .43rem 'JetBrains Mono',monospace;white-space:nowrap}
+.era-manager-card[open]>summary>i{color:#fff}
+.era-manager-expanded{display:grid;gap:10px;padding:0 10px 10px;border-top:1px solid var(--line-soft);animation:eraReveal .24s cubic-bezier(.2,.8,.2,1)}
+.era-manager-expanded>.era-world-list{margin-top:8px}
+.era-manager-actions{display:flex;justify-content:flex-end;gap:5px;flex-wrap:wrap}
+.creative-era-unassigned>.era-world-list{margin-top:8px;padding:4px 12px;border:1px solid var(--line-soft);border-radius:var(--radius);background:rgba(255,255,255,.012)}
+@keyframes eraReveal{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+@media(max-width:1080px){.archive-era-home-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){
+  .archive-era-shelf{margin:8px 0 12px;padding:10px}
+  .archive-era-home-head{align-items:flex-start;flex-direction:column}
+  .archive-era-home-head>div:last-child{justify-content:flex-start}
+  .archive-era-home-list,.era-guess-grid{grid-template-columns:1fr}
+  .archive-era-home-card>summary{grid-template-columns:48px minmax(0,1fr);min-height:68px;padding:8px}
+  .archive-era-home-card>summary>img,.archive-era-home-field{width:48px}
+  .archive-era-home-card>summary>i{grid-column:2;justify-self:start}
+  .era-guess-card>summary{grid-template-columns:minmax(0,1fr)}
+  .era-guess-card>summary i{grid-column:1;grid-row:auto}
+  .era-guess-range{grid-template-columns:1fr}
+  .era-manager-card>summary{grid-template-columns:58px minmax(0,1fr);gap:9px;padding:8px}
+  .era-manager-card>summary .era-manager-art{width:58px}
+  .era-manager-card>summary>i{grid-column:2;justify-self:start}
+  .era-manager-actions{justify-content:flex-start}
+  .era-world-row{grid-template-columns:14px minmax(0,1fr)}
+  .era-world-row em{grid-column:2}
+}
+@media(prefers-reduced-motion:reduce){.archive-era-home-detail,.era-guess-preview,.era-manager-expanded{animation:none}}
