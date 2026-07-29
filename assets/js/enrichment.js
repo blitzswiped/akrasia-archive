@@ -1140,15 +1140,21 @@
     return Math.max(1,...values.filter(value => value > 0));
   }
 
-  function enrichmentFlowLineMarkup(line) {
+  function enrichmentFlowLineMarkup(line,group,nextGroup) {
     var lane = line?.lane || 'main';
     if(line?.text === '...') return '<span class="is-pause" data-lane="pause"><i>instrumental</i><b><u></u><u></u><u></u></b></span>';
-    return `<span data-lane="${escapeAttr(lane)}"><i>${escapeHtml(lane)}</i><b>${escapeHtml(line?.text || '')}</b></span>`;
+    var schedule = lyricWordTimingSchedule(line,group?.time || line?.time || 0,nextGroup?.time);
+    var words = schedule.words.map((word,index) =>
+      `<span class="enrichment-flow-word" data-flow-word-start="${word.start.toFixed(3)}" data-flow-word-end="${word.end.toFixed(3)}" data-flow-word-speed="${word.speed}" style="--flow-word-grow:${Math.max(.04,word.share).toFixed(4)}"><u>${escapeHtml(word.text)}</u><em>${escapeHtml(lyricWordSpeedLabel(word.speed))} / ${word.duration.toFixed(2)}s</em></span>`
+    ).join('');
+    return `<span data-lane="${escapeAttr(lane)}"><i>${escapeHtml(`${lane} / ${normalizeLyricSpeed(line?.speed)}`)}</i><b class="enrichment-flow-word-run">${words || escapeHtml(line?.text || '')}</b></span>`;
   }
 
   function enrichmentFlowSlotMarkup(label,group) {
     if(!group) return `<small>${escapeHtml(label)}</small><span class="enrichment-flow-empty">${label === 'current' ? 'waiting for the first line' : '--'}</span>`;
-    return `<small>${escapeHtml(label)} / ${escapeHtml(enrichmentTimeText(group.time))}</small><span class="enrichment-flow-lines">${group.lines.map(enrichmentFlowLineMarkup).join('')}</span>`;
+    var groupIndex = enrichmentFlowGroups.indexOf(group);
+    var nextGroup = groupIndex >= 0 ? enrichmentFlowGroups[groupIndex + 1] : null;
+    return `<small>${escapeHtml(label)} / ${escapeHtml(enrichmentTimeText(group.time))}</small><span class="enrichment-flow-lines">${group.lines.map(line => enrichmentFlowLineMarkup(line,group,nextGroup)).join('')}</span>`;
   }
 
   function enrichmentLyricFlowHtml(suggestion,row,lines) {
@@ -1159,12 +1165,16 @@
     var laneLevel = { main:0,lead:0,adlib:1,bg:1,effect:2 };
     var markers = enrichmentFlowGroups.flatMap((group,groupIndex) => {
       var next = enrichmentFlowGroups[groupIndex + 1];
-      var end = next ? next.time : Math.min(enrichmentFlowDurationValue,group.time + 6);
       var left = Math.max(0,Math.min(100,group.time / enrichmentFlowDurationValue * 100));
-      var width = Math.max(.42,Math.min(12,(Math.max(group.time + .35,end) - group.time) / enrichmentFlowDurationValue * 100));
       return group.lines.map((line,lineIndex) => {
+        var schedule = lyricWordTimingSchedule(line,group.time,next?.time);
+        var end = group.time + Math.max(.35,schedule.duration);
+        var width = Math.max(.42,Math.min(12,(end - group.time) / enrichmentFlowDurationValue * 100));
         var level = Number(laneLevel[line.lane] ?? 0) + lineIndex * .16;
-        return `<button class="enrichment-flow-marker" type="button" data-flow-group="${groupIndex}" data-flow-index="${line.editorIndex}" data-lane="${escapeAttr(line.text === '...' ? 'pause' : line.lane || 'main')}" style="--flow-left:${left.toFixed(3)}%;--flow-width:${width.toFixed(3)}%;--flow-lane:${level}" onclick="event.stopPropagation();seekEnrichmentFlowLine('${escapeAttr(suggestion.id)}',${line.editorIndex},${Number(line.time || 0).toFixed(3)})" aria-label="${escapeAttr(`${enrichmentTimeText(line.time)} ${line.lane || 'main'} ${line.text}`)}"></button>`;
+        var wordSegments = schedule.words.map(word =>
+          `<span data-flow-word-start="${word.start.toFixed(3)}" data-flow-word-end="${word.end.toFixed(3)}" style="--flow-segment-left:${((word.start - group.time) / Math.max(.01,schedule.duration) * 100).toFixed(2)}%;--flow-segment-width:${(word.duration / Math.max(.01,schedule.duration) * 100).toFixed(2)}%"></span>`
+        ).join('');
+        return `<button class="enrichment-flow-marker" type="button" data-flow-group="${groupIndex}" data-flow-index="${line.editorIndex}" data-lane="${escapeAttr(line.text === '...' ? 'pause' : line.lane || 'main')}" style="--flow-left:${left.toFixed(3)}%;--flow-width:${width.toFixed(3)}%;--flow-lane:${level}" onclick="event.stopPropagation();seekEnrichmentFlowLine('${escapeAttr(suggestion.id)}',${line.editorIndex},${Number(line.time || 0).toFixed(3)})" aria-label="${escapeAttr(`${enrichmentTimeText(line.time)} ${line.lane || 'main'} ${line.text}`)}">${wordSegments}</button>`;
       });
     }).join('');
     return `<section class="enrichment-lyric-flow" id="enrichmentLyricFlow" data-suggestion-id="${escapeAttr(suggestion.id)}" data-duration="${enrichmentFlowDurationValue}">
@@ -1175,7 +1185,7 @@
         <button type="button" data-flow-slot="next" onclick="seekEnrichmentFlowSlot(this,'${escapeAttr(suggestion.id)}')">${enrichmentFlowSlotMarkup('next',enrichmentFlowGroups[0] || null)}</button>
       </div>
       <div class="enrichment-flow-timeline" id="enrichmentFlowTimeline" onclick="seekEnrichmentFlowTimeline(event,'${escapeAttr(suggestion.id)}')"><span class="enrichment-flow-axis"></span>${markers}<i class="enrichment-flow-playhead" id="enrichmentFlowPlayhead"></i></div>
-      <footer><span>main + lead</span><span>adlib + background</span><span>effect + pause</span><em>click anywhere to seek</em></footer>
+      <footer><span>word width = sung time</span><span>badge = word rate</span><span>lanes stay separate</span><em>change rates in each row's word timing panel</em></footer>
     </section>`;
   }
 
@@ -1265,6 +1275,14 @@
     if(playhead) playhead.style.left = `${(progress * 100).toFixed(3)}%`;
     var time = document.getElementById('enrichmentFlowTime');
     if(time) time.textContent = `${fmt(currentTime)} / ${fmt(enrichmentFlowDurationValue)}`;
+    host.querySelectorAll('[data-flow-word-start]').forEach(word => {
+      var start = Number(word.getAttribute('data-flow-word-start')) || 0;
+      var end = Math.max(start + .04,Number(word.getAttribute('data-flow-word-end')) || start + .2);
+      var wordProgress = Math.max(0,Math.min(1,(currentTime - start) / (end - start)));
+      word.style.setProperty('--flow-word-progress',wordProgress.toFixed(3));
+      word.classList.toggle('is-current',wordProgress > 0 && wordProgress < 1);
+      word.classList.toggle('is-past',wordProgress >= 1);
+    });
     host.classList.toggle('is-playing',Boolean(active && !currentAudio.paused));
   }
 

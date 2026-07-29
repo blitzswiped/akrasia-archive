@@ -66,7 +66,7 @@ assert.deepEqual(
     { text:'still',speed:1 }
   ]
 );
-const lyricFocusStart = playerSource.indexOf('  function lyricFocusLineHtml');
+const lyricFocusStart = playerSource.indexOf('  function lyricWordTimingSchedule');
 const lyricFocusEnd = playerSource.indexOf('  var lyricCenterFrame');
 assert.ok(lyricFocusStart >= 0 && lyricFocusEnd > lyricFocusStart);
 const lyricFocusBlock = playerSource.slice(lyricFocusStart,lyricFocusEnd);

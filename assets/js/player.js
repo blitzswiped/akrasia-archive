@@ -320,17 +320,16 @@
     return '<span class="lyric-dots" aria-label="instrumental pause"><i></i><i></i><i></i></span>';
   }
 
-  function lyricFocusLineHtml(line,groupIndex,lineIndex) {
-    var words = Array.isArray(line.words) && line.words.length
+  function lyricWordTimingSchedule(line,startTime,nextTime) {
+    var words = Array.isArray(line?.words) && line.words.length
       ? line.words.map(word => ({ text:String(word.text || ''),speed:normalizeLyricWordSpeed(word.speed) })).filter(word => word.text)
-      : parseLyricWordSpeeds(line.text).words;
-    if(!words.length) return '';
-    var glow = normalizeLyricGlow(line.glow,line.lane);
-    var speed = normalizeLyricSpeed(line.speed);
-    var group = activeLyricGroups[groupIndex];
-    var next = activeLyricGroups[groupIndex + 1];
-    var available = next ? Math.max(.7,next.time - group.time - .08) : Math.max(1.4,Math.min(6,words.length * .42));
-    var speedScale = { still:1,slow:1,normal:.86,fast:.68 }[speed] || 1;
+      : parseLyricWordSpeeds(line?.text || '').words;
+    if(!words.length) return { duration:0,words:[] };
+    var start = Math.max(0,Number(startTime) || 0);
+    var available = Number.isFinite(Number(nextTime))
+      ? Math.max(.7,Number(nextTime) - start - .08)
+      : Math.max(1.4,Math.min(6,words.length * .42));
+    var speedScale = { still:1,slow:1,normal:.86,fast:.68 }[normalizeLyricSpeed(line?.speed)] || 1;
     var duration = Math.max(.35,Math.min(available,Math.max(1.2,Math.min(6,words.length * .42))) * speedScale);
     var weights = words.map(word => {
       var base = Math.max(.72,Math.min(1.65,String(word.text).replace(/[^\p{L}\p{N}]/gu,'').length / 4 || .72));
@@ -338,14 +337,29 @@
     });
     var weightTotal = weights.reduce((sum,value) => sum + value,0) || 1;
     var elapsed = 0;
-    var markup = words.map((word,index) => {
-      var start = group.time + duration * (elapsed / weightTotal);
-      elapsed += weights[index];
-      var end = group.time + duration * (elapsed / weightTotal);
+    return {
+      duration,
+      words:words.map((word,index) => {
+        var wordStart = start + duration * (elapsed / weightTotal);
+        elapsed += weights[index];
+        var wordEnd = start + duration * (elapsed / weightTotal);
+        return Object.assign({},word,{ start:wordStart,end:wordEnd,duration:wordEnd - wordStart,share:weights[index] / weightTotal });
+      })
+    };
+  }
+
+  function lyricFocusLineHtml(line,groupIndex,lineIndex) {
+    var glow = normalizeLyricGlow(line.glow,line.lane);
+    var speed = normalizeLyricSpeed(line.speed);
+    var group = activeLyricGroups[groupIndex];
+    var next = activeLyricGroups[groupIndex + 1];
+    var schedule = lyricWordTimingSchedule(line,group.time,next?.time);
+    if(!schedule.words.length) return '';
+    var markup = schedule.words.map((word,index) => {
       var floatX = ((index + lineIndex * 2) % 5 - 2) * 2;
       var floatY = -6 - ((index + lineIndex) % 3) * 3;
       var motionScale = word.speed > 0 ? 1 / word.speed : 1;
-      return `<span class="lyrics-focus-word" data-word-start="${start.toFixed(3)}" data-word-end="${end.toFixed(3)}" data-word-speed="${word.speed}" style="--word-order:${index};--word-float-x:${floatX}px;--word-float-y:${floatY}px;--word-duration:${(2.6 + index % 4 * .34).toFixed(2)}s;--word-speed-scale:${motionScale.toFixed(3)}">${escapeHtml(word.text)}</span>`;
+      return `<span class="lyrics-focus-word" data-word-start="${word.start.toFixed(3)}" data-word-end="${word.end.toFixed(3)}" data-word-speed="${word.speed}" style="--word-order:${index};--word-float-x:${floatX}px;--word-float-y:${floatY}px;--word-duration:${(2.6 + index % 4 * .34).toFixed(2)}s;--word-speed-scale:${motionScale.toFixed(3)}">${escapeHtml(word.text)}</span>`;
     }).join('');
     return `<span class="lyrics-focus-line" data-lane="${escapeAttr(line.lane)}" data-glow="${escapeAttr(glow)}" data-speed="${escapeAttr(speed)}">${markup}</span>`;
   }
