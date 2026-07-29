@@ -505,7 +505,9 @@
 
   function enrichmentReviewItems() {
     return collapseEnrichmentEraSuggestions(archiveEnrichment.suggestions).filter(item => {
-      if(enrichmentReviewStatus !== 'all' && item.status !== enrichmentReviewStatus) return false;
+      // A direct song search must not silently miss drafts hidden by a remembered
+      // status filter from an earlier review session.
+      if(!enrichmentReviewQuery && enrichmentReviewStatus !== 'all' && item.status !== enrichmentReviewStatus) return false;
       if(enrichmentReviewKind !== 'all' && item.kind !== enrichmentReviewKind) return false;
       if(enrichmentSuggestionConfidence(item) < enrichmentReviewConfidence) return false;
       if(!enrichmentSuggestionMatchesSignal(item,enrichmentReviewSignal)) return false;
@@ -688,7 +690,7 @@
     var signals = [['all','all'],['unsure','unsure lyrics'],['missing-cover','missing cover'],['failed','failed'],['ready','ready']];
     var signalBar = `<div class="enrichment-signal-bar"><span>show</span>${signals.map(signal => `<button class="${enrichmentReviewSignal === signal[0] ? 'active' : ''}" type="button" onclick="setEnrichmentReviewFilter('signal','${signal[0]}')">${signal[1]}</button>`).join('')}<em>J/K moves / space selects</em></div>`;
     var toolbar = `<div class="enrichment-review-toolbar">
-      <label class="enrichment-review-search"><span>find a song</span><input id="enrichmentReviewSearch" type="search" maxlength="160" value="${escapeAttr(enrichmentReviewQuery)}" placeholder="title, version, folder, era..." oninput="filterEnrichmentReviewQueue(this.value)" onkeydown="handleEnrichmentReviewSearchKey(event)"></label>
+      <label class="enrichment-review-search"><span>find a song${enrichmentReviewQuery ? ' / all statuses' : ''}</span><input id="enrichmentReviewSearch" type="search" maxlength="160" value="${escapeAttr(enrichmentReviewQuery)}" placeholder="title, version, folder, era..." oninput="filterEnrichmentReviewQueue(this.value)" onkeydown="handleEnrichmentReviewSearchKey(event)"></label>
       <label><span>status</span><select onchange="setEnrichmentReviewFilter('status',this.value)">${statuses.map(status => `<option value="${status}"${status === enrichmentReviewStatus ? ' selected' : ''}>${status.replace('_',' ')}</option>`).join('')}</select></label>
       <label><span>kind</span><select onchange="setEnrichmentReviewFilter('kind',this.value)">${kinds.map(kind => `<option value="${kind}"${kind === enrichmentReviewKind ? ' selected' : ''}>${kind.replace('_',' ')}</option>`).join('')}</select></label>
       <label class="enrichment-confidence"><span>confidence / ${Math.round(enrichmentReviewConfidence * 100)}%</span><input type="range" min="0" max="1" step=".05" value="${enrichmentReviewConfidence}" oninput="this.previousElementSibling.textContent='confidence / '+Math.round(this.value*100)+'%'" onchange="setEnrichmentReviewFilter('confidence',this.value)"></label>

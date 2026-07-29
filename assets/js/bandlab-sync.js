@@ -358,20 +358,44 @@
     var byRevision = new Map();
     var byProjectVersion = new Map();
     var byFileVersion = new Map();
+    var byTitleVersion = new Map();
+    var byDateVersion = new Map();
+    var sourceDateVersionCounts = new Map();
+    function addUniqueMatch(map,key,row) {
+      if(!key) return;
+      if(map.has(key)) map.set(key,null);
+      else map.set(key,row);
+    }
     rows.forEach(row => {
       var revisionId = row.getAttribute('data-source-revision-id');
       var projectId = row.getAttribute('data-source-project-id');
       var version = String(row.getAttribute('data-ver') || '').toLowerCase();
+      var title = cleanSingleLine(row.getAttribute('data-title'),120).toLocaleLowerCase();
+      var date = cleanSingleLine(row.getAttribute('data-asset-date'),20);
       if(revisionId) byRevision.set(revisionId,row);
       if(projectId && version) byProjectVersion.set(`${projectId}:${version}`,row);
-      byFileVersion.set(`${String(row.getAttribute('data-name') || '').toLowerCase()}:${version}`,row);
+      addUniqueMatch(byFileVersion,`${String(row.getAttribute('data-name') || '').toLowerCase()}:${version}`,row);
+      addUniqueMatch(byTitleVersion,title && version ? `${title}:${version}` : '',row);
+      addUniqueMatch(byDateVersion,date && version ? `${date}:${version}` : '',row);
     });
     bandlabScanState.entries.forEach(item => {
-      var existing = byRevision.get(item.revisionId)
-        || (item.projectId ? byProjectVersion.get(`${item.projectId}:${item.version.toLowerCase()}`) : null)
-        || byFileVersion.get(`${item.filename.toLowerCase()}:${item.version.toLowerCase()}`)
-        || null;
+      var key = item.assetDate && item.version ? `${item.assetDate}:${item.version.toLowerCase()}` : '';
+      if(key) sourceDateVersionCounts.set(key,(sourceDateVersionCounts.get(key) || 0) + 1);
+    });
+    bandlabScanState.entries.forEach(item => {
+      var version = item.version.toLowerCase();
+      var dateVersionKey = item.assetDate ? `${item.assetDate}:${version}` : '';
+      var candidates = [
+        ['revision',byRevision.get(item.revisionId)],
+        ['project-version',item.projectId ? byProjectVersion.get(`${item.projectId}:${version}`) : null],
+        ['filename-version',byFileVersion.get(`${item.filename.toLowerCase()}:${version}`)],
+        ['title-version',byTitleVersion.get(`${item.archiveTitle.toLocaleLowerCase()}:${version}`)],
+        ['unique-date-version',dateVersionKey && sourceDateVersionCounts.get(dateVersionKey) === 1 ? byDateVersion.get(dateVersionKey) : null]
+      ];
+      var match = candidates.find(candidate => candidate[1]);
+      var existing = match ? match[1] : null;
       item.existingRow = existing;
+      item.matchKind = match ? match[0] : '';
       if(!existing) item.status = 'new';
       else if(!existing.getAttribute('data-source-revision-id')) item.status = 'changed';
       else {
@@ -776,6 +800,9 @@
       var sourceMatch = await supabaseClient.from('archive_source_provenance').select('asset_id').eq('source_kind','bandlab').eq('source_revision_id',item.revisionId).maybeSingle();
       if(sourceMatch.error) throw sourceMatch.error;
       assetId = sourceMatch.data?.asset_id || '';
+    }
+    if(analysisOnly && assetId && !item.existingRow?.getAttribute('data-source-revision-id')) {
+      await saveBandlabProvenance(assetId,item,new Date().toISOString());
     }
     var analysisSaved = typeof saveBandlabAnalysisSuggestions === 'function' ? await saveBandlabAnalysisSuggestions(assetId,item) : 0;
     return { record,mediaSaved,analysisSaved };
