@@ -51,6 +51,7 @@
   var supabaseClient = null;
   var isAdmin = false;
   var isRemoteReady = false;
+  var currentAuthIdentity = '';
   var adminTapCount = 0;
   var draggedExplorerItem = null;
   var editingRow = null;
@@ -603,8 +604,8 @@
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       isRemoteReady = true;
       var sessionData = await supabaseClient.auth.getSession();
-      updateAuthState(sessionData.data.session);
-      supabaseClient.auth.onAuthStateChange((event, session) => updateAuthState(session));
+      updateAuthState(sessionData.data.session,'INITIAL_SESSION');
+      supabaseClient.auth.onAuthStateChange((event, session) => updateAuthState(session,event));
       await loadRemoteArchive();
       await loadArchiveExtras();
       setupLiveRealtime();
@@ -617,9 +618,13 @@
     }
   }
 
-  function updateAuthState(session) {
+  function updateAuthState(session,event) {
+    var previousIdentity = currentAuthIdentity;
+    var previousAdmin = isAdmin;
     var email = session && session.user ? session.user.email : '';
+    currentAuthIdentity = session?.user?.id || email.toLowerCase() || '';
     isAdmin = email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    var identityChanged = previousIdentity !== currentAuthIdentity || previousAdmin !== isAdmin;
     document.body.classList.toggle('is-admin', isAdmin);
     document.getElementById('authStatus').textContent = isAdmin ? 'admin' : '';
     document.getElementById('authLogin').style.display = 'none';
@@ -636,8 +641,11 @@
         if(typeof hydrateArchiveEnrichmentRows === 'function') hydrateArchiveEnrichmentRows();
       }
     }
-    else setTimeout(autoRescanBandlabSource,0);
-    if(supabaseClient && typeof loadArchiveEnrichmentData === 'function') setTimeout(() => loadArchiveEnrichmentData({ force:true }),450);
+    else if(identityChanged) setTimeout(autoRescanBandlabSource,0);
+    var enrichmentNeedsIdentityLoad = typeof archiveEnrichment === 'undefined' || !archiveEnrichment.ready;
+    if(supabaseClient && typeof loadArchiveEnrichmentData === 'function' && (identityChanged || enrichmentNeedsIdentityLoad)) {
+      setTimeout(() => loadArchiveEnrichmentData({ force:identityChanged }),450);
+    }
     syncAdminControls();
     updateCounts();
   }

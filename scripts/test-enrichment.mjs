@@ -118,8 +118,8 @@ const enrichmentHelpers = `
   function stableSourceHash(value){let h=2166136261;for(const c of String(value||'')){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0).toString(16).padStart(8,'0')}
   ${playerLyricsBlock}
 `;
-const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, buildEnrichmentFlowGroups, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions, archiveEraAssignedRowsForWorld } = new Function(
-  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, buildEnrichmentFlowGroups, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions, archiveEraAssignedRowsForWorld };`
+const { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, buildEnrichmentFlowGroups, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraCanonicalName, archiveEraMergeSignal, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions, archiveEraAssignedRowsForWorld } = new Function(
+  `${enrichmentHelpers}\n${enrichmentSource}\nreturn { privateLyricsPayload, privateAudioMetadataPayload, privateTagSuggestions, bandlabAnalysisSuggestionRecords, repairEnrichmentLyricBreaks, repairEnrichmentLyricBreaksResult, enrichmentDraftLines, enrichmentLyricEvidence, serializeEnrichmentDraftLines, enrichmentWordTimingHtml, buildEnrichmentFlowGroups, enrichmentErrorIsBrokenNullSanitizer, acceptEnrichmentLyricsCompatibility, archiveEraCanonicalName, archiveEraMergeSignal, archiveEraNameSignals, archiveEraTextMentionsWorld, archiveEraTextTitleSignal, archiveEraWorldOrigin, archiveEnrichment, archiveEraParentId, archiveEraChildren, archiveEraRoots, archiveEraDescendantIds, archiveEraAncestors, archiveEraHierarchyFlat, archiveEraPathLabel, archiveEraParentOptions, archiveEraAssignedRowsForWorld };`
 )();
 
 const lyrics = privateLyricsPayload({
@@ -238,6 +238,16 @@ assert.ok(archiveEraNameSignals('June 15 sessions','text file').some(signal => s
 assert.ok(archiveEraNameSignals('these songs are from Before Akrasia.','folder note').some(signal => signal.name === 'before akrasia'));
 assert.ok(archiveEraNameSignals('project name: glass hallway','text file').some(signal => signal.name === 'glass hallway'));
 assert.equal(archiveEraNameSignals('mix notes for tomorrow','song note').length,0);
+assert.equal(archiveEraCanonicalName('AKRASIA V1 - note'),'AKRASIA V1');
+assert.equal(archiveEraCanonicalName('akrasia v1 - image'),'akrasia v1');
+assert.equal(archiveEraCanonicalName('Batch 4 cover art'),'Batch 4');
+const combinedEraSignals = new Map();
+archiveEraMergeSignal(combinedEraSignals,{ key:'akrasia v1',name:'akrasia v1',strength:.93,source:'text file / AKRASIA V1 - note' });
+archiveEraMergeSignal(combinedEraSignals,{ key:'akrasia v1',name:'akrasia v1',strength:.91,source:'image title / akrasia v1 - image' });
+assert.deepEqual(combinedEraSignals.get('akrasia v1').sources,[
+  'text file / AKRASIA V1 - note',
+  'image title / akrasia v1 - image'
+]);
 assert.equal(
   archiveEraTextMentionsWorld(
     makeEraRow({ 'data-text-content':'come back\nanother song', 'data-notes':'' }),
@@ -371,6 +381,10 @@ assert.match(enrichmentSource,/The archive files were not deleted/);
 assert.match(enrichmentSource,/prepareArchiveSubEra/);
 assert.match(enrichmentSource,/creativeEraChapterCardsHtml/);
 assert.match(enrichmentSource,/chapters inside this era/);
+assert.match(enrichmentSource,/var byCanonicalName = new Map/);
+assert.match(enrichmentSource,/sessionStorage\.setItem\(ENRICHMENT_ERA_EDITOR_DRAFT_KEY/);
+assert.match(enrichmentSource,/removeAssetFromArchiveEra/);
+assert.match(enrichmentSource,/remove current era cover/);
 assert.match(playerSource,/data-glow="\$\{escapeAttr\(glow\)\}"/);
 assert.match(playerSource,/data-speed="\$\{escapeAttr\(speed\)\}"/);
 
@@ -378,5 +392,9 @@ const worldsSource = fs.readFileSync(new URL('../assets/js/worlds.js', import.me
 assert.match(worldsSource,/function worldNoteEntries/);
 assert.match(worldsSource,/from the archive journal/);
 assert.match(worldsSource,/\['overview','versions','artifacts','notes','lyrics','credits'\]/);
+
+const coreSource = fs.readFileSync(new URL('../assets/js/core.js', import.meta.url),'utf8');
+assert.match(coreSource,/identityChanged \|\| enrichmentNeedsIdentityLoad/);
+assert.match(coreSource,/updateAuthState\(session,event\)/);
 
 console.log('enrichment contract tests passed');

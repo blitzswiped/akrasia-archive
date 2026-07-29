@@ -30,6 +30,7 @@
   var enrichmentFlowActiveKey = '';
   var ENRICHMENT_REVIEW_STATE_KEY = 'akrasia-enrichment-review-state-v2';
   var ENRICHMENT_DRAFTS_KEY = 'akrasia-enrichment-local-drafts-v1';
+  var ENRICHMENT_ERA_EDITOR_DRAFT_KEY = 'akrasia-era-editor-draft-v1';
   var ENRICHMENT_SUGGESTION_SUMMARY_COLUMNS = 'id,asset_id,kind,confidence,evidence,model_name,model_version,source_revision_id,source_sha256,cache_key,status,review_note,reviewed_at,reviewed_by,created_at,updated_at';
   var ENRICHMENT_TAG_CATEGORIES = ['mood','vibe','genre','subgenre','lyrical-theme','production-style','vocal-style','instrumentation','listening-situation','time-of-day','weather-season','energy','narrative-tone','completion-state','release-state'];
 
@@ -84,6 +85,93 @@
     if(!Object.prototype.hasOwnProperty.call(drafts,id)) return;
     delete drafts[id];
     try { localStorage.setItem(ENRICHMENT_DRAFTS_KEY,JSON.stringify(drafts)); } catch(error) {}
+  }
+
+  function readArchiveEraEditorDraft() {
+    try {
+      var value = JSON.parse(sessionStorage.getItem(ENRICHMENT_ERA_EDITOR_DRAFT_KEY) || 'null');
+      return value && typeof value === 'object' && !Array.isArray(value) ? value : null;
+    } catch(error) {
+      return null;
+    }
+  }
+
+  function captureArchiveEraEditorDraft() {
+    var editor = document.getElementById('eraEditor');
+    if(!editor) return;
+    var value = id => document.getElementById(id)?.value || '';
+    var draft = {
+      id:value('eraEditId'),name:value('eraName'),parentId:value('eraParent'),
+      visibility:value('eraVisibility') || 'public',startDate:value('eraStartDate'),endDate:value('eraEndDate'),
+      accent:value('eraAccent') || '#ffffff',description:value('eraDescription'),notes:value('eraNotes'),
+      removeCover:Boolean(document.getElementById('eraRemoveCover')?.checked),
+      coverFileName:document.getElementById('eraCoverFile')?.files?.[0]?.name || '',
+      panelOpen:Boolean(document.getElementById('eraEditorPanel')?.open)
+    };
+    try { sessionStorage.setItem(ENRICHMENT_ERA_EDITOR_DRAFT_KEY,JSON.stringify(draft)); } catch(error) {}
+  }
+
+  function clearArchiveEraEditorDraft() {
+    try { sessionStorage.removeItem(ENRICHMENT_ERA_EDITOR_DRAFT_KEY); } catch(error) {}
+  }
+
+  function updateArchiveEraCoverControls() {
+    var id = document.getElementById('eraEditId')?.value || '';
+    var era = archiveEnrichment.erasById.get(id);
+    var cover = era?.resolved_cover_url || era?.cover_url || '';
+    var current = document.getElementById('eraCurrentCover');
+    var removeWrap = document.getElementById('eraRemoveCoverWrap');
+    if(current) {
+      current.hidden = !cover;
+      current.innerHTML = cover ? `<img src="${escapeAttr(cover)}" alt=""><span>current era cover</span>` : '';
+    }
+    if(removeWrap) removeWrap.hidden = !cover;
+  }
+
+  function restoreArchiveEraEditorDraft() {
+    var draft = readArchiveEraEditorDraft();
+    if(!draft || !document.getElementById('eraEditor')) return;
+    var set = function(id,value) {
+      var input = document.getElementById(id);
+      if(input) input.value = value == null ? '' : value;
+    };
+    set('eraEditId',draft.id);
+    set('eraName',draft.name);
+    set('eraVisibility',draft.visibility || 'public');
+    set('eraStartDate',draft.startDate);
+    set('eraEndDate',draft.endDate);
+    set('eraAccent',draft.accent || '#ffffff');
+    set('eraDescription',draft.description);
+    set('eraNotes',draft.notes);
+    var parent = document.getElementById('eraParent');
+    if(parent && archiveEnrichment.eraHierarchyAvailable) {
+      parent.innerHTML = `<option value="">top-level era</option>${archiveEraParentOptions(draft.id || '',draft.parentId || '')}`;
+      parent.value = draft.parentId || '';
+    }
+    var remove = document.getElementById('eraRemoveCover');
+    if(remove) remove.checked = Boolean(draft.removeCover);
+    var panel = document.getElementById('eraEditorPanel');
+    if(panel) panel.open = draft.panelOpen !== false;
+    var era = archiveEnrichment.erasById.get(draft.id);
+    var title = document.getElementById('eraEditorTitle');
+    if(title) title.textContent = era ? `edit ${era.name}` : (draft.parentId && archiveEnrichment.erasById.get(draft.parentId) ? `new sub-era inside ${archiveEnrichment.erasById.get(draft.parentId).name}` : 'create or edit an era');
+    var fileState = document.getElementById('eraCoverFileState');
+    if(fileState) fileState.textContent = draft.coverFileName ? `${draft.coverFileName} was selected before this panel refreshed; choose it again before saving.` : '';
+    updateArchiveEraCoverControls();
+  }
+
+  function handleArchiveEraCoverSelection(input) {
+    if(input?.files?.length && document.getElementById('eraRemoveCover')) document.getElementById('eraRemoveCover').checked = false;
+    var state = document.getElementById('eraCoverFileState');
+    if(state) state.textContent = input?.files?.[0]?.name || '';
+    captureArchiveEraEditorDraft();
+  }
+
+  function toggleArchiveEraCoverRemoval(input) {
+    if(input?.checked && document.getElementById('eraCoverFile')) document.getElementById('eraCoverFile').value = '';
+    var state = document.getElementById('eraCoverFileState');
+    if(state) state.textContent = input?.checked ? 'the current cover will be removed when this era is saved.' : '';
+    captureArchiveEraEditorDraft();
   }
 
   function persistEnrichmentReviewState() {
@@ -572,6 +660,7 @@
     var list = document.getElementById('adminWorkspaceList');
     var workspace = document.getElementById('adminFileWorkspace');
     if(!list || !workspace) return;
+    if(enrichmentWorkspaceTab === 'eras') captureArchiveEraEditorDraft();
     workspace.classList.add('enrichment-mode');
     document.getElementById('adminWorkspaceTitle').textContent = enrichmentWorkspaceTab === 'review' ? 'enrichment review' : (enrichmentWorkspaceTab === 'eras' ? 'creative eras' : 'tag library');
     document.getElementById('adminWorkspaceKicker').textContent = 'private analysis / accepted metadata stays separate';
@@ -590,12 +679,14 @@
     if(enrichmentWorkspaceTab === 'eras') list.innerHTML = enrichmentWorkspaceTabsHtml() + enrichmentEraManagerHtml();
     else if(enrichmentWorkspaceTab === 'tags') list.innerHTML = enrichmentWorkspaceTabsHtml() + enrichmentTagManagerHtml();
     else list.innerHTML = enrichmentWorkspaceTabsHtml() + enrichmentReviewHtml();
+    if(enrichmentWorkspaceTab === 'eras') restoreArchiveEraEditorDraft();
     renderEnrichmentInspector();
     window.setTimeout(drawEnrichmentReviewWaveform,0);
   }
 
   function setEnrichmentWorkspaceTab(tab) {
     if(!['review','eras','tags'].includes(tab)) return;
+    if(enrichmentWorkspaceTab === 'eras') captureArchiveEraEditorDraft();
     if(enrichmentSelectedSuggestionId && document.querySelector('[data-enrichment-lyric-row]')) {
       enrichmentEditorDraft = cleanSyncedLyrics(collectEnrichmentLyricsEditor());
       saveEnrichmentLocalDraft(enrichmentSelectedSuggestionId,enrichmentEditorDraft);
@@ -1960,15 +2051,33 @@
     return cleanSingleLine(value,160).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
   }
 
+  function archiveEraCanonicalName(value) {
+    return cleanSingleLine(value,100)
+      .replace(/^[#>*\-\s]+/,'')
+      .replace(/\s*(?:[-_/|:]\s*)?(?:notes?|text(?:\s+file)?|images?|visuals?|art(?:work)?|covers?(?:\s+art)?|photos?|track\s*list(?:\s+idea)?|tracklist(?:\s+idea)?)\s*$/i,'')
+      .replace(/[,:;.\-]+$/,'')
+      .trim();
+  }
+
+  function archiveEraMergeSignal(signals,signal) {
+    if(!signals || !signal?.key) return;
+    var current = signals.get(signal.key);
+    var sources = Array.from(new Set(
+      (current?.sources || (current?.source ? [current.source] : []))
+        .concat(signal.sources || (signal.source ? [signal.source] : []))
+    )).filter(Boolean).slice(0,24);
+    if(!current || Number(signal.strength) > Number(current.strength)) {
+      signals.set(signal.key,Object.assign({},signal,{ sources }));
+      return;
+    }
+    current.sources = sources;
+  }
+
   function archiveEraNameSignals(value,source) {
     var text = String(value || '').replace(/\r/g,'\n').slice(0,16000);
     var signals = new Map();
     var add = function(name,strength,kind) {
-      name = cleanSingleLine(name,100)
-        .replace(/^[#>*\-\s]+/,'')
-        .replace(/\s+(?:notes?|track\s*list(?:\s+idea)?)$/i,'')
-        .replace(/[,:;.\-]+$/,'')
-        .trim();
+      name = archiveEraCanonicalName(name);
       var key = archiveEraComparable(name);
       if(!key || key.length < 3) return;
       var next = { key,name:name.toLowerCase(),strength:Math.max(0,Math.min(1,Number(strength) || 0)),kind:kind || 'text signal',source:source || 'archive context' };
@@ -2005,10 +2114,10 @@
   }
 
   function archiveEraTextTitleSignal(row) {
-    var title = cleanSingleLine(row?.getAttribute('data-title') || row?.getAttribute('data-name'),100)
+    var title = archiveEraCanonicalName(cleanSingleLine(row?.getAttribute('data-title') || row?.getAttribute('data-name'),100)
       .replace(/\.(?:txt|md|rtf)$/i,'')
       .replace(/\s+(?:track\s*list|tracklist)(?:\s+idea)?$/i,'')
-      .trim();
+      .trim());
     var key = archiveEraComparable(title);
     if(!key || /^(?:notes?|folder notes?|readme|manifest|inspirations?|lyrics?|untitled)$/i.test(key)) return null;
     var content = String(row?.getAttribute('data-text-content') || row?.getAttribute('data-notes') || '');
@@ -2071,9 +2180,10 @@
       entry.textRows = archiveEraTextRowsForWorld(entry,textRows);
       var signalSources = [];
       entry.topFolders.forEach(folder => signalSources.push({ value:folder,source:`folder / ${folder}` }));
-      signalSources.push({
-        value:[entry.title].concat(entry.rows.map(row => row.getAttribute('data-name') || '')).join('\n'),
-        source:'song and file titles'
+      signalSources.push({ value:entry.title,source:`song title / ${entry.title}` });
+      entry.rows.forEach(row => {
+        var title = row.getAttribute('data-title') || row.getAttribute('data-name') || '';
+        if(title) signalSources.push({ value:title,source:`${row.getAttribute('data-type') || 'file'} title / ${title}` });
       });
       var songNotes = entry.rows.map(row => row.getAttribute('data-notes') || '').filter(Boolean);
       if(songNotes.length) signalSources.push({ value:songNotes.join('\n'),source:'song notes' });
@@ -2082,15 +2192,11 @@
         source:`text file / ${row.getAttribute('data-title') || row.getAttribute('data-name') || 'note'}`
       }));
       var signals = new Map();
-      signalSources.forEach(item => archiveEraNameSignals(item.value,item.source).forEach(signal => {
-        var current = signals.get(signal.key);
-        if(!current || current.strength < signal.strength) signals.set(signal.key,signal);
-      }));
+      signalSources.forEach(item => archiveEraNameSignals(item.value,item.source).forEach(signal => archiveEraMergeSignal(signals,signal)));
       entry.textRows.forEach(row => {
         var signal = archiveEraTextTitleSignal(row);
         if(!signal) return;
-        var current = signals.get(signal.key);
-        if(!current || current.strength < signal.strength) signals.set(signal.key,signal);
+        archiveEraMergeSignal(signals,signal);
       });
       entry.signals = Array.from(signals.values()).sort((a,b) => b.strength - a.strength || a.name.localeCompare(b.name));
       entry.folderPath = entry.folders.slice().sort((a,b) => a.length - b.length || a.localeCompare(b))[0] || '';
@@ -2105,7 +2211,7 @@
     entries.forEach(entry => entry.signals.forEach(signal => {
       if(!ranked.has(signal.key)) ranked.set(signal.key,Object.assign({},signal,{ worlds:new Set(),sources:new Set() }));
       ranked.get(signal.key).worlds.add(entry.key);
-      ranked.get(signal.key).sources.add(signal.source);
+      (signal.sources || [signal.source]).filter(Boolean).forEach(source => ranked.get(signal.key).sources.add(source));
     }));
     return Array.from(ranked.values())
       .filter(item => item.worlds.size >= 2 || item.strength >= .98)
@@ -2121,7 +2227,7 @@
     return {
       id:options.id,
       type:options.type,
-      name:cleanSingleLine(options.name,100).toLowerCase(),
+      name:(archiveEraCanonicalName(options.name) || cleanSingleLine(options.name,100)).toLowerCase(),
       worlds,
       rows,
       revisionCount:worlds.reduce((sum,entry) => sum + entry.revisionCount,0),
@@ -2130,7 +2236,7 @@
       originDate:originDates.length && originDates.every(date => date === originDates[0]) ? originDates[0] : '',
       confidence:Math.max(0,Math.min(1,Number(options.confidence) || 0)),
       evidence:cleanSingleLine(options.evidence,500),
-      evidenceDetails:Array.from(new Set(options.evidenceDetails || [])).slice(0,10),
+      evidenceDetails:Array.from(new Set(options.evidenceDetails || [])).slice(0,24),
       aliases:Array.from(new Set(options.aliases || [])).filter(Boolean).slice(0,8)
     };
   }
@@ -2166,7 +2272,10 @@
         entries:worlds,
         confidence:Math.min(.98,signal.strength + Math.min(.08,worlds.length * .012)),
         evidence:`"${signal.name}" appears in ${signal.source} and connects ${worlds.length} song${worlds.length === 1 ? '' : 's'}.`,
-        evidenceDetails:Array.from(new Set(worlds.flatMap(entry => entry.signals.filter(item => item.key === key).map(item => item.source))))
+        evidenceDetails:Array.from(new Set(worlds.flatMap(entry => entry.signals
+          .filter(item => item.key === key)
+          .flatMap(item => item.sources || [item.source])
+        ).filter(Boolean)))
       }));
     });
     dayGroups.forEach((group,date) => {
@@ -2201,9 +2310,32 @@
         aliases:name === fallbackName ? [] : [fallbackName]
       }));
     });
-    var existingNames = new Set(archiveEnrichment.eras.map(era => String(era.name || '').trim().toLowerCase()));
+    var byCanonicalName = new Map();
+    candidates.forEach(candidate => {
+      var key = archiveEraComparable(archiveEraCanonicalName(candidate.name));
+      if(!key) return;
+      var current = byCanonicalName.get(key);
+      if(!current) {
+        byCanonicalName.set(key,candidate);
+        return;
+      }
+      var currentIsDate = /^song-origin /.test(current.type);
+      var candidateIsDate = /^song-origin /.test(candidate.type);
+      var winner = currentIsDate && !candidateIsDate ? candidate : (!currentIsDate && candidateIsDate ? current : (candidate.confidence > current.confidence ? candidate : current));
+      var other = winner === current ? candidate : current;
+      byCanonicalName.set(key,archiveEraGuessFromEntries({
+        id:winner.id,type:winner.type,name:winner.name,
+        entries:Array.from(new Map(winner.worlds.concat(other.worlds).map(entry => [entry.key,entry])).values()),
+        confidence:Math.min(.99,Math.max(winner.confidence,other.confidence) + .025),
+        evidence:`Multiple archive signals point to "${winner.name}".`,
+        evidenceDetails:Array.from(new Set([winner.evidence,other.evidence].concat(winner.evidenceDetails || [],other.evidenceDetails || []))),
+        aliases:Array.from(new Set((winner.aliases || []).concat(other.aliases || [],other.name))).filter(name => archiveEraComparable(name) !== key)
+      }));
+    });
+    candidates = Array.from(byCanonicalName.values());
+    var existingNames = new Set(archiveEnrichment.eras.map(era => archiveEraComparable(archiveEraCanonicalName(era.name))));
     var merged = new Map();
-    candidates.filter(candidate => candidate.worlds.length && !existingNames.has(candidate.name.toLowerCase())).forEach(candidate => {
+    candidates.filter(candidate => candidate.worlds.length && !existingNames.has(archiveEraComparable(candidate.name))).forEach(candidate => {
       var fingerprint = candidate.worlds.map(world => world.key).sort().join('|');
       var current = merged.get(fingerprint);
       if(!current) return merged.set(fingerprint,candidate);
@@ -2212,7 +2344,7 @@
       var winner = candidateNamed && !currentNamed ? candidate : ((!candidateNamed && currentNamed) ? current : (candidate.confidence > current.confidence ? candidate : current));
       var other = winner === candidate ? current : candidate;
       winner.aliases = Array.from(new Set((winner.aliases || []).concat(other.name,other.aliases || []))).filter(name => name && name !== winner.name).slice(0,8);
-      winner.evidenceDetails = Array.from(new Set((winner.evidenceDetails || []).concat(other.evidenceDetails || [],other.evidence))).slice(0,10);
+      winner.evidenceDetails = Array.from(new Set((winner.evidenceDetails || []).concat(other.evidenceDetails || [],other.evidence))).slice(0,24);
       merged.set(fingerprint,winner);
     });
     return Array.from(merged.values())
@@ -2520,7 +2652,7 @@
       <section class="era-manager-list"><div class="era-editor-head"><strong>archive era hierarchy</strong><span>enter any era or add a chapter inside it</span></div>${cards || '<div class="enrichment-empty">No eras are hard-coded. Define the first larger creative era below.</div>'}</section>
       ${enrichmentEraGuessesHtml()}
       <div class="era-manager-tools">
-        <details class="era-tool-panel" id="eraEditorPanel" open><summary><strong id="eraEditorTitle">create or edit an era</strong><span>identity, parent, dates, cover, journal</span></summary><section class="era-editor" id="eraEditor"><input type="hidden" id="eraEditId"><div class="era-editor-head"><strong>era identity</strong><button type="button" onclick="resetArchiveEraEditor()">clear</button></div><div class="era-editor-grid"><label><span>name</span><input id="eraName" maxlength="100" placeholder="artist-defined era name"></label>${parentControl}<label><span>visibility</span><select id="eraVisibility"><option value="public">public</option><option value="private">private</option><option value="hidden">hidden</option></select></label><label><span>start date / optional</span><input id="eraStartDate" type="date"></label><label><span>end date / optional</span><input id="eraEndDate" type="date"></label><label><span>accent</span><input id="eraAccent" type="color" value="#ffffff"></label><label><span>cover / optional</span><input id="eraCoverFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label>${narrativeFields}</div><button class="primary" type="button" onclick="saveArchiveEra()">save era</button></section></details>
+        <details class="era-tool-panel" id="eraEditorPanel" open><summary><strong id="eraEditorTitle">create or edit an era</strong><span>identity, parent, dates, cover, journal</span></summary><section class="era-editor" id="eraEditor" oninput="captureArchiveEraEditorDraft()" onchange="captureArchiveEraEditorDraft()"><input type="hidden" id="eraEditId"><div class="era-editor-head"><strong>era identity</strong><button type="button" onclick="resetArchiveEraEditor()">clear</button></div><div class="era-editor-grid"><label><span>name</span><input id="eraName" maxlength="100" placeholder="artist-defined era name"></label>${parentControl}<label><span>visibility</span><select id="eraVisibility"><option value="public">public</option><option value="private">private</option><option value="hidden">hidden</option></select></label><label><span>start date / optional</span><input id="eraStartDate" type="date"></label><label><span>end date / optional</span><input id="eraEndDate" type="date"></label><label><span>accent</span><input id="eraAccent" type="color" value="#ffffff"></label><section class="era-cover-editor"><label><span>cover / optional</span><input id="eraCoverFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="handleArchiveEraCoverSelection(this)"></label><div class="era-current-cover" id="eraCurrentCover" hidden></div><label class="era-remove-cover" id="eraRemoveCoverWrap" hidden><input id="eraRemoveCover" type="checkbox" onchange="toggleArchiveEraCoverRemoval(this)"><span>remove current era cover</span></label><small id="eraCoverFileState"></small></section>${narrativeFields}</div><button class="primary" type="button" onclick="saveArchiveEra()">save era</button></section></details>
         <details class="era-tool-panel"><summary><strong>place songs and folders</strong><span>${selectionCount} archive files selected</span></summary><section class="era-assignment"><div class="era-editor-head"><strong>assign without moving files</strong><span>choose the most specific era or sub-era</span></div><div class="era-assignment-controls"><select id="eraAssignEra"><option value="">choose era</option>${eraOptions}</select><select id="eraAssignRelationship"><option value="primary">primary</option><option value="secondary">secondary</option></select><button type="button" onclick="assignEraToArchiveSelection()"${selectionCount ? '' : ' disabled'}>assign selection</button><button type="button" onclick="removeEraFromArchiveSelection()"${selectionCount ? '' : ' disabled'}>remove from selection</button></div><div class="era-world-assignment"><select id="eraAssignWorld"><option value="">choose Song World</option>${worldOptions}</select><button type="button" onclick="assignEraToWorld()">assign every revision in world</button></div><div class="era-folder-assignment"><select id="eraAssignFolder"><option value="">choose archive folder</option>${folderOptions}</select><button type="button" onclick="assignEraToFolder()">assign folder contents</button></div></section></details>
       </div>
       <details class="era-unassigned"><summary>unassigned songs / ${unassigned.length}</summary><div>${unassignedRows || '<span>Every Song World has a starting era.</span>'}</div></details>
@@ -2528,16 +2660,20 @@
   }
 
   function resetArchiveEraEditor() {
+    clearArchiveEraEditorDraft();
     ['eraEditId','eraName','eraStartDate','eraEndDate','eraDescription','eraNotes'].forEach(id => { var input=document.getElementById(id); if(input) input.value=''; });
     if(document.getElementById('eraVisibility')) document.getElementById('eraVisibility').value='public';
     if(document.getElementById('eraAccent')) document.getElementById('eraAccent').value='#ffffff';
     if(document.getElementById('eraCoverFile')) document.getElementById('eraCoverFile').value='';
+    if(document.getElementById('eraRemoveCover')) document.getElementById('eraRemoveCover').checked=false;
+    if(document.getElementById('eraCoverFileState')) document.getElementById('eraCoverFileState').textContent='';
     var parent = document.getElementById('eraParent');
     if(parent && archiveEnrichment.eraHierarchyAvailable) {
       parent.innerHTML = `<option value="">top-level era</option>${archiveEraParentOptions('','')}`;
       parent.value = '';
     }
     if(document.getElementById('eraEditorTitle')) document.getElementById('eraEditorTitle').textContent = 'create or edit an era';
+    updateArchiveEraCoverControls();
   }
 
   function editArchiveEra(id) {
@@ -2551,6 +2687,8 @@
     document.getElementById('eraAccent').value = era.accent_color || '#ffffff';
     document.getElementById('eraDescription').value = era.description || '';
     if(document.getElementById('eraNotes')) document.getElementById('eraNotes').value = era.notes || '';
+    if(document.getElementById('eraRemoveCover')) document.getElementById('eraRemoveCover').checked = false;
+    if(document.getElementById('eraCoverFile')) document.getElementById('eraCoverFile').value = '';
     var parent = document.getElementById('eraParent');
     if(parent && archiveEnrichment.eraHierarchyAvailable) {
       parent.innerHTML = `<option value="">top-level era</option>${archiveEraParentOptions(era.id,archiveEraParentId(era))}`;
@@ -2559,6 +2697,8 @@
     var panel = document.getElementById('eraEditorPanel');
     if(panel) panel.open = true;
     if(document.getElementById('eraEditorTitle')) document.getElementById('eraEditorTitle').textContent = `edit ${era.name}`;
+    updateArchiveEraCoverControls();
+    captureArchiveEraEditorDraft();
     document.getElementById('eraEditor')?.scrollIntoView({ behavior:archiveSettings?.motion === 'off' ? 'auto' : 'smooth',block:'start' });
     document.getElementById('eraName')?.focus();
   }
@@ -2575,6 +2715,7 @@
     if(document.getElementById('eraStartDate')) document.getElementById('eraStartDate').value = parentEra.start_date || '';
     if(document.getElementById('eraEndDate')) document.getElementById('eraEndDate').value = parentEra.end_date || '';
     if(document.getElementById('eraEditorTitle')) document.getElementById('eraEditorTitle').textContent = `new sub-era inside ${parentEra.name}`;
+    captureArchiveEraEditorDraft();
     var panel = document.getElementById('eraEditorPanel');
     if(panel) panel.open = true;
     document.getElementById('eraEditor')?.scrollIntoView({ behavior:archiveSettings?.motion === 'off' ? 'auto' : 'smooth',block:'center' });
@@ -2583,7 +2724,9 @@
 
   async function saveArchiveEra() {
     if(!requireAdmin()) return;
+    captureArchiveEraEditorDraft();
     var id = document.getElementById('eraEditId')?.value || '';
+    var existingEra = archiveEnrichment.erasById.get(id) || null;
     var parentId = archiveEnrichment.eraHierarchyAvailable ? document.getElementById('eraParent')?.value || '' : '';
     if(id && archiveEraDescendantIds(id,true).has(parentId)) return showAppNotice('An era cannot be placed inside itself or one of its own sub-eras.','error');
     var payload = {
@@ -2606,7 +2749,15 @@
     if(result.error) return showAppNotice(result.error.message,'error');
     var era = result.data;
     var file = document.getElementById('eraCoverFile')?.files?.[0];
-    if(file) {
+    var removeCover = Boolean(document.getElementById('eraRemoveCover')?.checked);
+    if(removeCover && existingEra) {
+      var coverRemoval = await supabaseClient.from('archive_eras').update({ cover_storage_path:'',cover_url:'' }).eq('id',era.id);
+      if(coverRemoval.error) return showAppNotice(`Era saved, but its cover could not be removed: ${coverRemoval.error.message}`,'error');
+      if(existingEra.cover_storage_path) {
+        var storageRemoval = await supabaseClient.storage.from(STORAGE_BUCKET).remove([existingEra.cover_storage_path]);
+        if(storageRemoval.error) showAppNotice(`Era cover was detached, but its stored file could not be removed: ${storageRemoval.error.message}`,'error');
+      }
+    } else if(file) {
       var validation = validateAssetFile(file,'image');
       if(validation) return showAppNotice(validation,'error');
       var extension = String(file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
@@ -2615,6 +2766,9 @@
       if(upload.error) return showAppNotice(`Era saved, but cover upload failed: ${upload.error.message}`,'error');
       var coverUpdate = await supabaseClient.from('archive_eras').update({ cover_storage_path:storagePath,cover_url:'' }).eq('id',era.id);
       if(coverUpdate.error) return showAppNotice(coverUpdate.error.message,'error');
+      if(existingEra?.cover_storage_path && existingEra.cover_storage_path !== storagePath) {
+        await supabaseClient.storage.from(STORAGE_BUCKET).remove([existingEra.cover_storage_path]);
+      }
     }
     resetArchiveEraEditor();
     await loadArchiveEnrichmentData({ force:true });
@@ -2756,6 +2910,31 @@
     }
   }
 
+  async function removeAssetFromArchiveEra(eraId,assetId,button) {
+    if(!requireAdmin()) return;
+    var era = archiveEnrichment.erasById.get(eraId);
+    var row = enrichmentRowsByAsset.get(assetId) || document.querySelector(`.file-row[data-id="${cssEscape(assetId)}"]`);
+    if(!era || !row) return showAppNotice('That era file is no longer available.','error');
+    var title = row.getAttribute('data-title') || row.getAttribute('data-name') || 'this file';
+    if(!confirm(`Remove "${title}" from "${era.name}"? The archive file itself will not be deleted.`)) return;
+    var originalText = button?.textContent || 'remove from era';
+    if(button) {
+      button.disabled = true;
+      button.textContent = 'removing...';
+    }
+    var result = await supabaseClient.from('archive_asset_eras').delete().eq('era_id',eraId).eq('asset_id',assetId);
+    if(result.error) {
+      if(button) {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+      return showAppNotice(result.error.message,'error');
+    }
+    await loadArchiveEnrichmentData({ force:true });
+    openCreativeEraWorld(eraId);
+    showAppNotice(`${title} was removed from ${era.name}. The archive file was kept.`);
+  }
+
   function openEraUnassignedRow(key) {
     var row = adminRowFromKey(key);
     if(!row) return;
@@ -2843,8 +3022,15 @@
   function initArchiveEnrichment() {
     restoreEnrichmentReviewState();
     document.addEventListener('keydown',handleEnrichmentReviewKeys);
-    document.addEventListener('visibilitychange',function(){ if(document.hidden) flushEnrichmentDraftCapture(); });
-    window.addEventListener('pagehide',flushEnrichmentDraftCapture);
+    document.addEventListener('visibilitychange',function(){
+      if(!document.hidden) return;
+      flushEnrichmentDraftCapture();
+      captureArchiveEraEditorDraft();
+    });
+    window.addEventListener('pagehide',function(){
+      flushEnrichmentDraftCapture();
+      captureArchiveEraEditorDraft();
+    });
     window.addEventListener('storage',function(event){
       if(event.key !== ENRICHMENT_DRAFTS_KEY || !enrichmentSelectedSuggestionId) return;
       if(document.hasFocus() && document.activeElement?.closest?.('.enrichment-lyrics-editor')) return;
@@ -2926,7 +3112,7 @@
     var looseRows = directRows.filter(row => !coveredIds.has(row.getAttribute('data-id')));
     var cover = era.resolved_cover_url || era.cover_url;
     var groupHtml = groups.map(group => `<section class="world-section creative-era-song-group"><div class="world-section-head creative-era-song-head"><div><h3>${escapeHtml(group.entry.title)}</h3><span>began ${escapeHtml(group.entry.originDate || 'undated')} / ${group.rows.length} assigned files</span></div>${isAdmin ? `<button class="creative-era-song-remove" type="button" onclick="removeWorldFromArchiveEra('${escapeAttr(id)}',decodeURIComponent('${encodeURIComponent(group.entry.key)}'),this)">remove from era</button>` : ''}</div><div class="world-file-list">${group.rows.map((row,index) => worldFileHtml(row,index)).join('')}</div></section>`).join('');
-    var looseHtml = looseRows.length ? `<section class="world-section creative-era-loose"><div class="world-section-head"><h3>notes, visuals + loose artifacts</h3><span>${looseRows.length} files assigned directly to this era</span></div><div class="world-file-list">${looseRows.map((row,index) => worldFileHtml(row,index)).join('')}</div></section>` : '';
+    var looseHtml = looseRows.length ? `<section class="world-section creative-era-loose"><div class="world-section-head"><h3>notes, visuals + loose artifacts</h3><span>${looseRows.length} files assigned directly to this era</span></div><div class="world-file-list">${looseRows.map((row,index) => `<div class="creative-era-loose-row">${worldFileHtml(row,index)}${isAdmin ? `<button type="button" onclick="removeAssetFromArchiveEra('${escapeAttr(id)}','${escapeAttr(row.getAttribute('data-id'))}',this)">remove from era</button>` : ''}</div>`).join('')}</div></section>` : '';
     var ancestors = archiveEraAncestors(id);
     var breadcrumb = ancestors.map(parent => `<button type="button" onclick="openCreativeEraWorld('${escapeAttr(parent.id)}')">${escapeHtml(parent.name)}</button><span>/</span>`).join('');
     var parent = ancestors[ancestors.length - 1] || null;
