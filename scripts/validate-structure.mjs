@@ -38,7 +38,10 @@ check(!duplicateFunctions.length,`duplicate functions: ${duplicateFunctions.map(
 
 const live = sources.get('live.js') || '';
 const player = sources.get('player.js') || '';
+const bootstrap = sources.get('bootstrap.js') || '';
+const worlds = sources.get('worlds.js') || '';
 const polish = fs.readFileSync(path.join(root,'assets','css','polish-responsive.css'),'utf8');
+const introStyles = fs.readFileSync(path.join(root,'assets','css','intro-worlds.css'),'utf8');
 const saveStart = live.indexOf('async function saveLiveState');
 const saveEnd = live.indexOf('function receiveLiveState',saveStart);
 const saveBody = live.slice(saveStart,saveEnd);
@@ -63,6 +66,11 @@ check(/function syncMiniPlayerMediaMode\(type\)/.test(player),'mini player media
 check(/function refreshMiniPlayerArtwork\(row, type, failedSource, token\)/.test(player),'expired mini player artwork cannot refresh');
 check(/if\(activeMediaType !== 'audio'\) return;\s*var peaks/.test(player),'visual previews can still render a fake audio waveform');
 check(/player-bar\.media-preview \.pb-center,[\s\S]*?display:none!important/.test(polish),'visual preview transport is not force-hidden');
+check(html.includes('class="archive-intro motion-intro"'),'motion-graphic introduction markup is missing');
+check((html.match(/data-motion-copy=/g) || []).length === 4,'motion introduction statements are incomplete');
+check(!html.includes('signal-intro') && !introStyles.includes('.signal-intro'),'obsolete slideshow-style introduction remains');
+check(/var archiveMotionActs = \[/.test(bootstrap) && /function scheduleArchiveMotion\(\)/.test(bootstrap),'motion introduction timing model is missing');
+check(/akrasia_motion_intro_seen_v1/.test(html) && /akrasia_motion_intro_seen_v1/.test(bootstrap) && /akrasia_motion_intro_seen_v1/.test(worlds),'first-visit and replay introduction keys do not match');
 
 console.log(JSON.stringify({
   indexBytes:Buffer.byteLength(html),

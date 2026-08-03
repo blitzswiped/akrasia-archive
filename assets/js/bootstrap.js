@@ -90,51 +90,49 @@
     return archiveChatName() ? true : showArchiveSetup('live');
   }
 
-  var archiveSignalTimers = [];
-  var archiveSignalPhase = 0;
-  var archiveSignalDwell = 5200;
-  var archiveSignalBeats = [
-    { kicker:'akrasia / entering', title:'not a portfolio. a place that remembers.', copy:'Unreleased music, versions, notes, visuals, and live moments begin as connected files instead of disappearing into folders.', features:['root archive','folders + drag','private files','notes + links'] },
-    { kicker:'time resolves around every file', title:'the archive becomes a history.', copy:'Exact dates, sessions, versions, notes, and visuals form one immersive timeline that always returns you to the moment.', features:['date rail','session history','versions','connections'] },
-    { kicker:'the file begins to speak', title:'listening opens what lives inside it.', copy:'Artwork, queue, waveform, notes, synced lead vocals, adlibs, pauses, and lyric seeking move with the song.', features:['fullscreen player','synced lyrics','adlibs','instrumental space'] },
-    { kicker:'sound leaves an image behind', title:'visual memory stays attached.', copy:'Covers, photographs, videos, and unfinished studies keep their own viewers without becoming disconnected from the music.', features:['image viewer','video viewer','cover studies','archive artifacts'] },
-    { kicker:'the archive enters the present', title:'sometimes the room goes live.', copy:'Angel runs the broadcast, queue, countdown, cover, notes, announcements, and moderation while listeners watch without controlling playback.', features:['control room','auto queue','countdown','chat + moderation'] },
-    { kicker:'files stop being flat', title:'every version becomes part of a world.', copy:'Version constellations, A/B comparison, archive radio, connections, premieres, history, and accessibility settings turn the archive into one connected place.', features:['song worlds','a / b versions','connections + premieres','radio + history','settings'] }
+  var archiveMotionTimers = [];
+  var archiveMotionAct = 0;
+  var archiveMotionActs = [
+    { label:'source signal / 01',duration:3200 },
+    { label:'revision memory / 02',duration:3700 },
+    { label:'connected history / 03',duration:4100 },
+    { label:'archive in motion / 04',duration:3900 },
+    { label:'akrasia / resolved',duration:3600 }
   ];
 
-  function setArchiveSignalPhase(index) {
+  function clearArchiveMotionTimers() {
+    archiveMotionTimers.forEach(timer => clearTimeout(timer));
+    archiveMotionTimers = [];
+  }
+
+  function setArchiveMotionAct(index) {
     var intro = document.getElementById('archiveIntro');
     if(!intro) return;
-    archiveSignalPhase = Math.max(0, Math.min(archiveSignalBeats.length - 1, Number(index) || 0));
-    intro.setAttribute('data-phase', archiveSignalPhase);
-    var beat = archiveSignalBeats[archiveSignalPhase];
-    var narration = intro.querySelector('.signal-narration');
-    if(narration) {
-      narration.classList.remove('resolving');
-      void narration.offsetWidth;
-      narration.classList.add('resolving');
-    }
-    document.getElementById('signalKicker').textContent = beat.kicker;
-    document.getElementById('signalTitle').textContent = beat.title;
-    document.getElementById('signalCopy').textContent = beat.copy;
-    document.getElementById('signalCounter').textContent = `signal ${String(archiveSignalPhase + 1).padStart(2,'0')} / ${String(archiveSignalBeats.length).padStart(2,'0')}`;
-    var features = document.getElementById('signalFeatures');
-    if(features) features.innerHTML = beat.features.map(feature => `<span>${escapeHtml(feature)}</span>`).join('');
-    var progress = document.getElementById('signalProgress');
+    archiveMotionAct = Math.max(0,Math.min(archiveMotionActs.length - 1,Number(index) || 0));
+    intro.setAttribute('data-act',archiveMotionAct);
+    intro.querySelectorAll('[data-motion-copy]').forEach(section => {
+      var active = Number(section.getAttribute('data-motion-copy')) === archiveMotionAct;
+      section.setAttribute('aria-hidden',active ? 'false' : 'true');
+    });
+    var label = document.getElementById('motionActLabel');
+    if(label) label.textContent = archiveMotionActs[archiveMotionAct].label;
+  }
+
+  function scheduleArchiveMotion() {
+    clearArchiveMotionTimers();
+    var elapsed = 0;
+    archiveMotionActs.forEach((act,index) => {
+      if(index) archiveMotionTimers.push(setTimeout(() => setArchiveMotionAct(index),elapsed));
+      elapsed += act.duration;
+    });
+    var progress = document.getElementById('motionProgress');
     if(progress) {
+      progress.style.setProperty('--motion-duration',`${elapsed}ms`);
       progress.classList.remove('running');
       void progress.offsetWidth;
       progress.classList.add('running');
     }
-  }
-
-  function scheduleArchiveSignal(fromPhase) {
-    archiveSignalTimers.forEach(timer => clearTimeout(timer));
-    archiveSignalTimers = [];
-    for(var phase = fromPhase + 1; phase < archiveSignalBeats.length; phase++) {
-      ((targetPhase, delay) => archiveSignalTimers.push(setTimeout(() => setArchiveSignalPhase(targetPhase), delay)))(phase, (phase - fromPhase) * archiveSignalDwell);
-    }
-    archiveSignalTimers.push(setTimeout(() => finishArchiveIntro(false), (archiveSignalBeats.length - fromPhase) * archiveSignalDwell + 800));
+    archiveMotionTimers.push(setTimeout(() => finishArchiveIntro(false),elapsed));
   }
 
   function revealArchiveShell(delay) {
@@ -142,13 +140,14 @@
       document.body.classList.remove('shell-loading');
       document.body.classList.add('archive-ready');
     }, delay || 0);
+    setTimeout(() => document.documentElement.classList.remove('intro-running'),Math.max(1300,(delay || 0) + 1050));
   }
 
   function finishArchiveIntro(skipped) {
     var intro = document.getElementById('archiveIntro');
     if(!intro || intro.classList.contains('is-leaving')) return;
-    archiveSignalTimers.forEach(timer => clearTimeout(timer));
-    archiveSignalTimers = [];
+    clearArchiveMotionTimers();
+    if(!skipped && archiveMotionAct < archiveMotionActs.length - 1) setArchiveMotionAct(archiveMotionActs.length - 1);
     var mark = document.getElementById('introMark');
     var target = document.querySelector('.topbar .wordmark');
     if(mark && target && !skipped && mark.animate) {
@@ -157,31 +156,43 @@
       var dx = to.left + to.width / 2 - (from.left + from.width / 2);
       var dy = to.top + to.height / 2 - (from.top + from.height / 2);
       var scale = Math.max(.12, to.width / Math.max(1, from.width));
-      mark.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:`translate(${dx}px,${dy}px) scale(${scale})`,opacity:.92}],{duration:780,easing:'cubic-bezier(.16,1,.3,1)',fill:'forwards'});
+      mark.classList.add('is-landing');
+      mark.animate([{transform:'translate3d(0,0,0) scale(1)',opacity:1},{transform:`translate3d(${dx}px,${dy}px,0) scale(${scale})`,opacity:.96}],{duration:900,easing:'cubic-bezier(.16,1,.3,1)',fill:'forwards'});
     }
     intro.classList.add('is-leaving');
     document.body.classList.remove('intro-active');
-    revealArchiveShell(skipped ? 80 : 340);
-    try { localStorage.setItem('akrasia_tour_seen_v7','1'); } catch(error) {}
-    window.setTimeout(() => showArchiveSetup(''),skipped ? 260 : 920);
-    setTimeout(() => intro.remove(), 820);
+    revealArchiveShell(skipped ? 80 : 260);
+    try { localStorage.setItem('akrasia_motion_intro_seen_v1','1'); } catch(error) {}
+    window.setTimeout(() => showArchiveSetup(''),skipped ? 260 : 1080);
+    setTimeout(() => {
+      intro.remove();
+      document.documentElement.classList.remove('intro-running');
+    }, skipped ? 520 : 980);
   }
 
   function startArchiveIntro() {
     var drawer = document.getElementById('liveAdminDrawer');
     if(drawer && drawer.parentElement !== document.body) document.body.appendChild(drawer);
     var alreadySeen = false;
-    try { alreadySeen = localStorage.getItem('akrasia_tour_seen_v7') === '1'; } catch(error) {}
+    try { alreadySeen = localStorage.getItem('akrasia_motion_intro_seen_v1') === '1'; } catch(error) {}
     if(alreadySeen) {
       var intro = document.getElementById('archiveIntro');
       if(intro) intro.remove();
+      document.documentElement.classList.remove('intro-running');
       document.body.classList.remove('intro-active');
       revealArchiveShell(90);
       window.setTimeout(() => showArchiveSetup(''),260);
       return;
     }
-    setArchiveSignalPhase(0);
-    scheduleArchiveSignal(0);
+    document.documentElement.classList.add('intro-running');
+    var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reducedMotion) {
+      setArchiveMotionAct(archiveMotionActs.length - 1);
+      archiveMotionTimers.push(setTimeout(() => finishArchiveIntro(false),2600));
+      return;
+    }
+    setArchiveMotionAct(0);
+    scheduleArchiveMotion();
   }
 
   startArchiveIntro();
